@@ -22,17 +22,17 @@ return new class extends Migration
         DB::table('settings')->insert([
             [
                 'key' => 'office_latitude',
-                'value' => '-6.200000',
+                'value' => '-6.1787051',
                 'type' => 'number',
-                'description' => 'Latitude kantor (Jakarta default)',
+                'description' => 'Latitude BAPETEN',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'key' => 'office_longitude',
-                'value' => '106.816666',
+                'value' => '106.8109582',
                 'type' => 'number',
-                'description' => 'Longitude kantor (Jakarta default)',
+                'description' => 'Longitude BAPETEN',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
