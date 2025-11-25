@@ -27,8 +27,8 @@ class GeoLocationService
 
         // Haversine formula
         $a = sin($deltaLatRad / 2) * sin($deltaLatRad / 2) +
-             cos($lat1Rad) * cos($lat2Rad) *
-             sin($deltaLonRad / 2) * sin($deltaLonRad / 2);
+            cos($lat1Rad) * cos($lat2Rad) *
+            sin($deltaLonRad / 2) * sin($deltaLonRad / 2);
 
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
@@ -74,7 +74,7 @@ class GeoLocationService
      * @param float $maxAccuracy Maximum allowed accuracy (default: 100m)
      * @return array
      */
-    public function validateAccuracy(float $accuracy, float $maxAccuracy = 100): array
+    public function validateAccuracy(float $accuracy, float $maxAccuracy = 2500): array
     {
         $isValid = $accuracy <= $maxAccuracy;
 
