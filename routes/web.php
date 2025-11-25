@@ -4,10 +4,7 @@ use App\Http\Controllers\AbsensiController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/login', function () {
-    return redirect()->route('filament.user.auth.login');
-})->name('login');
-
+// Landing / login choice
 Route::get('/', function () {
     if (Auth::check()) {
         // Redirect based on role
@@ -15,8 +12,15 @@ Route::get('/', function () {
             ? redirect('/admin')
             : redirect('/user');
     }
-    return redirect()->route('login');
-});
+
+    // Show a simple choice page that emphasizes User login but provides Admin login too
+    return view('auth.choice');
+})->name('home');
+
+// Keep a named `login` route for compatibility and point it to the same choice page
+Route::get('/login', function () {
+    return view('auth.choice');
+})->name('login');
 
 Route::middleware(['auth'])->group(function () {
     // Dashboard
