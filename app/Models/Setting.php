@@ -24,7 +24,7 @@ class Setting extends Model
             return $default;
         }
 
-        return match($setting->type) {
+        return match ($setting->type) {
             'number' => (float) $setting->value,
             'json' => json_decode($setting->value, true),
             'boolean' => filter_var($setting->value, FILTER_VALIDATE_BOOLEAN),

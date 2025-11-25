@@ -23,6 +23,8 @@ class Absence extends Model
 
     protected $casts = [
         'tanggal' => 'date',
+        'jam_masuk' => 'datetime',
+        'jam_pulang' => 'datetime',
         'lat_masuk' => 'decimal:8',
         'lng_masuk' => 'decimal:8',
         'lat_pulang' => 'decimal:8',
