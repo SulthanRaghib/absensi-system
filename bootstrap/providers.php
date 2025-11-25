@@ -3,5 +3,5 @@
 return [
     App\Providers\AppServiceProvider::class,
     App\Providers\Filament\AdminPanelProvider::class,
-    App\Providers\GeoLocationService::class,
+    App\Providers\Filament\UserPanelProvider::class,
 ];
