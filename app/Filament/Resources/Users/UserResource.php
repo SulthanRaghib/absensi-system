@@ -45,9 +45,9 @@ class UserResource extends Resource
                         Forms\TextInput::make('password')
                             ->label('Password')
                             ->password()
-                            ->required(fn ($context) => $context === 'create')
-                            ->dehydrateStateUsing(fn ($state) => Hash::make($state))
-                            ->dehydrated(fn ($state) => filled($state))
+                            ->required(fn($context) => $context === 'create')
+                            ->dehydrateStateUsing(fn($state) => Hash::make($state))
+                            ->dehydrated(fn($state) => filled($state))
                             ->maxLength(255)
                             ->helperText('Kosongkan jika tidak ingin mengubah password'),
 
@@ -109,6 +109,7 @@ class UserResource extends Resource
                     ]),
             ])
             ->actions([
+                Actions\ViewAction::make(),
                 Actions\EditAction::make(),
                 Actions\DeleteAction::make(),
             ])
