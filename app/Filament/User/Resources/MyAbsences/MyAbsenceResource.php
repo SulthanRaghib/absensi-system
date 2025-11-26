@@ -150,6 +150,10 @@ class MyAbsenceResource extends Resource
                     ->label('Bulan Ini')
                     ->query(fn(Builder $query) => $query->whereMonth('tanggal', now()->month))
                     ->default(),
+                Tables\Filters\Filter::make('semua_data')
+                    ->label('Semua Data')
+                    ->query(fn(Builder $query) => $query),
+
             ])
             ->actions([
                 Actions\ViewAction::make(),
