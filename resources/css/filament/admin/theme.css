@@ -1,4 +1,23 @@
-@import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import "../../../../vendor/filament/filament/resources/css/theme.css";
 
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
+
+/* Brand logo sizing override: keep logo height consistent across login pages */
+.filament-brand img,
+.filament-brand-logo,
+.filament-brand-logo img {
+    max-height: 48px;
+    height: 48px;
+    width: auto;
+}
+
+/* Smaller breakpoint variant */
+@media (max-width: 640px) {
+    .filament-brand img,
+    .filament-brand-logo,
+    .filament-brand-logo img {
+        max-height: 40px;
+        height: 40px;
+    }
+}
