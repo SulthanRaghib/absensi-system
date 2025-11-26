@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 </head>
+
 <body class="bg-gray-100">
     <div class="min-h-screen py-8">
         <div class="max-w-4xl mx-auto px-4">
@@ -20,7 +22,8 @@
             <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
-                        <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                        <div
+                            class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
                             {{ strtoupper(substr($user->name, 0, 1)) }}
                         </div>
                         <div>
@@ -78,7 +81,8 @@
                     </div>
                 </div>
 
-                <button id="btn-get-location" class="w-full mt-4 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded-lg transition">
+                <button id="btn-get-location"
+                    class="w-full mt-4 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded-lg transition">
                     📍 Ambil Lokasi Saya
                 </button>
             </div>
@@ -100,6 +104,41 @@
 
             <!-- Alert Container -->
             <div id="alert-container" class="mt-6"></div>
+
+            <!-- Location Permission Modal -->
+            <div id="location-modal"
+                class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center"
+                style="z-index: 1000">
+                <div class="relative p-5 border w-96 shadow-lg rounded-md bg-white">
+                    <div class="mt-3 text-center">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                            <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Aktifkan Lokasi</h3>
+                        <div class="mt-2 px-2 py-3">
+                            <p class="text-sm text-gray-500">
+                                Aplikasi ini memerlukan izin lokasi Anda untuk melakukan absensi. Silakan klik tombol di
+                                bawah untuk mengizinkan.
+                            </p>
+                        </div>
+                        <div class="items-center px-4 py-3">
+                            <button id="btn-confirm-location"
+                                class="w-full px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                Izinkan Lokasi
+                            </button>
+                            <button id="btn-cancel-location"
+                                class="mt-3 w-full px-4 py-2 bg-gray-100 text-gray-700 text-base font-medium rounded-md shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                                Batal
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -170,22 +209,48 @@
             const Δλ = (lon2 - lon1) * Math.PI / 180;
 
             const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-                      Math.cos(φ1) * Math.cos(φ2) *
-                      Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
             return R * c;
         }
 
         // Get User Location
-        document.getElementById('btn-get-location').addEventListener('click', function() {
+        const locationModal = document.getElementById('location-modal');
+        const btnGetLocation = document.getElementById('btn-get-location');
+        const btnConfirmLocation = document.getElementById('btn-confirm-location');
+        const btnCancelLocation = document.getElementById('btn-cancel-location');
+
+        function toggleModal(show) {
+            if (show) {
+                locationModal.classList.remove('hidden');
+            } else {
+                locationModal.classList.add('hidden');
+            }
+        }
+
+        btnGetLocation.addEventListener('click', function() {
+            toggleModal(true);
+        });
+
+        btnCancelLocation.addEventListener('click', function() {
+            toggleModal(false);
+        });
+
+        btnConfirmLocation.addEventListener('click', function() {
+            toggleModal(false);
+            getLocation();
+        });
+
+        function getLocation() {
             if (!navigator.geolocation) {
                 showAlert('Browser Anda tidak mendukung GPS!', 'error');
                 return;
             }
 
-            this.innerHTML = '⏳ Mengambil lokasi...';
-            this.disabled = true;
+            btnGetLocation.innerHTML = '⏳ Mengambil lokasi...';
+            btnGetLocation.disabled = true;
 
             navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -195,9 +260,11 @@
 
                     // Validate accuracy
                     if (accuracy > MAX_ACCURACY) {
-                        showAlert(`Akurasi GPS terlalu buruk (${accuracy.toFixed(2)}m). Harap aktifkan GPS dengan baik!`, 'error');
-                        document.getElementById('btn-get-location').innerHTML = '📍 Coba Lagi';
-                        document.getElementById('btn-get-location').disabled = false;
+                        showAlert(
+                            `Akurasi GPS terlalu buruk (${accuracy.toFixed(2)}m). Harap aktifkan GPS dengan baik!`,
+                            'error');
+                        btnGetLocation.innerHTML = '📍 Coba Lagi';
+                        btnGetLocation.disabled = false;
                         return;
                     }
 
@@ -225,17 +292,24 @@
                     map.setView([lat, lng], 16);
 
                     // Store location
-                    userLocation = { lat, lng, accuracy, distance };
+                    userLocation = {
+                        lat,
+                        lng,
+                        accuracy,
+                        distance
+                    };
 
                     // Show status
                     if (distance <= OFFICE_RADIUS) {
                         showAlert(`✓ Lokasi valid! Jarak: ${distance.toFixed(2)}m dari kantor.`, 'success');
                     } else {
-                        showAlert(`✗ Lokasi terlalu jauh! Jarak: ${distance.toFixed(2)}m (Maks: ${OFFICE_RADIUS}m)`, 'error');
+                        showAlert(
+                            `✗ Lokasi terlalu jauh! Jarak: ${distance.toFixed(2)}m (Maks: ${OFFICE_RADIUS}m)`,
+                            'error');
                     }
 
-                    document.getElementById('btn-get-location').innerHTML = '✓ Lokasi Berhasil Diambil';
-                    document.getElementById('btn-get-location').disabled = false;
+                    btnGetLocation.innerHTML = '✓ Lokasi Berhasil Diambil';
+                    btnGetLocation.disabled = false;
                 },
                 (error) => {
                     let message = 'Gagal mengambil lokasi!';
@@ -244,16 +318,15 @@
                     if (error.code === 3) message = 'Timeout mengambil lokasi!';
 
                     showAlert(message, 'error');
-                    document.getElementById('btn-get-location').innerHTML = '📍 Ambil Lokasi Saya';
-                    document.getElementById('btn-get-location').disabled = false;
-                },
-                {
+                    btnGetLocation.innerHTML = '📍 Ambil Lokasi Saya';
+                    btnGetLocation.disabled = false;
+                }, {
                     enableHighAccuracy: true,
                     timeout: 10000,
                     maximumAge: 0
                 }
             );
-        });
+        }
 
         // Check In
         document.getElementById('btn-check-in').addEventListener('click', async function() {
@@ -266,7 +339,7 @@
             this.innerHTML = '⏳ Memproses...';
 
             try {
-                const response = await fetch('{{ route("absensi.check-in") }}', {
+                const response = await fetch('{{ route('absensi.check-in') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -309,7 +382,7 @@
             this.innerHTML = '⏳ Memproses...';
 
             try {
-                const response = await fetch('{{ route("absensi.check-out") }}', {
+                const response = await fetch('{{ route('absensi.check-out') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -346,4 +419,5 @@
         });
     </script>
 </body>
+
 </html>
