@@ -8,6 +8,7 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\View\PanelsRenderHook;
+use Filament\Facades\Filament;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -28,6 +29,10 @@ class UserPanelProvider extends PanelProvider
             ->id('user')
             ->path('user')
             ->login()
+            ->spa()
+            ->brandLogo(asset('images/Logo_bapeten.png'))
+            ->brandLogoHeight('5rem')
+            ->brandName('Absensi Maganghub - BAPETEN')
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -55,6 +60,7 @@ class UserPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, fn() => view('filament.auth.back-button', ['home' => route('home')])->render());
+            ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE, fn() => Filament::getCurrentPanel()?->getId() === 'user' ? view('filament.auth.login-heading')->render() : '')
+            ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, fn() => Filament::getCurrentPanel()?->getId() === 'user' ? view('filament.auth.back-button', ['home' => route('home')])->render() : '');
     }
 }

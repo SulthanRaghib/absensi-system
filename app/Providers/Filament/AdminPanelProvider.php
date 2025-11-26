@@ -2,12 +2,14 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Widgets\AdminAttendanceWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\View\PanelsRenderHook;
+use Filament\Facades\Filament;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -29,6 +31,10 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->spa()
+            ->brandLogo(asset('images/Logo_bapeten.png'))
+            ->brandLogoHeight('5rem')
+            ->brandName('Absensi Maganghub - BAPETEN')
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -42,6 +48,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 AccountWidget::class,
                 FilamentInfoWidget::class,
+                AdminAttendanceWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -57,6 +64,7 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, fn() => view('filament.auth.back-button', ['home' => route('home')])->render());
+            ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE, fn() => Filament::getCurrentPanel()?->getId() === 'admin' ? view('filament.auth.login-heading')->render() : '')
+            ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, fn() => Filament::getCurrentPanel()?->getId() === 'admin' ? view('filament.auth.back-button', ['home' => route('home')])->render() : '');
     }
 }
