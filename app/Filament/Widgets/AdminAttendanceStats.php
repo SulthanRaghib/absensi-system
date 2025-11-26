@@ -50,7 +50,7 @@ class AdminAttendanceStats extends BaseWidget
         }
 
         // additional counts: mentors (jabatan) and users by role
-        $totalMentors = User::where('jabatan', 'mentor')->count();
+        $totalMentors = User::where('jabatan', 'like', '%mentor%')->count();
         $totalRoleUsers = User::where('role', 'user')->count();
 
         return [
