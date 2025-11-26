@@ -112,14 +112,14 @@ class AbsenceResource extends Resource
                 Tables\Columns\TextColumn::make('jam_masuk')
                     ->label('Jam Masuk')
                     ->time('H:i')
-                    ->default('-')
+                    ->placeholder('-')
                     ->badge()
                     ->color('success'),
 
                 Tables\Columns\TextColumn::make('jam_pulang')
                     ->label('Jam Pulang')
                     ->time('H:i')
-                    ->default('-')
+                    ->placeholder('-')
                     ->badge()
                     ->color('info'),
 
