@@ -45,7 +45,7 @@
 
     <!-- Top Navigation Bar -->
     <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-gray-200 px-4 py-3">
-        <div class="max-w-md mx-auto flex items-center justify-between">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
             <a href="{{ route('dashboard') }}"
                 class="p-2 -ml-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
@@ -59,144 +59,164 @@
         </div>
     </nav>
 
-    <main class="flex-grow px-4 py-6 max-w-md mx-auto w-full space-y-6">
+    <main class="flex-grow px-4 py-6 max-w-7xl mx-auto w-full">
 
-        <!-- Profile Section -->
-        <div class="flex items-center space-x-4">
-            <div class="relative">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+
+            <!-- Left Column: Profile, Status, Actions -->
+            <div class="md:col-span-5 lg:col-span-4 space-y-6">
+
+                <!-- Profile Section -->
                 <div
-                    class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-blue-500/30">
-                    {{ strtoupper(substr($user->name, 0, 1)) }}
-                </div>
-                <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full"></div>
-            </div>
-            <div>
-                <h1 class="text-xl font-bold text-gray-900 leading-tight">{{ $user->name }}</h1>
-                <p class="text-sm text-gray-500 font-medium">{{ $user->email }}</p>
-                <p class="text-xs text-blue-600 font-semibold mt-1 bg-blue-50 inline-block px-2 py-0.5 rounded-md">
-                    {{ now()->isoFormat('dddd, D MMMM Y') }}
-                </p>
-            </div>
-        </div>
-
-        <!-- Attendance Status Card -->
-        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Status Hari Ini</h2>
-                @if ($todayAbsence?->jam_masuk && $todayAbsence?->jam_pulang)
-                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">Selesai</span>
-                @elseif($todayAbsence?->jam_masuk)
-                    <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">Bekerja</span>
-                @else
-                    <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full">Belum Absen</span>
-                @endif
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <!-- Check In Time -->
-                <div
-                    class="bg-green-50/50 rounded-2xl p-4 border border-green-100 flex flex-col items-center justify-center text-center">
-                    <div class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center mb-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                        </svg>
+                    class="flex items-center space-x-4 bg-white p-4 rounded-3xl shadow-sm border border-gray-100 md:bg-transparent md:shadow-none md:border-0 md:p-0">
+                    <div class="relative">
+                        <div
+                            class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-blue-500/30">
+                            {{ strtoupper(substr($user->name, 0, 1)) }}
+                        </div>
+                        <div
+                            class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full">
+                        </div>
                     </div>
-                    <span class="text-xs text-gray-500 font-medium mb-0.5">Jam Masuk</span>
-                    <span id="jam-masuk-display" class="text-xl font-bold text-gray-900 tracking-tight">
-                        {{ $todayAbsence?->jam_masuk ? $todayAbsence->jam_masuk->format('H:i') : '--:--' }}
-                    </span>
-                </div>
-
-                <!-- Check Out Time -->
-                <div
-                    class="bg-orange-50/50 rounded-2xl p-4 border border-orange-100 flex flex-col items-center justify-center text-center">
-                    <div
-                        class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mb-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                    </div>
-                    <span class="text-xs text-gray-500 font-medium mb-0.5">Jam Pulang</span>
-                    <span id="jam-pulang-display" class="text-xl font-bold text-gray-900 tracking-tight">
-                        {{ $todayAbsence?->jam_pulang ? $todayAbsence->jam_pulang->format('H:i') : '--:--' }}
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Map & Location Section -->
-        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="p-5 pb-0 flex justify-between items-center">
-                <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Lokasi Anda</h2>
-                <button id="btn-get-location"
-                    class="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1 bg-blue-50 px-3 py-1.5 rounded-full transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    <span>Update Lokasi</span>
-                </button>
-            </div>
-
-            <div class="p-5">
-                <div id="map" class="h-48 w-full rounded-2xl map-container bg-gray-100 mb-4 z-0"></div>
-
-                <div class="grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
-                    <div class="flex flex-col">
-                        <span class="text-xs text-gray-400">Latitude</span>
-                        <span id="lat-display" class="font-mono font-medium text-gray-700">-</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-xs text-gray-400">Longitude</span>
-                        <span id="lng-display" class="font-mono font-medium text-gray-700">-</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-xs text-gray-400">Akurasi</span>
-                        <span id="accuracy-display" class="font-mono font-medium text-gray-700">-</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-xs text-gray-400">Jarak Kantor</span>
-                        <span id="distance-display" class="font-mono font-medium text-gray-700">-</span>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900 leading-tight">{{ $user->name }}</h1>
+                        <p class="text-sm text-gray-500 font-medium">{{ $user->email }}</p>
+                        <p
+                            class="text-xs text-blue-600 font-semibold mt-1 bg-blue-50 inline-block px-2 py-0.5 rounded-md">
+                            {{ now()->isoFormat('dddd, D MMMM Y') }}
+                        </p>
                     </div>
                 </div>
+
+                <!-- Attendance Status Card -->
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Status Hari Ini</h2>
+                        @if ($todayAbsence?->jam_masuk && $todayAbsence?->jam_pulang)
+                            <span
+                                class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">Selesai</span>
+                        @elseif($todayAbsence?->jam_masuk)
+                            <span
+                                class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">Bekerja</span>
+                        @else
+                            <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full">Belum
+                                Absen</span>
+                        @endif
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Check In Time -->
+                        <div
+                            class="bg-green-50/50 rounded-2xl p-4 border border-green-100 flex flex-col items-center justify-center text-center">
+                            <div
+                                class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                </svg>
+                            </div>
+                            <span class="text-xs text-gray-500 font-medium mb-0.5">Jam Masuk</span>
+                            <span id="jam-masuk-display" class="text-xl font-bold text-gray-900 tracking-tight">
+                                {{ $todayAbsence?->jam_masuk ? $todayAbsence->jam_masuk->format('H:i') : '--:--' }}
+                            </span>
+                        </div>
+
+                        <!-- Check Out Time -->
+                        <div
+                            class="bg-orange-50/50 rounded-2xl p-4 border border-orange-100 flex flex-col items-center justify-center text-center">
+                            <div
+                                class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                            </div>
+                            <span class="text-xs text-gray-500 font-medium mb-0.5">Jam Pulang</span>
+                            <span id="jam-pulang-display" class="text-xl font-bold text-gray-900 tracking-tight">
+                                {{ $todayAbsence?->jam_pulang ? $todayAbsence->jam_pulang->format('H:i') : '--:--' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="grid grid-cols-2 gap-4">
+                    <button id="btn-check-in"
+                        class="btn-action group relative w-full flex flex-col items-center justify-center p-4 rounded-2xl bg-gray-900 text-white shadow-lg shadow-gray-900/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none overflow-hidden"
+                        {{ $todayAbsence?->jam_masuk ? 'disabled' : '' }}>
+                        <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                        </div>
+                        <div
+                            class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mb-2 group-disabled:bg-white/10">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                            </svg>
+                        </div>
+                        <span class="font-semibold">Absen Masuk</span>
+                    </button>
+
+                    <button id="btn-check-out"
+                        class="btn-action group relative w-full flex flex-col items-center justify-center p-4 rounded-2xl bg-white text-gray-900 border border-gray-200 shadow-sm hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50"
+                        {{ !$todayAbsence?->jam_masuk || $todayAbsence?->jam_pulang ? 'disabled' : '' }}>
+                        <div
+                            class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-2 group-disabled:bg-gray-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                        </div>
+                        <span class="font-semibold">Absen Pulang</span>
+                    </button>
+                </div>
             </div>
-        </div>
 
-        <!-- Action Buttons -->
-        <div class="grid grid-cols-2 gap-4 pt-2">
-            <button id="btn-check-in"
-                class="btn-action group relative w-full flex flex-col items-center justify-center p-4 rounded-2xl bg-gray-900 text-white shadow-lg shadow-gray-900/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none overflow-hidden"
-                {{ $todayAbsence?->jam_masuk ? 'disabled' : '' }}>
-                <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div
-                    class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mb-2 group-disabled:bg-white/10">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                    </svg>
-                </div>
-                <span class="font-semibold">Absen Masuk</span>
-            </button>
+            <!-- Right Column: Map -->
+            <div class="md:col-span-7 lg:col-span-8 h-full">
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden h-full flex flex-col">
+                    <div class="p-5 pb-0 flex justify-between items-center shrink-0">
+                        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Lokasi Anda</h2>
+                        <button id="btn-get-location"
+                            class="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1 bg-blue-50 px-3 py-1.5 rounded-full transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <span>Update Lokasi</span>
+                        </button>
+                    </div>
 
-            <button id="btn-check-out"
-                class="btn-action group relative w-full flex flex-col items-center justify-center p-4 rounded-2xl bg-white text-gray-900 border border-gray-200 shadow-sm hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50"
-                {{ !$todayAbsence?->jam_masuk || $todayAbsence?->jam_pulang ? 'disabled' : '' }}>
-                <div
-                    class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-2 group-disabled:bg-gray-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
+                    <div class="p-5 flex-grow flex flex-col">
+                        <div id="map"
+                            class="w-full rounded-2xl map-container bg-gray-100 mb-4 z-0 flex-grow min-h-[300px] md:min-h-[400px]">
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-y-3 gap-x-4 text-sm shrink-0">
+                            <div class="flex flex-col">
+                                <span class="text-xs text-gray-400">Latitude</span>
+                                <span id="lat-display" class="font-mono font-medium text-gray-700">-</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-xs text-gray-400">Longitude</span>
+                                <span id="lng-display" class="font-mono font-medium text-gray-700">-</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-xs text-gray-400">Akurasi</span>
+                                <span id="accuracy-display" class="font-mono font-medium text-gray-700">-</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-xs text-gray-400">Jarak Kantor</span>
+                                <span id="distance-display" class="font-mono font-medium text-gray-700">-</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <span class="font-semibold">Absen Pulang</span>
-            </button>
+            </div>
         </div>
 
         <!-- Alert Container -->
@@ -363,6 +383,14 @@
                 return;
             }
 
+            // Check for secure context (HTTPS)
+            if (window.location.protocol !== 'https:' &&
+                window.location.hostname !== 'localhost' &&
+                window.location.hostname !== '127.0.0.1') {
+                showAlert('Akses lokasi memerlukan koneksi HTTPS (aman). Silakan gunakan HTTPS atau localhost.', 'error');
+                return;
+            }
+
             const originalBtnText = btnGetLocation.innerHTML;
             btnGetLocation.innerHTML = `
                 <svg class="animate-spin h-3 w-3 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -443,10 +471,16 @@
                     btnGetLocation.disabled = false;
                 },
                 (error) => {
+                    console.error('Geolocation error:', error);
                     let message = 'Gagal mengambil lokasi.';
-                    if (error.code === 1) message = 'Izin lokasi ditolak.';
-                    if (error.code === 2) message = 'Sinyal GPS tidak ditemukan.';
-                    if (error.code === 3) message = 'Waktu permintaan habis.';
+                    if (error.code === 1) {
+                        message = 'Izin lokasi ditolak. Pastikan GPS aktif dan izin browser diberikan.';
+                        if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+                            message += ' (Wajib HTTPS)';
+                        }
+                    }
+                    if (error.code === 2) message = 'Sinyal GPS tidak ditemukan. Pastikan GPS aktif.';
+                    if (error.code === 3) message = 'Waktu permintaan habis. Coba lagi.';
 
                     showAlert(message, 'error');
                     btnGetLocation.innerHTML = originalBtnText;
