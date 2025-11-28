@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AbsenceExportController;
 use App\Http\Controllers\AbsensiController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -35,4 +36,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/check-out', [AbsensiController::class, 'checkOut'])->name('check-out');
         Route::get('/office-location', [AbsensiController::class, 'getOfficeLocation'])->name('office-location');
     });
+
+    // Export Route
+    Route::get('/custom-exports/absences/monthly', [AbsenceExportController::class, 'export'])->name('absences.export-monthly');
 });
