@@ -60,9 +60,16 @@ class UserResource extends Resource
                             ->default('user')
                             ->required(),
 
-                        Forms\TextInput::make('jabatan')
+                        Forms\Select::make('jabatan_id')
                             ->label('Jabatan')
-                            ->maxLength(255),
+                            ->relationship('jabatan', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->createOptionForm([
+                                Forms\TextInput::make('name')
+                                    ->required()
+                                    ->maxLength(255),
+                            ]),
                     ])
                     ->columns(2),
             ]);
@@ -89,7 +96,7 @@ class UserResource extends Resource
                         'success' => 'user',
                     ]),
 
-                Tables\Columns\TextColumn::make('jabatan')
+                Tables\Columns\TextColumn::make('jabatan.name')
                     ->label('Jabatan')
                     ->searchable()
                     ->default('-'),

@@ -24,13 +24,12 @@ class AbsenceExportController extends Controller
             $query->where('id', $userId);
         }
 
-        $users = $query->with(['absences' => function ($query) use ($month, $year) {
+        $users = $query->with(['jabatan', 'absences' => function ($query) use ($month, $year) {
             $query->whereMonth('tanggal', $month)
                 ->whereYear('tanggal', $year);
         }])
             ->orderBy('name')
             ->get();
-
         if ($userId) {
             $user = User::find($userId);
             if ($user) {
