@@ -52,6 +52,9 @@ class DatabaseSeeder extends Seeder
             'jabatan_id' => $jabatanSDM->id,
         ]);
 
+        // run JabatanSeeder
+        $this->call(JabatanSeeder::class);
+
         $this->command->info('✓ Users seeded successfully!');
         $this->command->info('');
         $this->command->info('Login credentials:');
