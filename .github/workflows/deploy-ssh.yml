@@ -41,16 +41,14 @@ jobs:
       - name: 🔑 Configure SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          # Menggunakan printf untuk menangani newline dengan lebih baik
+          printf "%s\n" "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          cat >>~/.ssh/config <<END
-          Host production
-            HostName ${{ secrets.SSH_HOST }}
-            User ${{ secrets.SSH_USER }}
-            Port ${{ secrets.SSH_PORT }}
-            IdentityFile ~/.ssh/deploy_key
-            StrictHostKeyChecking no
-          END
+
+          # Debug: Cek format key (Header & Footer saja agar aman)
+          echo "Checking Key Format..."
+          head -n 1 ~/.ssh/deploy_key
+          tail -n 1 ~/.ssh/deploy_key
 
       # DEBUGGING
       - name: 🔍 Debug Secrets (Check Empty)
@@ -62,21 +60,15 @@ jobs:
           echo "✅ All required secrets are present!"
 
       # 5. Kirim File menggunakan RSYNC (Cepat & Cerdas)
-      # Mengirim folder 'public/build' (hasil npm run build) dan code lainnya
-      # Mengecualikan file yang tidak perlu atau file sensitif (.env)
-      # 5. Kirim File menggunakan RSYNC (Versi Aman Spasi)
       - name: 📤 Rsync Deploy to Server
         run: |
-          # Bersihkan variabel dari spasi/newline yang tidak sengaja ter-copy
-          CLEAN_USER=$(echo "${{ secrets.SSH_USER }}" | xargs)
-          CLEAN_HOST=$(echo "${{ secrets.SSH_HOST }}" | xargs)
-          CLEAN_PORT=$(echo "${{ secrets.SSH_PORT }}" | xargs)
-          CLEAN_DIR=$(echo "${{ secrets.TARGET_DIR }}" | xargs)
+          echo "🚀 Starting deployment to ${{ secrets.SSH_HOST }}..."
 
-          echo "🚀 Starting deployment to $CLEAN_HOST..."
+          # Test koneksi SSH dulu sebelum rsync
+          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo '✅ SSH Connection Successful'"
 
           rsync -avz --delete \
-            -e "ssh -p $CLEAN_PORT -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            -e "ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
             --exclude='.git/' \
             --exclude='.github/' \
             --exclude='.env' \
@@ -86,7 +78,7 @@ jobs:
             --exclude='storage/framework/cache/*' \
             --exclude='storage/framework/views/*' \
             --exclude='storage/logs/*' \
-            ./ "$CLEAN_USER@$CLEAN_HOST:$CLEAN_DIR"
+            ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.TARGET_DIR }}
 
       # 6. Eksekusi Perintah Laravel di Server (Remote Command)
       # Ini bagian 'Advanced'-nya: Migrate & Optimize otomatis!
