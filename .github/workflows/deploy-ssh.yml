@@ -64,10 +64,19 @@ jobs:
       # 5. Kirim File menggunakan RSYNC (Cepat & Cerdas)
       # Mengirim folder 'public/build' (hasil npm run build) dan code lainnya
       # Mengecualikan file yang tidak perlu atau file sensitif (.env)
+      # 5. Kirim File menggunakan RSYNC (Versi Aman Spasi)
       - name: 📤 Rsync Deploy to Server
         run: |
+          # Bersihkan variabel dari spasi/newline yang tidak sengaja ter-copy
+          CLEAN_USER=$(echo "${{ secrets.SSH_USER }}" | xargs)
+          CLEAN_HOST=$(echo "${{ secrets.SSH_HOST }}" | xargs)
+          CLEAN_PORT=$(echo "${{ secrets.SSH_PORT }}" | xargs)
+          CLEAN_DIR=$(echo "${{ secrets.TARGET_DIR }}" | xargs)
+
+          echo "🚀 Starting deployment to $CLEAN_HOST..."
+
           rsync -avz --delete \
-            -e "ssh -vvv -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no"
+            -e "ssh -p $CLEAN_PORT -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
             --exclude='.git/' \
             --exclude='.github/' \
             --exclude='.env' \
@@ -77,7 +86,7 @@ jobs:
             --exclude='storage/framework/cache/*' \
             --exclude='storage/framework/views/*' \
             --exclude='storage/logs/*' \
-            ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.TARGET_DIR }}
+            ./ "$CLEAN_USER@$CLEAN_HOST:$CLEAN_DIR"
 
       # 6. Eksekusi Perintah Laravel di Server (Remote Command)
       # Ini bagian 'Advanced'-nya: Migrate & Optimize otomatis!
