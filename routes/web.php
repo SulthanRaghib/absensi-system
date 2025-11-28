@@ -6,6 +6,8 @@ use App\Http\Controllers\DirectAttendanceController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+use App\Models\Setting;
+
 // Landing / login choice
 Route::get('/', function () {
     if (Auth::check()) {
@@ -15,16 +17,20 @@ Route::get('/', function () {
             : redirect('/user');
     }
 
+    $officeLocation = Setting::getOfficeLocation();
+
     // Show a simple choice page that emphasizes User login but provides Admin login too
-    return view('auth.choice');
+    return view('auth.choice', compact('officeLocation'));
 })->name('home');
 
 // Keep a named `login` route for compatibility and point it to the same choice page
 Route::get('/login', function () {
-    return view('auth.choice');
+    $officeLocation = Setting::getOfficeLocation();
+    return view('auth.choice', compact('officeLocation'));
 })->name('login');
 
 Route::post('/attendance/direct', [DirectAttendanceController::class, 'store'])->name('attendance.direct');
+Route::post('/attendance/check-status', [DirectAttendanceController::class, 'checkStatus'])->name('attendance.check-status');
 
 Route::middleware(['auth'])->group(function () {
     // Dashboard

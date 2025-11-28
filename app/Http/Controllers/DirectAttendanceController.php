@@ -18,6 +18,57 @@ class DirectAttendanceController extends Controller
         $this->geoService = $geoService;
     }
 
+    public function checkStatus(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        $credentials = $request->only('email', 'password');
+
+        if (!Auth::validate($credentials)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Email atau password salah.',
+            ], 401);
+        }
+
+        $user = User::where('email', $request->email)->first();
+        $today = now()->toDateString();
+
+        $absence = Absence::where('user_id', $user->id)
+            ->whereDate('tanggal', $today)
+            ->first();
+
+        if (!$absence) {
+            return response()->json([
+                'status' => 'check-in',
+                'message' => 'Anda akan melakukan Absen Masuk.',
+                'user_name' => $user->name,
+            ]);
+        } elseif ($absence->jam_masuk && !$absence->jam_pulang) {
+            return response()->json([
+                'status' => 'check-out',
+                'message' => 'Anda sudah Absen Masuk pada ' . $absence->jam_masuk->format('H:i') . '. Apakah Anda ingin Absen Pulang sekarang?',
+                'user_name' => $user->name,
+                'jam_masuk' => $absence->jam_masuk->format('H:i'),
+            ]);
+        } elseif (!$absence->jam_masuk) {
+            return response()->json([
+                'status' => 'check-in',
+                'message' => 'Anda akan melakukan Absen Masuk.',
+                'user_name' => $user->name,
+            ]);
+        } else {
+            return response()->json([
+                'status' => 'completed',
+                'message' => 'Anda sudah menyelesaikan absensi hari ini (Masuk & Pulang).',
+                'user_name' => $user->name,
+            ]);
+        }
+    }
+
     public function store(Request $request)
     {
         $request->validate([
