@@ -185,5 +185,3 @@ Ikuti langkah berikut untuk menjalankan proyek di lingkungan lokal:
 <p align="center">
 Dibuat dengan ❤️ untuk efisiensi manajemen SDM.
 </p>
-
---- tes CICD
