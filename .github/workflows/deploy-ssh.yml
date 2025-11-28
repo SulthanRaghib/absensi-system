@@ -3,7 +3,7 @@ name: 🚀 Advanced Deploy via SSH
 on:
   push:
     branches:
-      - main # Sesuaikan dengan branch utama Anda
+      - master # Sesuaikan dengan branch utama Anda
 
 jobs:
   deploy:
