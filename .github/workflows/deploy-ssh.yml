@@ -52,6 +52,15 @@ jobs:
             StrictHostKeyChecking no
           END
 
+      # DEBUGGING
+      - name: 🔍 Debug Secrets (Check Empty)
+        run: |
+          if [ -z "${{ secrets.SSH_HOST }}" ]; then echo "❌ Error: Secret SSH_HOST is empty"; exit 1; fi
+          if [ -z "${{ secrets.SSH_USER }}" ]; then echo "❌ Error: Secret SSH_USER is empty"; exit 1; fi
+          if [ -z "${{ secrets.TARGET_DIR }}" ]; then echo "❌ Error: Secret TARGET_DIR is empty"; exit 1; fi
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then echo "❌ Error: Secret SSH_PRIVATE_KEY is empty"; exit 1; fi
+          echo "✅ All required secrets are present!"
+
       # 5. Kirim File menggunakan RSYNC (Cepat & Cerdas)
       # Mengirim folder 'public/build' (hasil npm run build) dan code lainnya
       # Mengecualikan file yang tidak perlu atau file sensitif (.env)
