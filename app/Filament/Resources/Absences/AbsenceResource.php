@@ -161,9 +161,11 @@ class AbsenceResource extends Resource
                 Filter::make('tanggal')
                     ->form([
                         Forms\DatePicker::make('dari')
-                            ->label('Dari Tanggal'),
+                            ->label('Dari Tanggal')
+                            ->default(today()),
                         Forms\DatePicker::make('sampai')
-                            ->label('Sampai Tanggal'),
+                            ->label('Sampai Tanggal')
+                            ->default(today()),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
