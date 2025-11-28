@@ -1,59 +1,187 @@
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
+# 📍 Sistem Absensi & Manajemen Kepegawaian (Auth Service Focus)
+
+![Laravel](https://img.shields.io/badge/Laravel-v12-FF2D20?style=for-the-badge&logo=laravel)
+![Filament](https://img.shields.io/badge/Filament-v4-F2C94C?style=for-the-badge&logo=laravel)
+![Livewire](https://img.shields.io/badge/Livewire-v3-4E56A6?style=for-the-badge&logo=livewire)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v3-38B2AC?style=for-the-badge&logo=tailwind-css)
+
+> **Sistem Absensi Modern** yang terintegrasi dengan validasi Geolocation, dan dashboard admin yang _powerful_ menggunakan FilamentPHP.
+
+---
+
+## 📋 Daftar Isi
+
+1. [Tentang Proyek](#-tentang-proyek)
+2. [Fitur Unggulan](#-fitur-unggulan)
+3. [Arsitektur & Teknologi](#-arsitektur--teknologi)
+4. [Struktur Project](#-struktur-project)
+5. [Layanan Autentikasi (Auth Service)](#-layanan-autentikasi-auth-service-deep-dive)
+6. [Instalasi & Konfigurasi](#-instalasi--konfigurasi)
+
+---
+
+## 📖 Tentang Proyek
+
+Aplikasi ini dirancang untuk mempermudah proses pencatatan kehadiran karyawan dengan validasi lokasi yang akurat. Dibangun di atas ekosistem **TALL Stack** (Tailwind, Alpine, Laravel, Livewire), sistem ini menawarkan performa tinggi dengan _load time_ yang cepat berkat implementasi SPA (Single Page Application) mode pada Filament.
+
+Sistem ini memisahkan logika antara **Administrator** (Manajemen Data) dan **User/Karyawan** (Pencatatan Absensi) untuk menjaga keamanan dan kenyamanan penggunaan.
+
+---
+
+## 🚀 Fitur Unggulan
+
+### 🔐 Authentication & Security
+
+-   **Multi-Guard Login:** Pemisahan akses antara Admin Panel dan User Panel.
+-   **Quick Attendance Mode (Absen Langsung):** Fitur unik di mana karyawan bisa melakukan absen cepat melalui modal popup tanpa perlu masuk ke dashboard penuh.
+-   **Role-Based Access Control:** Manajemen hak akses berdasarkan jabatan (Admin, Staff, dll).
+
+### 📍 Attendance & Tracking
+
+-   **Geo-Location Validation:** Validasi koordinat GPS saat _Check-in_ dan _Check-out_ menggunakan `GeoLocationService`.
+-   **Real-time Status:** Deteksi otomatis status "Terlambat" (Late) atau "Tepat Waktu".
+-   **Export Data:** Kemampuan unduh laporan absensi ke format Excel/CSV secara efisien.
+
+### 📊 Dashboard & Management
+
+-   **Interactive Widgets:** Grafik statistik kehadiran 7 hari terakhir.
+-   **User Management:** CRUD lengkap untuk data pengguna dan jabatan.
+-   **Settings Management:** Konfigurasi global sistem yang dinamis.
+
+---
+
+## 🛠 Arsitektur & Teknologi
+
+Project ini dibangun menggunakan teknologi mutakhir untuk menjamin skalabilitas:
+
+| Komponen        | Teknologi         | Deskripsi                                                   |
+| :-------------- | :---------------- | :---------------------------------------------------------- |
+| **Framework**   | Laravel 12        | Core backend framework yang robust dan aman.                |
+| **Admin Panel** | Filament 4        | Generator dashboard admin dan form builder.                 |
+| **Frontend**    | Blade & Alpine.js | Templating engine dan interaktivitas ringan (modal, state). |
+| **Styling**     | Tailwind CSS      | Utility-first CSS framework untuk desain responsif.         |
+| **Database**    | MySQL             | Penyimpanan data relasional (User, Absensi, Jabatan).       |
+
+---
+
+## 📂 Struktur Project
+
+Berikut adalah susunan direktori utama yang perlu dipahami pengembang:
+
+```bash
+├── app
+│   ├── Filament
+│   │   ├── Resources       # Logika CRUD (Absence, User, Jabatan)
+│   │   ├── Widgets         # Komponen Statistik Dashboard
+│   │   └── Exports         # Logika Export Excel (AbsenceExporter)
+│   ├── Http
+│   │   ├── Controllers     # Autentikasi & Logika Absensi Cepat
+│   │   └── Middleware      # Validasi Request
+│   ├── Models              # Eloquent Models (Absence, User, Setting)
+│   └── Services            # Business Logic (GeoLocationService)
+├── database
+│   ├── migrations          # Skema Database
+│   └── seeders             # Data Awal (Admin, Jabatan Dummy)
+├── resources
+│   └── views
+│       ├── auth            # Tampilan Login & Choice Page
+│       └── filament        # Custom View untuk Widget/Component
+└── routes                  # Definisi Jalur URL (web.php, api.php)
+```
+
+---
+
+## 🔐 Layanan Autentikasi (Auth Service) Deep Dive
+
+Bagian ini menjelaskan alur unik autentikasi pada sistem ini yang terdapat pada `resources/views/auth/choice.blade.php`.
+
+### 1\. Halaman Pilihan (Choice Page)
+
+Sebelum masuk, pengguna disuguhkan halaman landing (`/`) yang memberikan opsi navigasi:
+
+-   **Masuk sebagai Admin:** Mengarahkan ke `/admin/login`.
+-   **Masuk sebagai Karyawan:** Mengarahkan ke `/app/login` (User Panel).
+-   **Absen Langsung (Quick Action):** Tombol khusus untuk efisiensi.
+
+### 2\. Fitur "Absen Langsung"
+
+Fitur ini menggunakan **Alpine.js** dan **AJAX** untuk mempercepat proses.
+
+-   **Mekanisme:** Saat tombol diklik, sebuah Modal Popup muncul.
+-   **Input:** User memasukkan Email & Password.
+-   **Proses:** Sistem memvalidasi kredensial di `AbsensiController`.
+-   **Hasil:**
+    -   _Sukses:_ Absensi tercatat, user diarahkan ke halaman sukses/ringkasan.
+    -   _Gagal:_ Pesan error muncul di modal tanpa reload halaman.
+
+### 3\. Panel Dashboard (Filament)
+
+Sistem menggunakan `AdminPanelProvider` dan `UserPanelProvider` untuk memisahkan _scope_ akses. Ini memastikan karyawan tidak bisa mengakses menu konfigurasi sistem yang sensitif.
+
+---
+
+## ⚙️ Instalasi & Konfigurasi
+
+Ikuti langkah berikut untuk menjalankan proyek di lingkungan lokal:
+
+### Prasyarat
+
+-   PHP \>= 8.2
+-   Composer
+-   Node.js & NPM
+-   MySQL Server
+
+### Langkah-langkah
+
+1.  **Clone Repository**
+
+    ```bash
+    git clone [https://github.com/username/absensi-system.git](https://github.com/username/absensi-system.git)
+    cd absensi-system
+    ```
+
+2.  **Install Dependencies**
+
+    ```bash
+    composer install
+    npm install
+    ```
+
+3.  **Konfigurasi Environment**
+    Salin file `.env.example` menjadi `.env` dan atur koneksi database:
+
+    ```bash
+    cp .env.example .env
+    # Edit DB_DATABASE, DB_USERNAME, DB_PASSWORD di file .env
+    ```
+
+4.  **Generate Key & Migrate**
+
+    ```bash
+    php artisan key:generate
+    php artisan migrate --seed
+    ```
+
+    _\> Perintah `--seed` akan membuat akun Admin default dan data Jabatan awal._
+
+5.  **Build Aset Frontend**
+
+    ```bash
+    npm run build
+    ```
+
+6.  **Jalankan Server**
+
+    ```bash
+    php artisan serve
+    ```
+
+    Akses aplikasi di `http://127.0.0.1:8000`.
+
+---
+
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+Dibuat dengan ❤️ untuk efisiensi manajemen SDM.
 </p>
-
-## About Laravel
-
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
