@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AbsenceExportController;
 use App\Http\Controllers\AbsensiController;
+use App\Http\Controllers\DirectAttendanceController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +23,8 @@ Route::get('/', function () {
 Route::get('/login', function () {
     return view('auth.choice');
 })->name('login');
+
+Route::post('/attendance/direct', [DirectAttendanceController::class, 'store'])->name('attendance.direct');
 
 Route::middleware(['auth'])->group(function () {
     // Dashboard
