@@ -8,4 +8,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateAbsence extends CreateRecord
 {
     protected static string $resource = AbsenceResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }
