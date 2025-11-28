@@ -15,8 +15,18 @@ jobs:
       - name: 🚚 Checkout Code
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js untuk Build Frontend (Vite/Tailwind)
-      # Kita build di sini agar hosting tidak perlu install Node.js yang berat
+      # 2. Setup PHP & Install Composer Dependencies
+      # Penting: Composer install harus dilakukan SEBELUM npm run build
+      # karena Filament membutuhkan file CSS dari folder vendor/
+      - name: 🔵 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+
+      - name: 🧶 Install Composer Dependencies (Local)
+        run: composer install --prefer-dist --no-ansi --no-interaction --no-progress --no-scripts
+
+      # 3. Setup Node.js untuk Build Frontend (Vite/Tailwind)
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -26,15 +36,6 @@ jobs:
         run: |
           npm install
           npm run build
-
-      # 3. Setup PHP (Hanya untuk validasi composer di runner, opsional)
-      - name: 🔵 Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.2"
-
-      - name: 🧶 Install Composer Dependencies (Local)
-        run: composer install --prefer-dist --no-ansi --no-interaction --no-progress --no-scripts
 
       # 4. Siapkan SSH Key di Runner Sementara
       - name: 🔑 Configure SSH
