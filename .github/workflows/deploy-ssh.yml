@@ -58,6 +58,7 @@ jobs:
       - name: 📤 Rsync Deploy to Server
         run: |
           rsync -avz --delete \
+            -e "ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
             --exclude='.git/' \
             --exclude='.github/' \
             --exclude='.env' \
@@ -67,7 +68,7 @@ jobs:
             --exclude='storage/framework/cache/*' \
             --exclude='storage/framework/views/*' \
             --exclude='storage/logs/*' \
-            ./ production:${{ secrets.TARGET_DIR }}
+            ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.TARGET_DIR }}
 
       # 6. Eksekusi Perintah Laravel di Server (Remote Command)
       # Ini bagian 'Advanced'-nya: Migrate & Optimize otomatis!
