@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Jabatan;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -13,13 +14,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Create Jabatans
+        $mentorSDM = Jabatan::create(['name' => 'Mentor']);
+        $jabatanSDM = Jabatan::create(['name' => 'Pranata Komputer']);
+
         // Create Admin User
         User::create([
             'name' => 'Administrator',
             'email' => 'admin@absensi.com',
             'password' => Hash::make('password'),
             'role' => 'admin',
-            'jabatan' => 'Administrator',
+            'jabatan_id' => $mentorSDM->id,
         ]);
 
         User::create([
@@ -27,7 +32,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'dimas@maganghub.com',
             'password' => Hash::make('password'),
             'role' => 'admin',
-            'jabatan' => 'Staff IT',
+            'jabatan_id' => $mentorSDM->id,
         ]);
         // Create Sample Users
 
@@ -36,7 +41,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'tahta@gmail.com',
             'password' => Hash::make('password'),
             'role' => 'user',
-            'jabatan' => 'SDM Pranata Komputer',
+            'jabatan_id' => $jabatanSDM->id,
         ]);
 
         User::create([
@@ -44,7 +49,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'raghib@gmail.com',
             'password' => Hash::make('password'),
             'role' => 'user',
-            'jabatan' => 'SDM Pranata Komputer',
+            'jabatan_id' => $jabatanSDM->id,
         ]);
 
         $this->command->info('✓ Users seeded successfully!');
