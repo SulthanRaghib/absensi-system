@@ -1,0 +1,106 @@
+name: 🚀 Advanced Deploy via SSH
+
+on:
+  push:
+    branches:
+      - main # Sesuaikan dengan branch utama Anda
+
+jobs:
+  deploy:
+    name: 🚧 Build & Deploy to Server
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Ambil Kodingan Terbaru
+      - name: 🚚 Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js untuk Build Frontend (Vite/Tailwind)
+      # Kita build di sini agar hosting tidak perlu install Node.js yang berat
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 📦 Install NPM & Build Assets
+        run: |
+          npm install
+          npm run build
+
+      # 3. Setup PHP (Hanya untuk validasi composer di runner, opsional)
+      - name: 🔵 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+
+      - name: 🧶 Install Composer Dependencies (Local)
+        run: composer install --prefer-dist --no-ansi --no-interaction --no-progress --no-scripts
+
+      # 4. Siapkan SSH Key di Runner Sementara
+      - name: 🔑 Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          cat >>~/.ssh/config <<END
+          Host production
+            HostName ${{ secrets.SSH_HOST }}
+            User ${{ secrets.SSH_USER }}
+            Port ${{ secrets.SSH_PORT }}
+            IdentityFile ~/.ssh/deploy_key
+            StrictHostKeyChecking no
+          END
+
+      # 5. Kirim File menggunakan RSYNC (Cepat & Cerdas)
+      # Mengirim folder 'public/build' (hasil npm run build) dan code lainnya
+      # Mengecualikan file yang tidak perlu atau file sensitif (.env)
+      - name: 📤 Rsync Deploy to Server
+        run: |
+          rsync -avz --delete \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.env' \
+            --exclude='.env.example' \
+            --exclude='node_modules/' \
+            --exclude='storage/framework/sessions/*' \
+            --exclude='storage/framework/cache/*' \
+            --exclude='storage/framework/views/*' \
+            --exclude='storage/logs/*' \
+            ./ production:${{ secrets.TARGET_DIR }}
+
+      # 6. Eksekusi Perintah Laravel di Server (Remote Command)
+      # Ini bagian 'Advanced'-nya: Migrate & Optimize otomatis!
+      - name: 🚀 Run Remote Commands
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd ${{ secrets.TARGET_DIR }}
+
+            # Matikan aplikasi sebentar (Maintenance Mode)
+            php artisan down --render="errors::503" || true
+
+            # Install dependency PHP di server (memastikan kecocokan platform)
+            # Jika hosting membatasi RAM, tambahkan flag --ignore-platform-reqs jika perlu
+            composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+
+            # Jalankan Migrasi Database
+            php artisan migrate --force
+
+            # Bersihkan dan Cache Konfigurasi
+            php artisan optimize:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan filament:optimize # Khusus Filament v3/v4
+
+            # Storage Link (Hanya perlu sekali, tapi aman dijalankan ulang)
+            php artisan storage:link
+
+            # Nyalakan kembali aplikasi
+            php artisan up
+
+            echo "✅ Deployment Successfully Finished!"
