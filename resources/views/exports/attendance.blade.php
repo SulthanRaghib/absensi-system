@@ -47,12 +47,13 @@
     <table>
         <!-- Header Rows -->
         <tr>
-            <td colspan="{{ 2 + $daysInMonth * 2 + 2 }}" class="header-title" style="border: none;">Heading Bapeten</td>
+            <td colspan="{{ 2 + $daysInMonth * 2 + 2 }}" class="header-title" style="border: none;">Rekapitulasi Kehadiran
+                Peserta Magang</td>
         </tr>
-        <tr>
+        {{-- <tr>
             <td colspan="{{ 2 + $daysInMonth * 2 + 2 }}" class="header-subtitle" style="border: none;">Laporan Absensi
                 Pegawai</td>
-        </tr>
+        </tr> --}}
         <tr>
             <td colspan="{{ 2 + $daysInMonth * 2 + 2 }}" class="header-subtitle" style="border: none;">Periode:
                 {{ $monthName }} {{ $year }}</td>
