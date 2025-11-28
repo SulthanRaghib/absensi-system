@@ -34,10 +34,10 @@ class AbsenceExportController extends Controller
         if ($userId) {
             $user = User::find($userId);
             if ($user) {
-                $filename = 'Laporan_Absensi_' . $user->name . '_' . $startDate->format('F_Y') . '.xlsx';
+                $filename = 'Laporan_Absensi_' . $user->name . '_' . $startDate->format('F_Y') . '.xls';
             }
         } else {
-            $filename = 'Laporan_Absensi_' . $startDate->format('F_Y') . '.xlsx';
+            $filename = 'Laporan_Absensi_' . $startDate->format('F_Y') . '.xls';
         }
 
         // Default jam masuk kantor senin-jumat: 7.30
