@@ -23,7 +23,7 @@ class User extends Authenticatable implements FilamentUser
         'email',
         'password',
         'role',
-        'jabatan',
+        'jabatan_id',
     ];
 
     /**
@@ -52,6 +52,11 @@ class User extends Authenticatable implements FilamentUser
     public function absences(): HasMany
     {
         return $this->hasMany(Absence::class);
+    }
+
+    public function jabatan()
+    {
+        return $this->belongsTo(Jabatan::class);
     }
 
     /**
