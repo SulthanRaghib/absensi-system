@@ -195,4 +195,60 @@
             }
         }));
     });
+
+    function loginForm() {
+        return {
+            email: '',
+            password: '',
+            remember: false,
+            isLoading: false,
+            errorMessage: '',
+
+            async submitLogin() {
+                this.errorMessage = '';
+                this.isLoading = true;
+
+                // Simulate small delay for UX consistency
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                if (!this.email || !this.password) {
+                    this.errorMessage = 'Email dan Password wajib diisi.';
+                    this.isLoading = false;
+                    return;
+                }
+
+                try {
+                    const response = await fetch('{{ route('login.perform') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            email: this.email,
+                            password: this.password,
+                            remember: this.remember
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        window.location.href = data.redirect;
+                    } else {
+                        this.errorMessage = data.message || 'Terjadi kesalahan saat login.';
+                        if (data.errors && data.errors.email) {
+                            this.errorMessage = data.errors.email[0];
+                        }
+                    }
+                } catch (error) {
+                    this.errorMessage = 'Terjadi kesalahan jaringan. Silakan coba lagi.';
+                    console.error(error);
+                } finally {
+                    this.isLoading = false;
+                }
+            }
+        }
+    }
 </script>

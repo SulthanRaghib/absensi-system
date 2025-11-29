@@ -2,32 +2,18 @@
 
 use App\Http\Controllers\AbsenceExportController;
 use App\Http\Controllers\AbsensiController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DirectAttendanceController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-use App\Models\Setting;
+// Authentication Routes
+Route::get('/login', [AuthController::class, 'login'])->name('login');
+Route::post('/login', [AuthController::class, 'authenticate'])->name('login.perform');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Landing / login choice
-Route::get('/', function () {
-    if (Auth::check()) {
-        // Redirect based on role
-        return Auth::user()->role === 'admin'
-            ? redirect('/admin')
-            : redirect('/user');
-    }
-
-    $officeLocation = Setting::getOfficeLocation();
-
-    // Show a simple choice page that emphasizes User login but provides Admin login too
-    return view('auth.choice', compact('officeLocation'));
-})->name('home');
-
-// Keep a named `login` route for compatibility and point it to the same choice page
-Route::get('/login', function () {
-    $officeLocation = Setting::getOfficeLocation();
-    return view('auth.choice', compact('officeLocation'));
-})->name('login');
+// Redirect root to choice page
+Route::get('/', [AuthController::class, 'login'])->name('home');
 
 Route::post('/attendance/direct', [DirectAttendanceController::class, 'store'])->name('attendance.direct');
 Route::post('/attendance/check-status', [DirectAttendanceController::class, 'checkStatus'])->name('attendance.check-status');
@@ -37,6 +23,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         return redirect('/user');
     })->name('dashboard');
+
 
     // Absensi Routes
     Route::prefix('absensi')->name('absensi.')->group(function () {
