@@ -35,7 +35,8 @@ class JabatanSeeder extends Seeder
             'Analis Radiasi',
             'Analis Kajian Fasilitas Radiasi',
             'Statiska',
-            'Evaluator'
+            'Evaluator',
+            'Mentor'
         ];
 
         foreach ($jabatans as $name) {

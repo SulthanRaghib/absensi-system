@@ -15,8 +15,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Create Jabatans
-        $mentorSDM = Jabatan::create(['name' => 'Mentor']);
-        $jabatanSDM = Jabatan::create(['name' => 'Pranata Komputer']);
+        $mentorSDM = Jabatan::where('name', 'Mentor')->first();
+        $jabatanPranataKomputer = Jabatan::where('name', 'Pranata Komputer')->first();
 
         // Create Admin User
         User::create([
@@ -41,7 +41,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'tahta@gmail.com',
             'password' => Hash::make('password'),
             'role' => 'user',
-            'jabatan_id' => $jabatanSDM->id,
+            'jabatan_id' => $jabatanPranataKomputer->id,
         ]);
 
         User::create([
@@ -49,7 +49,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'raghib@gmail.com',
             'password' => Hash::make('password'),
             'role' => 'user',
-            'jabatan_id' => $jabatanSDM->id,
+            'jabatan_id' => $jabatanPranataKomputer->id,
         ]);
 
         // run JabatanSeeder
