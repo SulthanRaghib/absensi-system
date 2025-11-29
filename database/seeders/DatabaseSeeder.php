@@ -14,6 +14,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // run JabatanSeeder
+        $this->call(JabatanSeeder::class);
+
         // Create Jabatans
         $mentorSDM = Jabatan::where('name', 'Mentor')->first();
         $jabatanPranataKomputer = Jabatan::where('name', 'Pranata Komputer')->first();
@@ -51,9 +54,6 @@ class DatabaseSeeder extends Seeder
             'role' => 'user',
             'jabatan_id' => $jabatanPranataKomputer->id,
         ]);
-
-        // run JabatanSeeder
-        $this->call(JabatanSeeder::class);
 
         $this->command->info('✓ Users seeded successfully!');
         $this->command->info('');
