@@ -14,6 +14,14 @@ class Setting extends Model
     ];
 
     /**
+     * Check if radius check is enabled
+     */
+    public static function isRadiusEnabled(): bool
+    {
+        return self::get('radius_enabled', true);
+    }
+
+    /**
      * Get setting value by key
      */
     public static function get(string $key, $default = null)

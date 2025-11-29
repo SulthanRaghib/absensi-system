@@ -12,6 +12,7 @@ use Filament\Schemas\Components as Schemas;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class SettingResource extends Resource
 {
@@ -22,6 +23,14 @@ class SettingResource extends Resource
     protected static ?string $navigationLabel = 'Pengaturan Lokasi';
 
     protected static ?int $navigationSort = 3;
+
+    /**
+     * Only admin can access settings
+     */
+    public static function canViewAny(): bool
+    {
+        return Auth::user()?->role === 'admin';
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -34,13 +43,31 @@ class SettingResource extends Resource
                             ->label('Kunci Pengaturan')
                             ->required()
                             ->unique(ignoreRecord: true)
-                            ->disabled(fn ($context) => $context === 'edit')
+                            ->disabled(fn($context) => $context === 'edit')
                             ->helperText('Format: office_latitude, office_longitude, office_radius'),
 
+                        // Handle generic value input
                         Forms\TextInput::make('value')
                             ->label('Nilai')
                             ->required()
+                            ->hidden(fn($get) => $get('type') === 'boolean')
                             ->helperText('Masukkan nilai sesuai tipe data'),
+
+                        // Handle boolean toggle
+                        Forms\Toggle::make('value_boolean')
+                            ->label(fn($state) => $state ? 'Status: Aktif' : 'Status: Non-Aktif')
+                            ->visible(fn($get) => $get('type') === 'boolean')
+                            ->live()
+                            ->afterStateHydrated(function ($component, $state, $record) {
+                                // Load state from the actual 'value' column
+                                if ($record) {
+                                    $component->state($record->value === 'true' || $record->value === '1');
+                                }
+                            })
+                            ->dehydrated(fn($state) => $state ? 'true' : 'false') // Save directly to 'value'
+                            ->statePath('value')
+                            ->onColor('success')
+                            ->offColor('danger'),
 
                         Forms\Select::make('type')
                             ->label('Tipe Data')
@@ -51,7 +78,8 @@ class SettingResource extends Resource
                                 'boolean' => 'Boolean',
                             ])
                             ->default('string')
-                            ->required(),
+                            ->required()
+                            ->live(), // Make it reactive to show/hide value input
 
                         Forms\Textarea::make('description')
                             ->label('Deskripsi')
@@ -80,6 +108,9 @@ class SettingResource extends Resource
                         if ($record->type === 'number') {
                             return number_format((float)$state, 6);
                         }
+                        if ($record->type === 'boolean') {
+                            return filter_var($state, FILTER_VALIDATE_BOOLEAN) ? 'Aktif' : 'Tidak Aktif';
+                        }
                         return $state;
                     })
                     ->copyable(),
@@ -96,7 +127,7 @@ class SettingResource extends Resource
                 Tables\Columns\TextColumn::make('description')
                     ->label('Deskripsi')
                     ->limit(50)
-                    ->tooltip(fn ($record) => $record->description),
+                    ->tooltip(fn($record) => $record->description),
 
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Terakhir Diubah')

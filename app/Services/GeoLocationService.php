@@ -55,6 +55,16 @@ class GeoLocationService
             $office['longitude']
         );
 
+        // Check if radius is enabled
+        if (!Setting::isRadiusEnabled()) {
+            return [
+                'valid' => true,
+                'distance' => $distance,
+                'message' => "Radius check disabled. Jarak: {$distance} meter.",
+                'office_location' => $office,
+            ];
+        }
+
         $isValid = $distance <= $office['radius'];
 
         return [
