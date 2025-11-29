@@ -32,7 +32,14 @@ class DatabaseSeeder extends Seeder
 
         User::create([
             'name' => 'Dimas',
-            'email' => 'dimas@maganghub.com',
+            'email' => 'dimas@mentor.com',
+            'password' => Hash::make('password'),
+            'role' => 'admin',
+            'jabatan_id' => $mentorSDM->id,
+        ]);
+        User::create([
+            'name' => 'Supeni',
+            'email' => 'supeni@mentor.com',
             'password' => Hash::make('password'),
             'role' => 'admin',
             'jabatan_id' => $mentorSDM->id,
@@ -42,7 +49,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Tahta',
             'email' => 'tahta@gmail.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('123456'),
             'role' => 'user',
             'jabatan_id' => $jabatanPranataKomputer->id,
         ]);
@@ -50,7 +57,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Raghib',
             'email' => 'raghib@gmail.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('123456'),
             'role' => 'user',
             'jabatan_id' => $jabatanPranataKomputer->id,
         ]);
@@ -59,7 +66,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('');
         $this->command->info('Login credentials:');
         $this->command->info('Admin: admin@absensi.com / password');
-        $this->command->info('User: tahta@gmail.com / password');
-        $this->command->info('User: raghib@gmail.com / password');
+        $this->command->info('User: tahta@gmail.com / 123456');
+        $this->command->info('User: raghib@gmail.com / 123456');
     }
 }
