@@ -13,7 +13,7 @@
                 </svg>
             </div>
             <div>
-                <div class="text-sm font-medium">Karyawan Telat</div>
+                <div class="text-sm font-medium">Pegawai Telat</div>
                 <div class="text-xs text-gray-400">Jumlah: <span class="font-semibold">{{ $late->count() }}</span>
                 </div>
             </div>
@@ -22,7 +22,7 @@
     </div>
 
     @if ($late->isEmpty())
-        <div class="text-sm text-gray-500">Semua karyawan hadir tepat waktu hari ini.</div>
+        <div class="text-sm text-gray-500">Semua Pegawai hadir tepat waktu hari ini.</div>
     @else
         <ol class="list-decimal pl-6 space-y-2">
             @foreach ($late as $idx => $r)

@@ -73,7 +73,7 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="text-sm font-medium">Karyawan Telat</div>
+                        <div class="text-sm font-medium">Pegawai Telat</div>
                         <div class="text-xs text-gray-400">Jumlah: <span
                                 class="font-semibold">{{ $lateCount }}</span></div>
                     </div>
@@ -96,7 +96,7 @@
                     @endforeach
                 </div>
             @else
-                <div class="text-sm text-gray-500">Semua karyawan hadir tepat waktu hari ini.</div>
+                <div class="text-sm text-gray-500">Semua Pegawai hadir tepat waktu hari ini.</div>
             @endif
         </div>
 
