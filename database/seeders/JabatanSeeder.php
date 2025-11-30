@@ -19,12 +19,12 @@ class JabatanSeeder extends Seeder
             'Sekretaris',
             'Analisis Organisasi',
             'Analisis Sarana dan Prasarana',
-            'Analisis Barang Milik Negara',
+            'Analis Barang Milik Negara',
             'Pengelola Administrasi Perkantoran',
             'Analisis Pengembangan Kompetensi',
             'Pranata Hubungan Masyarakat',
-            'Analisis Bantuan Hukum',
-            'Analisis Pengawasan Penyelenggaraan Urusan Pemerintah',
+            'Analis Bantuan Hukum',
+            'Analis Pengawasan Penyelenggaraan Urusan Pemerintahan',
             'Analis Sistem Pembelajaran',
             'Pengelola Administrasi Peraturan',
             'Analis Pengawas Fasilitas Radiasi',
@@ -34,13 +34,16 @@ class JabatanSeeder extends Seeder
             'Analis Penganggaran',
             'Analis Radiasi',
             'Analis Kajian Fasilitas Radiasi',
-            'Statiska',
+            'Statistika',
             'Evaluator',
             'Mentor'
         ];
 
         foreach ($jabatans as $name) {
-            Jabatan::create(['name' => $name]);
+            Jabatan::updateOrCreate(
+                ['name' => $name], // Match by name
+                ['name' => $name]  // Update/Create values
+            );
         }
 
         $this->command->info('✓ Jabatans seeded successfully!');
