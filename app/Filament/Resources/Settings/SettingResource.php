@@ -13,12 +13,15 @@ use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 
 class SettingResource extends Resource
 {
     protected static ?string $model = Setting::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
+
+    protected static string | UnitEnum | null $navigationGroup = 'Data Master';
 
     protected static ?string $navigationLabel = 'Pengaturan Lokasi';
 
