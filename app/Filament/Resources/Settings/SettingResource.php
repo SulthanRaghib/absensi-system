@@ -39,6 +39,18 @@ class SettingResource extends Resource
                 Schemas\Section::make('Pengaturan Lokasi Kantor')
                     ->description('Atur koordinat dan radius absensi')
                     ->schema([
+                        Forms\Select::make('type')
+                            ->label('Tipe Data')
+                            ->options([
+                                'string' => 'String',
+                                'number' => 'Number',
+                                'json' => 'JSON',
+                                'boolean' => 'Boolean',
+                            ])
+                            ->default('string')
+                            ->required()
+                            ->live(), // Make it reactive to show/hide value input
+
                         Forms\TextInput::make('key')
                             ->label('Kunci Pengaturan')
                             ->required()
@@ -51,6 +63,7 @@ class SettingResource extends Resource
                             ->label('Nilai')
                             ->required()
                             ->hidden(fn($get) => $get('type') === 'boolean')
+                            ->dehydrated(true) // Ensure it is always saved, even if hidden (for boolean sync)
                             ->helperText('Masukkan nilai sesuai tipe data'),
 
                         // Handle boolean toggle
@@ -59,27 +72,18 @@ class SettingResource extends Resource
                             ->visible(fn($get) => $get('type') === 'boolean')
                             ->live()
                             ->afterStateHydrated(function ($component, $state, $record) {
-                                // Load state from the actual 'value' column
-                                if ($record) {
+                                // Only hydrate if the type is actually boolean
+                                if ($record && $record->type === 'boolean') {
                                     $component->state($record->value === 'true' || $record->value === '1');
                                 }
                             })
-                            ->dehydrated(fn($state) => $state ? 'true' : 'false') // Save directly to 'value'
-                            ->statePath('value')
+                            ->dehydrated(false) // Do not save this field directly
+                            ->afterStateUpdated(function ($state, $set) {
+                                // Sync the boolean state to the 'value' field
+                                $set('value', $state ? 'true' : 'false');
+                            })
                             ->onColor('success')
                             ->offColor('danger'),
-
-                        Forms\Select::make('type')
-                            ->label('Tipe Data')
-                            ->options([
-                                'string' => 'String',
-                                'number' => 'Number',
-                                'json' => 'JSON',
-                                'boolean' => 'Boolean',
-                            ])
-                            ->default('string')
-                            ->required()
-                            ->live(), // Make it reactive to show/hide value input
 
                         Forms\Textarea::make('description')
                             ->label('Deskripsi')
