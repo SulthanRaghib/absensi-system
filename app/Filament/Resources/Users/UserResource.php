@@ -70,6 +70,12 @@ class UserResource extends Resource
                                     ->required()
                                     ->maxLength(255),
                             ]),
+
+                        Forms\Select::make('unit_kerja_id')
+                            ->label('Unit Kerja')
+                            ->relationship('unitKerja', 'name')
+                            ->searchable()
+                            ->preload(),
                     ])
                     ->columns(2),
             ]);

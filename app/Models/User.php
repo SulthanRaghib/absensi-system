@@ -24,6 +24,7 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'role',
         'jabatan_id',
+        'unit_kerja_id',
     ];
 
     /**
@@ -57,6 +58,11 @@ class User extends Authenticatable implements FilamentUser
     public function jabatan()
     {
         return $this->belongsTo(Jabatan::class);
+    }
+
+    public function unitKerja()
+    {
+        return $this->belongsTo(UnitKerja::class);
     }
 
     /**
