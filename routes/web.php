@@ -4,6 +4,7 @@ use App\Http\Controllers\AbsenceExportController;
 use App\Http\Controllers\AbsensiController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DirectAttendanceController;
+use App\Filament\Pages\Auth\InternRegister;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -11,6 +12,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate'])->name('login.perform');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Intern Registration Routes
+Route::get('/intern-register/{token}', InternRegister::class)->name('register.intern');
 
 // Redirect root to choice page
 Route::get('/', [AuthController::class, 'login'])->name('home');
