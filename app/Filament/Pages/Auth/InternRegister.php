@@ -4,6 +4,7 @@ namespace App\Filament\Pages\Auth;
 
 use App\Models\Jabatan;
 use App\Models\RegistrationLink;
+use App\Models\UnitKerja;
 use Filament\Actions\Action;
 use Filament\Auth\Http\Responses\Contracts\RegistrationResponse;
 use Filament\Forms\Components\Select;
@@ -54,6 +55,12 @@ class InternRegister extends BaseRegister
                     ->required()
                     ->searchable()
                     ->preload(),
+                Select::make('unit_kerja_id')
+                    ->label('Unit Kerja')
+                    ->options(UnitKerja::all()->pluck('name', 'id'))
+                    ->required()
+                    ->searchable()
+                    ->preload(),
                 $this->getPasswordFormComponent(),
                 $this->getPasswordConfirmationFormComponent(),
             ]);
@@ -67,6 +74,7 @@ class InternRegister extends BaseRegister
             'password' => $data['password'],
             'role' => 'user',
             'jabatan_id' => $data['jabatan_id'],
+            'unit_kerja_id' => $data['unit_kerja_id'],
         ]);
 
         return $user;
