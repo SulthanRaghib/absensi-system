@@ -493,39 +493,37 @@
             );
         }
 
-        // Check In Action
-        document.getElementById('btn-check-in').addEventListener('click', async function() {
-            if (!userLocation) {
-                toggleModal(true);
-                return;
-            }
+        // Pending action when requesting location
+        let pendingAction = null;
 
-            const btn = this;
+        async function performAttendance(action, payload) {
+            const isCheckIn = action === 'in';
+            const url = isCheckIn ? '{{ route('absensi.check-in') }}' : '{{ route('absensi.check-out') }}';
+            const btn = isCheckIn ? document.getElementById('btn-check-in') : document.getElementById('btn-check-out');
             const originalContent = btn.innerHTML;
+
             btn.disabled = true;
-            btn.innerHTML =
-                `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+            btn.innerHTML = isCheckIn ?
+                `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle></svg>` :
+                `<svg class="animate-spin h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle></svg>`;
 
             try {
-                const response = await fetch('{{ route('absensi.check-in') }}', {
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
-                    body: JSON.stringify({
-                        latitude: userLocation.lat,
-                        longitude: userLocation.lng,
-                        accuracy: userLocation.accuracy
-                    })
+                    body: JSON.stringify(payload)
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    showAlert('Berhasil Check-in!', 'success');
-                    document.getElementById('jam-masuk-display').textContent = data.data.jam_masuk;
-                    setTimeout(() => location.reload(), 1500); // Reload to update state cleanly
+                    showAlert(isCheckIn ? 'Berhasil Check-in!' : 'Berhasil Check-out!', 'success');
+                    if (isCheckIn) document.getElementById('jam-masuk-display').textContent = data.data.jam_masuk;
+                    else document.getElementById('jam-pulang-display').textContent = data.data.jam_pulang;
+                    setTimeout(() => location.reload(), 1500);
                 } else {
                     showAlert(data.message, 'error');
                     btn.innerHTML = originalContent;
@@ -536,6 +534,20 @@
                 btn.innerHTML = originalContent;
                 btn.disabled = false;
             }
+        }
+
+        document.getElementById('btn-check-in').addEventListener('click', function() {
+            if (!userLocation) {
+                pendingAction = 'in';
+                toggleModal(true);
+                return;
+            }
+
+            performAttendance('in', {
+                latitude: userLocation.lat,
+                longitude: userLocation.lng,
+                accuracy: userLocation.accuracy
+            });
         });
 
         // Check Out Action

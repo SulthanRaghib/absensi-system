@@ -13,12 +13,12 @@ class ListMyAbsences extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('absensi')
-                ->label('Lakukan Absensi')
-                ->icon('heroicon-o-finger-print')
-                ->color('success')
-                ->url(route('absensi.index'))
-                ->openUrlInNewTab(false),
+            // Action::make('absensi')
+            //     ->label('Lakukan Absensi')
+            //     ->icon('heroicon-o-finger-print')
+            //     ->color('success')
+            //     ->url(route('absensi.index'))
+            //     ->openUrlInNewTab(false),
         ];
     }
 }
