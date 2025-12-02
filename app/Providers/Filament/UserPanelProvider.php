@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\User\Auth\EditProfile;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -33,7 +34,7 @@ class UserPanelProvider extends PanelProvider
             ->brandLogo(asset('images/Logo_bapeten.png'))
             ->brandLogoHeight('5rem')
             ->brandName('Absensi Maganghub - BAPETEN')
-            ->profile(isSimple: false)
+            ->profile(EditProfile::class)
             ->colors([
                 'primary' => Color::Amber,
             ])
