@@ -8,6 +8,13 @@ use App\Filament\Pages\Auth\InternRegister;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\RobotsController;
+
+// SEO Routes
+Route::get('/sitemap.xml', [SitemapController::class, 'index']);
+Route::get('/robots.txt', RobotsController::class);
+
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate'])->name('login.perform');
