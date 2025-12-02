@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Masuk — Absensi</title>
 
+    <meta name="google-site-verification" content="D7lwUHT9cSFPvvz6Ad11J0QBbCgBTe7hi_0Lc7OfY3E" />
+
     <!-- Tailwind (Keep existing) -->
     <script src="https://cdn.tailwindcss.com"></script>
 

@@ -5,6 +5,8 @@
     <x-seo-head title="Sistem Absensi BAPETEN"
         description="Portal Absensi Maganghub BAPETEN - Kelola kehadiran magang dengan mudah." />
 
+    <meta name="google-site-verification" content="D7lwUHT9cSFPvvz6Ad11J0QBbCgBTe7hi_0Lc7OfY3E" />
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
