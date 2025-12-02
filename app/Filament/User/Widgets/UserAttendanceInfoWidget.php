@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 
 class UserAttendanceInfoWidget extends BaseWidget
 {
+    protected ?string $pollingInterval = null;
+
     protected function getStats(): array
     {
         $user = Auth::user();

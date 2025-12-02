@@ -11,6 +11,8 @@ class AdminLateListWidget extends Widget
 {
     protected static ?int $sort = 4;
 
+    protected ?string $pollingInterval = null;
+
     /** @var view-string */
     protected string $view = 'filament.widgets.admin-late-list';
 

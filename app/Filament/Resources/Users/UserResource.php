@@ -12,6 +12,7 @@ use Filament\Schemas\Components as Schemas;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
@@ -23,6 +24,11 @@ class UserResource extends Resource
     protected static ?string $navigationLabel = 'Pengguna';
 
     protected static ?int $navigationSort = 1;
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with(['jabatan']);
+    }
 
     public static function form(Schema $schema): Schema
     {

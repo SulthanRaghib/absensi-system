@@ -9,6 +9,8 @@ class AdminLast7Chart extends ChartWidget
 {
     protected static ?int $sort = 11;
 
+    protected ?string $pollingInterval = null;
+
     // occupy 4 columns (right side)
     protected int | string | array $columnSpan = 11;
 
