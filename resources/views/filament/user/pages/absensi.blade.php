@@ -174,8 +174,8 @@
                 <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden h-full flex flex-col">
                     <div class="p-5 pb-0 flex justify-between items-center shrink-0">
                         <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Lokasi Anda</h2>
-                        <button @click="startTracking()"
-                            class="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1 bg-blue-50 px-3 py-1.5 rounded-full transition-colors">
+                        <button @click="manualUpdateLocation()"
+                            class="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1 bg-blue-50 px-3 py-1.5 rounded-full transition-colors cursor-pointer active:bg-blue-100">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
                                 viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -280,7 +280,7 @@
                     init() {
                         this.$nextTick(() => {
                             this.initMap();
-                            this.startTracking();
+                            this.startTracking(true); // Center map on init
                         });
                     },
 
@@ -316,7 +316,12 @@
                         }).addTo(this.map);
                     },
 
-                    startTracking() {
+                    manualUpdateLocation() {
+                        this.showAlert('Mencari lokasi terkini...', 'info');
+                        this.startTracking(true);
+                    },
+
+                    startTracking(centerOnUpdate = false) {
                         if (!navigator.geolocation) {
                             this.showAlert('Browser tidak mendukung GPS!', 'error');
                             return;
@@ -340,6 +345,14 @@
                                     distance
                                 };
                                 this.updateMapMarker(lat, lng);
+
+                                if (centerOnUpdate) {
+                                    this.map.setView([lat, lng], 18);
+                                    // Only show alert if it was a manual update (we can infer this if needed, or just show it)
+                                    // But init also calls this with true. We might not want an alert on init.
+                                    // Let's just center.
+                                    centerOnUpdate = false;
+                                }
                             },
                             (error) => {
                                 console.error('Geolocation error:', error);
