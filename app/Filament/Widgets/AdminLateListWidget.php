@@ -17,7 +17,7 @@ class AdminLateListWidget extends Widget
     protected string $view = 'filament.widgets.admin-late-list';
 
     // full width
-    protected int | string | array $columnSpan = 4;
+    protected int | string | array $columnSpan = 6;
 
     public function getLateRecords(): Collection
     {

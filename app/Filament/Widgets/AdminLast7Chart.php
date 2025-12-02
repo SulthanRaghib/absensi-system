@@ -7,12 +7,12 @@ use Filament\Widgets\ChartWidget;
 
 class AdminLast7Chart extends ChartWidget
 {
-    protected static ?int $sort = 11;
+    protected static ?int $sort = 6;
 
     protected ?string $pollingInterval = null;
 
     // occupy 4 columns (right side)
-    protected int | string | array $columnSpan = 11;
+    protected int | string | array $columnSpan = 12;
 
     // fix max height so it doesn't force the adjacent widget to stretch
     protected ?string $maxHeight = '20rem';

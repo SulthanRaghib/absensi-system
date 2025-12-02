@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Widgets\AdminAttendanceStats;
 use App\Filament\Widgets\AdminLateListWidget;
+use App\Filament\Widgets\AdminAbsentListWidget;
 use App\Filament\Widgets\AdminLast7Chart;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -51,6 +52,7 @@ class AdminPanelProvider extends PanelProvider
                 // AccountWidget::class,
                 AdminAttendanceStats::class,
                 AdminLateListWidget::class,
+                AdminAbsentListWidget::class,
                 AdminLast7Chart::class,
             ])
             ->middleware([

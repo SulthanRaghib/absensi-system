@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Cache;
 
 class AdminAttendanceStats extends BaseWidget
 {
-    protected static ?int $sort = -1;
+    protected static ?int $sort = 1;
 
     protected ?string $pollingInterval = null;
 
@@ -59,6 +59,13 @@ class AdminAttendanceStats extends BaseWidget
             })->count();
             $totalRoleUsers = User::where('role', 'user')->count();
 
+            // Calculate absent for role 'user' only
+            $absentRoleUsers = User::where('role', 'user')
+                ->whereDoesntHave('absences', function ($query) use ($today) {
+                    $query->whereDate('tanggal', $today)->whereNotNull('jam_masuk');
+                })
+                ->count();
+
             return [
                 Stat::make('Total Pengguna', $totalUsers)
                     ->description('Jumlah pengguna terdaftar')
@@ -81,8 +88,8 @@ class AdminAttendanceStats extends BaseWidget
                     ->color('success')
                     ->chart($chart),
 
-                Stat::make('Tidak Hadir', $absent)
-                    ->description($totalUsers ? round(($absent / $totalUsers) * 100) . '% tidak hadir' : '0%')
+                Stat::make('Tidak Hadir (Peserta)', $absentRoleUsers)
+                    ->description($totalRoleUsers ? round(($absentRoleUsers / $totalRoleUsers) * 100) . '% tidak hadir' : '0%')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger'),
 
