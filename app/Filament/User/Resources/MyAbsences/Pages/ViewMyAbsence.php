@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Filament\User\Resources\MyAbsenceResource\Pages;
+namespace App\Filament\User\Resources\MyAbsences\Pages;
 
-use App\Filament\User\Resources\MyAbsenceResource;
-use App\Filament\User\Resources\MyAbsences\MyAbsenceResource as MyAbsencesMyAbsenceResource;
+use App\Filament\User\Resources\MyAbsences\MyAbsenceResource;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewMyAbsence extends ViewRecord
 {
-    protected static string $resource = MyAbsencesMyAbsenceResource::class;
+    protected static string $resource = MyAbsenceResource::class;
 }
