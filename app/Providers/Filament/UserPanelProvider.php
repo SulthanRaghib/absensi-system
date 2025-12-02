@@ -34,7 +34,7 @@ class UserPanelProvider extends PanelProvider
             ->brandLogo(asset('images/Logo_bapeten.png'))
             ->brandLogoHeight('5rem')
             ->brandName('Absensi Maganghub - BAPETEN')
-            ->profile(EditProfile::class)
+            ->profile(EditProfile::class, isSimple: false)
             ->colors([
                 'primary' => Color::Amber,
             ])
