@@ -17,18 +17,19 @@
             padding: 5px;
             text-align: center;
             vertical-align: middle;
-            font-size: 12px;
+            font-size: 16px;
+            white-space: nowrap;
         }
 
         .header-title {
-            font-size: 16px;
+            font-size: 26px;
             font-weight: bold;
             text-align: center;
             border: none;
         }
 
         .header-subtitle {
-            font-size: 14px;
+            font-size: 24px;
             font-weight: bold;
             text-align: center;
             border: none;
@@ -67,10 +68,9 @@
         <thead>
             <tr>
                 <th rowspan="3" class="bg-gray" style="width: 40px;">No</th>
-                <th rowspan="3" class="bg-gray" style="width: 200px;">Nama</th>
+                <th rowspan="3" class="bg-gray" style="width: 250px;">Nama</th>
                 <th colspan="{{ $daysInMonth * 2 }}" class="bg-gray">Tanggal</th>
-                <th rowspan="3" class="bg-gray" style="width: 80px;">Total Hadir</th>
-                <th rowspan="3" class="bg-gray" style="width: 80px;">Total Terlambat</th>
+                <th colspan="3" rowspan="2" class="bg-gray">Total</th>
             </tr>
             <tr>
                 @for ($day = 1; $day <= $daysInMonth; $day++)
@@ -92,6 +92,9 @@
                     <th class="{{ $bgClass }}" style="width: 60px;">In</th>
                     <th class="{{ $bgClass }}" style="width: 60px;">Out</th>
                 @endfor
+                <th class="bg-gray" style="width: 80px;">Hadir</th>
+                <th class="bg-gray" style="width: 80px;">Terlambat</th>
+                <th class="bg-gray" style="width: 80px;">Alpa</th>
             </tr>
         </thead>
 
@@ -101,6 +104,7 @@
                 @php
                     $totalHadir = 0;
                     $totalTerlambat = 0;
+                    $totalAlpa = 0;
                 @endphp
                 <tr>
                     <td>{{ $index + 1 }}</td>
@@ -120,22 +124,32 @@
                             $jamMasuk = $absence && $absence->jam_masuk ? $absence->jam_masuk->format('H:i') : '';
                             $jamPulang = $absence && $absence->jam_pulang ? $absence->jam_pulang->format('H:i') : '';
 
+                            $isLate = false;
+
                             // Hitung Total
                             if ($jamMasuk) {
                                 $totalHadir++;
                                 // Cek Terlambat (Asumsi jam masuk kantor 07:30)
                                 if ($jamMasuk > ($jamMasukKantor ?? '07:30')) {
                                     $totalTerlambat++;
+                                    $isLate = true;
+                                }
+                            } else {
+                                // Hitung Alpa jika hari kerja dan belum ada absen (dan tanggal sudah lewat/hari ini)
+                                if (!$isWeekend && $dateObj->lte(now())) {
+                                    $totalAlpa++;
                                 }
                             }
                         @endphp
 
-                        <td class="{{ $bgClass }}">{{ $jamMasuk }}</td>
+                        <td class="{{ $bgClass }}" style="{{ $isLate ? 'color: red; font-weight: bold;' : '' }}">
+                            {{ $jamMasuk }}</td>
                         <td class="{{ $bgClass }}">{{ $jamPulang }}</td>
                     @endfor
 
                     <td>{{ $totalHadir }}</td>
                     <td>{{ $totalTerlambat }}</td>
+                    <td>{{ $totalAlpa }}</td>
                 </tr>
             @endforeach
         </tbody>
