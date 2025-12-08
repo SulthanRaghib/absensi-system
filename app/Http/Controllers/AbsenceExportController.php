@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\AttendanceExport;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AbsenceExportController extends Controller
 {
@@ -33,27 +35,15 @@ class AbsenceExportController extends Controller
         if ($userId) {
             $user = User::find($userId);
             if ($user) {
-                $filename = 'Laporan_Absensi_' . $user->name . '_' . $startDate->format('F_Y') . '.xls';
+                $filename = 'Laporan_Absensi_' . $user->name . '_' . $startDate->format('F_Y') . '.xlsx';
             }
         } else {
-            $filename = 'Laporan_Absensi_' . $startDate->format('F_Y') . '.xls';
+            $filename = 'Laporan_Absensi_' . $startDate->format('F_Y') . '.xlsx';
         }
 
         // Default jam masuk kantor senin-jumat: 7.30
         $jamMasukKantor = '07:30:00';
 
-        return response()->streamDownload(function () use ($users, $daysInMonth, $startDate, $month, $year, $jamMasukKantor) {
-            echo view('exports.attendance', [
-                'users' => $users,
-                'daysInMonth' => $daysInMonth,
-                'monthName' => $startDate->translatedFormat('F'),
-                'year' => $year,
-                'startDate' => $startDate,
-                'jamMasukKantor' => $jamMasukKantor
-            ])->render();
-        }, $filename, [
-            'Content-Type' => 'application/vnd.ms-excel',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
-        ]);
+        return Excel::download(new AttendanceExport($users, $daysInMonth, $startDate->translatedFormat('F'), $year, $startDate, $jamMasukKantor), $filename);
     }
 }
