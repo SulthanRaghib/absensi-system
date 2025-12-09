@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Setting;
+use Jenssegers\Agent\Agent;
 
 class GeoLocationService
 {
@@ -102,9 +103,31 @@ class GeoLocationService
      */
     public function getDeviceInfo(\Illuminate\Http\Request $request): string
     {
-        $userAgent = $request->userAgent();
-        $ip = $request->ip();
+        $agent = new Agent();
+        $agent->setUserAgent($request->userAgent());
 
-        return substr("{$userAgent} | IP: {$ip}", 0, 255);
+        $device = $agent->device();
+        $platform = $agent->platform();
+        $browser = $agent->browser();
+        $version = $agent->version($browser);
+
+        $deviceType = 'Unknown';
+        if ($agent->isDesktop()) {
+            $deviceType = 'Desktop';
+        } elseif ($agent->isTablet()) {
+            $deviceType = 'Tablet';
+        } elseif ($agent->isPhone()) {
+            $deviceType = 'Phone';
+        } elseif ($agent->isRobot()) {
+            $deviceType = 'Robot';
+        }
+
+        $info = "{$platform} | {$browser} {$version} | {$device} ({$deviceType})";
+
+        // Add IP address
+        $ip = $request->ip();
+        $info .= " | IP: {$ip}";
+
+        return substr($info, 0, 255);
     }
 }

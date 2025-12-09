@@ -7,6 +7,7 @@ use App\Models\Setting;
 use App\Services\GeoLocationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Jenssegers\Agent\Agent;
 
 class AbsensiController extends Controller
 {
@@ -73,6 +74,32 @@ class AbsensiController extends Controller
             ], 400);
         }
 
+        // Get device info
+        $agent = new Agent();
+        $agent->setUserAgent($request->userAgent());
+
+        $device = $agent->device();
+        $platform = $agent->platform();
+        $browser = $agent->browser();
+        $version = $agent->version($browser);
+
+        $deviceType = 'Unknown';
+        if ($agent->isDesktop()) {
+            $deviceType = 'Desktop';
+        } elseif ($agent->isTablet()) {
+            $deviceType = 'Tablet';
+        } elseif ($agent->isPhone()) {
+            $deviceType = 'Phone';
+        } elseif ($agent->isRobot()) {
+            $deviceType = 'Robot';
+        }
+
+        $info = "{$platform} | {$browser} {$version} | {$device} ({$deviceType})";
+
+        // Add IP address
+        $ip = $request->ip();
+        $info .= " | IP: {$ip}";
+
         // Create absence record
         $absence = Absence::create([
             'user_id' => $user->id,
@@ -81,7 +108,7 @@ class AbsensiController extends Controller
             'lat_masuk' => $validated['latitude'],
             'lng_masuk' => $validated['longitude'],
             'distance_masuk' => $locationCheck['distance'],
-            'device_info' => $this->geoService->getDeviceInfo($request),
+            'device_info' => $info,
         ]);
 
         return response()->json([

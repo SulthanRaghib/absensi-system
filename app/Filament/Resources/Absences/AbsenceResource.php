@@ -138,6 +138,12 @@ class AbsenceResource extends Resource
                     ->formatStateUsing(fn($state) => $state ? number_format($state, 2) . ' m' : '-')
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('device_info')
+                    ->label('Device Info')
+                    ->limit(50)
+                    ->tooltip(fn(Absence $record): string => $record->device_info ?? '')
+                    ->searchable(),
+
                 Tables\Columns\IconColumn::make('status')
                     ->label('Status')
                     ->getStateUsing(function (Absence $record) {
