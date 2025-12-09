@@ -92,27 +92,42 @@ jobs:
           script: |
             cd ${{ secrets.TARGET_DIR }}
 
-            # Matikan aplikasi sebentar (Maintenance Mode)
-            php artisan down --render="errors::503" || true
+            # --- KONFIGURASI PHP DIRECTADMIN ---
+            # Ini adalah path standar DirectAdmin untuk PHP 8.3
+            PHP_BIN="/usr/local/php83/bin/php"
 
-            # Install dependency PHP di server (memastikan kecocokan platform)
-            # Jika hosting membatasi RAM, tambahkan flag --ignore-platform-reqs jika perlu
-            composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+            # Cek versi untuk memastikan di Log GitHub (Harus 8.3)
+            echo "🔍 Checking PHP Version..."
+            $PHP_BIN -v
 
-            # Jalankan Migrasi Database
-            php artisan migrate --force
+            # 1. Maintenance Mode
+            $PHP_BIN artisan down --render="errors::503" || true
 
-            # Bersihkan dan Cache Konfigurasi
-            php artisan optimize:clear
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
-            php artisan filament:optimize # Khusus Filament v3/v4
+            # 2. Install Composer dengan PHP 8.3
+            # Kita download composer.phar manual agar aman & menggunakan PHP_BIN
+            echo "📦 Installing Dependencies..."
+            curl -sS https://getcomposer.org/installer | $PHP_BIN
+            $PHP_BIN composer.phar install --no-interaction --prefer-dist --optimize-autoloader --no-dev
 
-            # Storage Link (Hanya perlu sekali, tapi aman dijalankan ulang)
-            php artisan storage:link
+            # 3. Jalankan Migrasi
+            echo "Rx🚀 Running Migrations..."
+            $PHP_BIN artisan migrate --force
 
-            # Nyalakan kembali aplikasi
-            php artisan up
+            # 4. Optimasi Cache Laravel & Filament
+            echo "🧹 Optimizing..."
+            $PHP_BIN artisan optimize:clear
+            $PHP_BIN artisan config:cache
+            $PHP_BIN artisan route:cache
+            $PHP_BIN artisan view:cache
+            $PHP_BIN artisan filament:optimize
+
+            # 5. Storage Link
+            $PHP_BIN artisan storage:link
+
+            # 6. Online Kembali
+            $PHP_BIN artisan up
+
+            # Bersihkan file composer sementara
+            rm composer.phar
 
             echo "✅ Deployment Successfully Finished!"
