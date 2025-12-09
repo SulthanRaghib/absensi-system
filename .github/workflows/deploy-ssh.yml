@@ -95,34 +95,37 @@ jobs:
             # --- 1. DEFINISI PHP 8.3 (DirectAdmin) ---
             PHP_BIN="/usr/local/php83/bin/php"
 
-            # --- 2. HAPUS CACHE MANUAL (CRUCIAL STEP!) ---
-            # Kita hapus cache lama secara paksa agar tidak error "Class not found"
-            # Ini menghapus config.php, packages.php, services.php di folder cache
-            echo "🔥 Nuking old bootstrap cache..."
-            rm -f bootstrap/cache/*.php
+            echo "🔥 FORCE CLEANING CACHE..."
 
-            # --- 3. MAINTENANCE MODE ---
-            # Gunakan '|| true' agar jika gagal, script tetap lanjut
-            $PHP_BIN artisan down --render="errors::503" || true
+            # Hapus file cache spesifik satu per satu untuk memastikan
+            rm -f bootstrap/cache/config.php
+            rm -f bootstrap/cache/packages.php
+            rm -f bootstrap/cache/services.php
+            rm -f bootstrap/cache/routes-v7.php
 
-            # --- 4. INSTALL DEPENDENCIES ---
-            echo "📦 Installing Dependencies..."
-            # Hapus composer.phar lama jika ada biar fresh
+            # Hapus juga file vendor/composer/installed.json jika korup (opsional tapi aman)
+            # rm -f vendor/composer/installed.json
+
+            # Install dependencies TANPA menjalankan scripts (agar artisan tidak dipanggil dulu)
+            echo "📦 Installing Dependencies (No Scripts Mode)..."
             rm -f composer.phar
             curl -sS https://getcomposer.org/installer | $PHP_BIN
 
-            # Install tanpa dev dependencies
-            $PHP_BIN composer.phar install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+            # TAMBAHKAN --no-scripts agar tidak error 'Class not found' saat install
+            $PHP_BIN composer.phar install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-scripts
 
-            # --- 5. MIGRASI DATABASE ---
+            # Setelah vendor terinstall bersih, baru kita dump-autoload manual
+            echo "🔄 Dumping Autoload..."
+            $PHP_BIN composer.phar dump-autoload --optimize
+
+            # Sekarang Artisan harusnya sudah aman dipanggil
             echo "🚀 Running Migrations..."
-            # Paksa migrasi
             $PHP_BIN artisan migrate --force
 
-            # --- 6. BUILD ULANG CACHE ---
             echo "🧹 Re-building Cache..."
-            # Karena cache file sudah dihapus di step 2, perintah ini harusnya sekarang berhasil
+            # Panggil optimize:clear dulu
             $PHP_BIN artisan optimize:clear
+
             $PHP_BIN artisan config:cache
             $PHP_BIN artisan event:cache
             $PHP_BIN artisan route:cache
