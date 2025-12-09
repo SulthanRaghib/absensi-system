@@ -24,3 +24,6 @@ Homestead.yaml
 Thumbs.db
 
 .vercel
+
+/public/serviceworker.js
+/public/manifest.json
