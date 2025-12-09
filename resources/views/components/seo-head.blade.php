@@ -35,8 +35,8 @@
 <!-- JSON-LD Schema -->
 <script type="application/ld+json">
 {
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@@context": "https://schema.org",
+  "@@type": "SoftwareApplication",
   "name": "{{ $title }}",
   "description": "{{ $description }}",
   "applicationCategory": "BusinessApplication",
@@ -44,7 +44,7 @@
   "url": "{{ url('/') }}",
   "image": "{{ $image }}",
   "author": {
-    "@type": "Organization",
+    "@@type": "Organization",
     "name": "BAPETEN"
   }
 }

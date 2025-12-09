@@ -2,44 +2,37 @@
 <html lang="id">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Sistem Absensi</title>
+    <x-head title="Sistem Absensi">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <!-- Leaflet CSS & JS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
-    <meta name="google-site-verification" content="D7lwUHT9cSFPvvz6Ad11J0QBbCgBTe7hi_0Lc7OfY3E" />
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Leaflet CSS & JS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+        <style>
+            body {
+                font-family: 'Inter', sans-serif;
+                background-color: #F3F4F6;
+            }
 
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #F3F4F6;
-        }
+            .glass-card {
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
 
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
+            .btn-action {
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            }
 
-        .btn-action {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+            .btn-action:active {
+                transform: scale(0.98);
+            }
 
-        .btn-action:active {
-            transform: scale(0.98);
-        }
-
-        .map-container {
-            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
-        }
-    </style>
+            .map-container {
+                box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+            }
+        </style>
+    </x-head>
 </head>
 
 <body class="text-gray-800 antialiased min-h-screen flex flex-col">
@@ -183,8 +176,8 @@
                         <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Lokasi Anda</h2>
                         <button id="btn-get-location"
                             class="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1 bg-blue-50 px-3 py-1.5 rounded-full transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
@@ -378,6 +371,8 @@
             getLocation();
         });
 
+        let watchId = null;
+
         function getLocation() {
             if (!navigator.geolocation) {
                 showAlert('Browser tidak mendukung GPS!', 'error');
@@ -402,26 +397,20 @@
             `;
             btnGetLocation.disabled = true;
 
-            navigator.geolocation.getCurrentPosition(
+            if (watchId) navigator.geolocation.clearWatch(watchId);
+
+            watchId = navigator.geolocation.watchPosition(
                 (position) => {
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
                     const accuracy = position.coords.accuracy;
 
-                    // Validate accuracy
-                    if (accuracy > MAX_ACCURACY) {
-                        showAlert(`Akurasi GPS rendah (${accuracy.toFixed(0)}m). Coba di luar ruangan.`, 'warning');
-                        btnGetLocation.innerHTML = originalBtnText;
-                        btnGetLocation.disabled = false;
-                        return;
-                    }
-
-                    const distance = calculateDistance(lat, lng, OFFICE_LAT, OFFICE_LNG);
-
                     // Update UI
                     document.getElementById('lat-display').textContent = lat.toFixed(5);
                     document.getElementById('lng-display').textContent = lng.toFixed(5);
                     document.getElementById('accuracy-display').textContent = `±${accuracy.toFixed(0)}m`;
+
+                    const distance = calculateDistance(lat, lng, OFFICE_LAT, OFFICE_LNG);
                     document.getElementById('distance-display').textContent = `${distance.toFixed(0)}m`;
 
                     // Update Map
@@ -450,6 +439,20 @@
                         padding: [50, 50]
                     });
 
+                    // Validate accuracy
+                    if (accuracy > MAX_ACCURACY) {
+                        showAlert(`Akurasi GPS rendah (${accuracy.toFixed(0)}m). Menunggu sinyal lebih baik...`,
+                            'warning');
+                        btnGetLocation.innerHTML = `
+                            <svg class="animate-spin h-3 w-3 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Akurasi: ${accuracy.toFixed(0)}m</span>
+                        `;
+                        return;
+                    }
+
                     userLocation = {
                         lat,
                         lng,
@@ -470,6 +473,10 @@
                         <span>Lokasi OK</span>
                     `;
                     btnGetLocation.disabled = false;
+
+                    // Stop watching once we have a good location
+                    navigator.geolocation.clearWatch(watchId);
+                    watchId = null;
                 },
                 (error) => {
                     console.error('Geolocation error:', error);
@@ -484,11 +491,14 @@
                     if (error.code === 3) message = 'Waktu permintaan habis. Coba lagi.';
 
                     showAlert(message, 'error');
-                    btnGetLocation.innerHTML = originalBtnText;
+                    btnGetLocation.innerHTML = `<span>Ambil Lokasi</span>`;
                     btnGetLocation.disabled = false;
+
+                    if (watchId) navigator.geolocation.clearWatch(watchId);
+                    watchId = null;
                 }, {
                     enableHighAccuracy: true,
-                    timeout: 10000,
+                    timeout: 20000,
                     maximumAge: 0
                 }
             );

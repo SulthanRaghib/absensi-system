@@ -35,7 +35,7 @@
             async checkAttendance() {
                 this.isLoading = true;
                 try {
-                    const response = await fetch('{{ route('attendance.check-status') }}', {
+                    const response = await fetch("{{ route('attendance.check-status') }}", {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -200,6 +200,7 @@
         return {
             email: '',
             password: '',
+            showPassword: false,
             remember: false,
             isLoading: false,
             errorMessage: '',
@@ -218,7 +219,7 @@
                 }
 
                 try {
-                    const response = await fetch('{{ route('login.perform') }}', {
+                    const response = await fetch("{{ route('login.perform') }}", {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

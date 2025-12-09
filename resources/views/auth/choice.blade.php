@@ -2,24 +2,19 @@
 <html lang="id">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk — Absensi</title>
+    <x-head title="Masuk — Absensi">
+        <!-- Tailwind (Keep existing) -->
+        <script src="https://cdn.tailwindcss.com"></script>
 
-    <meta name="google-site-verification" content="D7lwUHT9cSFPvvz6Ad11J0QBbCgBTe7hi_0Lc7OfY3E" />
+        <!-- Alpine.js (Keep existing) -->
+        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-    <!-- Tailwind (Keep existing) -->
-    <script src="https://cdn.tailwindcss.com"></script>
+        <!-- Leaflet (Keep existing) -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
-    <!-- Alpine.js (Keep existing) -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-    <!-- Leaflet (Keep existing) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-
-    @include('auth.partials.styles')
-
+        @include('auth.partials.styles')
+    </x-head>
 </head>
 
 <body x-data="attendance">
@@ -73,7 +68,7 @@
                     </div>
 
                     <!-- Password Input -->
-                    <div style="margin-bottom: 0.5rem;" x-data="{ showPassword: false }">
+                    <div style="margin-bottom: 0.5rem;">
                         <label for="password"
                             style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">Password</label>
                         <div class="input-wrapper">
