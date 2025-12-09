@@ -24,7 +24,7 @@ jobs:
           php-version: "8.3"
 
       - name: 🧶 Install Composer Dependencies (Local)
-        run: composer install --prefer-dist --no-ansi --no-interaction --no-progress --no-scripts
+        run: composer install --prefer-dist --no-ansi --no-interaction --no-progress --no-scripts --no-dev --optimize-autoloader
 
       # 3. Setup Node.js untuk Build Frontend (Vite/Tailwind)
       - name: 🟢 Setup Node.js
@@ -106,17 +106,8 @@ jobs:
             # Hapus juga file vendor/composer/installed.json jika korup (opsional tapi aman)
             # rm -f vendor/composer/installed.json
 
-            # Install dependencies TANPA menjalankan scripts (agar artisan tidak dipanggil dulu)
-            echo "📦 Installing Dependencies (No Scripts Mode)..."
-            rm -f composer.phar
-            curl -sS https://getcomposer.org/installer | $PHP_BIN
-
-            # TAMBAHKAN --no-scripts agar tidak error 'Class not found' saat install
-            $PHP_BIN composer.phar install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-scripts
-
-            # Setelah vendor terinstall bersih, baru kita dump-autoload manual
-            echo "🔄 Dumping Autoload..."
-            $PHP_BIN composer.phar dump-autoload --optimize
+            # SKIP COMPOSER INSTALL ON SERVER TO AVOID OOM (Exit 137)
+            # We rely on the 'vendor' folder uploaded via Rsync from the GitHub Runner.
 
             # Sekarang Artisan harusnya sudah aman dipanggil
             echo "🚀 Running Migrations..."
