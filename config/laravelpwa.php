@@ -1,9 +1,9 @@
 <?php
 
 return [
-    'name' => 'Absensi BAPETEN',
+    'name' => 'Sistem Absensi BAPETEN',
     'manifest' => [
-        'name' => env('APP_NAME', 'Absensi BAPETEN'),
+        'name' => 'Sistem Absensi BAPETEN',
         'short_name' => 'Absensi',
         'start_url' => '/',
         'background_color' => '#ffffff',
