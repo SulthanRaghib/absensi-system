@@ -44,37 +44,15 @@ class AbsensiController extends Controller
 
         $user = Auth::user();
 
-        // Device Binding Logic (Multi-Device Support: Max 2)
-        $registeredDevices = [];
-
-        if ($user->registered_device_id) {
-            // Try to decode as JSON
-            $decoded = json_decode($user->registered_device_id, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                $registeredDevices = $decoded;
-            } else {
-                // Legacy: Single string
-                $registeredDevices = [$user->registered_device_id];
-            }
-        }
-
-        $currentDeviceToken = $validated['device_token'];
-
-        if (!in_array($currentDeviceToken, $registeredDevices)) {
-            // Allow up to 2 devices (e.g. Chrome + Safari on iOS)
-            if (count($registeredDevices) < 2) {
-                $registeredDevices[] = $currentDeviceToken;
-                $user->update(['registered_device_id' => json_encode($registeredDevices)]);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Device mismatch detected.',
-                    'cheat_alert' => true
-                ], 403);
-            }
-        } elseif (count($registeredDevices) === 1 && $registeredDevices[0] !== $user->registered_device_id) {
-            // Upgrade legacy string to JSON format if it matches but isn't JSON yet
-            $user->update(['registered_device_id' => json_encode($registeredDevices)]);
+        // Device Binding Logic
+        if (!$user->registered_device_id) {
+            $user->update(['registered_device_id' => $validated['device_token']]);
+        } elseif ($user->registered_device_id !== $validated['device_token']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Device mismatch detected.',
+                'cheat_alert' => true
+            ], 403);
         }
 
         // Check if already checked in today
