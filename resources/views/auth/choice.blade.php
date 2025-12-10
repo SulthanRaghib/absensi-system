@@ -22,31 +22,61 @@
         <!-- Cheat Alert Modal -->
         @if (session('fraud_alert'))
             <div x-data="{ show: true }" x-show="show" style="display: none;"
-                class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+                class="fixed inset-0 z-[9999] flex items-center justify-center p-4"
                 x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
                 x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
                 x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-                <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all scale-100"
-                    @click.away="show = false">
-                    <div class="bg-red-500 p-6 text-center">
-                        <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+
+                <!-- Backdrop -->
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="show = false"></div>
+
+                <!-- Modal Content -->
+                <div class="relative bg-white/80 backdrop-blur-xl rounded-3xl p-8 max-w-md w-full shadow-2xl border border-white/30 transform transition-all scale-100"
+                    style="box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);">
+
+                    <!-- Lock Icon -->
+                    <div class="flex justify-center mb-6">
+                        <div class="rounded-full p-6 inline-flex"
+                            style="background: linear-gradient(135deg, rgba(248, 113, 113, 0.2) 0%, rgba(239, 68, 68, 0.3) 100%); border: 2px solid rgba(248, 113, 113, 0.3);">
+                            <svg width="64" height="64" viewBox="0 0 64 64" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M32 8C26.4772 8 22 12.4772 22 18V24H18C15.7909 24 14 25.7909 14 28V50C14 52.2091 15.7909 54 18 54H46C48.2091 54 50 52.2091 50 50V28C50 25.7909 48.2091 24 46 24H42V18C42 12.4772 37.5228 8 32 8Z"
+                                    fill="#ef4444" fill-opacity="0.2" stroke="#ef4444" stroke-width="2.5"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M26 18C26 14.6863 28.6863 12 32 12C35.3137 12 38 14.6863 38 18V24H26V18Z"
+                                    fill="#ef4444" fill-opacity="0.3" stroke="#ef4444" stroke-width="2.5"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                                <circle cx="32" cy="38" r="4" fill="#ef4444" />
+                                <path d="M32 42V46" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" />
                             </svg>
                         </div>
-                        <h3 class="text-2xl font-bold text-white">SECURITY ALERT!</h3>
                     </div>
-                    <div class="p-8 text-center">
-                        <p class="text-gray-700 text-lg font-medium mb-6">
-                            "{{ session('fraud_alert') }}"
-                        </p>
-                        <button @click="show = false"
-                            class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-xl transition-colors duration-200">
-                            Saya Mengerti
-                        </button>
-                    </div>
+
+                    <!-- Title -->
+                    <h1 class="text-center mb-4 text-2xl font-bold text-slate-800"
+                        style="font-family: 'Inter', sans-serif;">
+                        Mau ngapain Hayoo!!
+                    </h1>
+
+                    <!-- Warning Text -->
+                    <p class="text-center mb-6 text-slate-600 leading-relaxed"
+                        style="font-family: 'Inter', sans-serif;">
+                        Sistem mendeteksi adanya aktivitas yang tidak sesuai. Mohon melakukan absensi dengan jujur dan
+                        sesuai prosedur.
+                    </p>
+
+                    <!-- Footer Text -->
+                    <p class="text-center mb-6 text-sm text-slate-400" style="font-family: 'Inter', sans-serif;">
+                        Ganti HP? Hubungi Admin untuk reset agar bisa absen kembali.
+                    </p>
+
+                    <!-- Button -->
+                    <button @click="show = false"
+                        class="w-full rounded-2xl py-4 text-white font-semibold shadow-lg transform transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
+                        style="background: linear-gradient(135deg, #f87171 0%, #ef4444 100%); font-family: 'Inter', sans-serif;">
+                        Saya Mengerti
+                    </button>
                 </div>
             </div>
         @endif

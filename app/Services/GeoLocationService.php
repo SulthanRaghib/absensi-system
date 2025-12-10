@@ -85,7 +85,7 @@ class GeoLocationService
      * @param float $maxAccuracy Maximum allowed accuracy (default: 100m)
      * @return array
      */
-    public function validateAccuracy(float $accuracy, float $maxAccuracy = 2500): array
+    public function validateAccuracy(float $accuracy, float $maxAccuracy = 10000): array
     {
         $isValid = $accuracy <= $maxAccuracy;
 
