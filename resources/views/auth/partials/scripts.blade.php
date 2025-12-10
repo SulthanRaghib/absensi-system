@@ -39,7 +39,8 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            'X-CSRF-TOKEN': document.querySelector(
+                                'meta[name="csrf-token"]').getAttribute('content')
                         },
                         body: JSON.stringify({
                             email: this.email,
@@ -204,9 +205,11 @@
             remember: false,
             isLoading: false,
             errorMessage: '',
+            fraudError: '',
 
             async submitLogin() {
                 this.errorMessage = '';
+                this.fraudError = '';
                 this.isLoading = true;
 
                 // Simulate small delay for UX consistency
@@ -224,7 +227,8 @@
                         headers: {
                             'Content-Type': 'application/json',
                             'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                'content')
                         },
                         body: JSON.stringify({
                             email: this.email,
@@ -235,12 +239,21 @@
 
                     const data = await response.json();
 
+                    // Update CSRF token if provided in response
+                    if (data.csrf_token) {
+                        document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrf_token);
+                    }
+
                     if (response.ok && data.success) {
                         window.location.href = data.redirect;
                     } else {
-                        this.errorMessage = data.message || 'Terjadi kesalahan saat login.';
-                        if (data.errors && data.errors.email) {
-                            this.errorMessage = data.errors.email[0];
+                        if (data.errors && data.errors.fraud_alert) {
+                            this.fraudError = data.errors.fraud_alert[0];
+                        } else {
+                            this.errorMessage = data.message || 'Terjadi kesalahan saat login.';
+                            if (data.errors && data.errors.email) {
+                                this.errorMessage = data.errors.email[0];
+                            }
                         }
                     }
                 } catch (error) {
