@@ -27,6 +27,7 @@
                         @csrf
                         <input type="hidden" name="latitude" x-model="latitude">
                         <input type="hidden" name="longitude" x-model="longitude">
+                        <input type="hidden" name="device_token" x-model="deviceToken">
                         <!-- Hidden inputs for email/pass to be submitted with the form -->
                         <input type="hidden" name="email" x-model="email">
                         <input type="hidden" name="password" x-model="password">

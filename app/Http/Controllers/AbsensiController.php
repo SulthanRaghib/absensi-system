@@ -39,9 +39,21 @@ class AbsensiController extends Controller
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
             'accuracy' => 'required|numeric|min:0',
+            'device_token' => 'required|string',
         ]);
 
         $user = Auth::user();
+
+        // Device Binding Logic
+        if (!$user->registered_device_id) {
+            $user->update(['registered_device_id' => $validated['device_token']]);
+        } elseif ($user->registered_device_id !== $validated['device_token']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Device mismatch detected.',
+                'cheat_alert' => true
+            ], 403);
+        }
 
         // Check if already checked in today
         if (Absence::hasCheckedInToday($user->id)) {

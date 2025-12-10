@@ -15,8 +15,17 @@
             showConfirm: false,
             confirmMessage: '',
             status: '',
+            deviceToken: null,
 
             init() {
+                // Device Binding Logic
+                let token = localStorage.getItem('device_token');
+                if (!token) {
+                    token = crypto.randomUUID();
+                    localStorage.setItem('device_token', token);
+                }
+                this.deviceToken = token;
+
                 this.$watch('openDirect', value => {
                     if (value) {
                         this.$nextTick(() => {

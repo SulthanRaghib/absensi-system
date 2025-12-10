@@ -76,12 +76,22 @@ class DirectAttendanceController extends Controller
             'password' => 'required',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
+            'device_token' => 'required|string',
         ]);
 
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
+
+            // Device Binding Logic
+            if (!$user->registered_device_id) {
+                $user->update(['registered_device_id' => $request->device_token]);
+            } elseif ($user->registered_device_id !== $request->device_token) {
+                Auth::logout();
+                return redirect()->back()->with('fraud_alert', 'Hayolohhh mau titip absen siapaaa?, gw laporin lohhh');
+            }
+
             $today = now()->toDateString();
             $now = now();
 

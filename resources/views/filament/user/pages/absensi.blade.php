@@ -33,6 +33,36 @@
             csrfToken: '{{ csrf_token() }}'
         })" class="grid grid-cols-1 md:grid-cols-12 gap-6">
 
+            <!-- Cheat Alert Modal -->
+            <div x-show="showCheatModal" style="display: none;"
+                class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+                x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+                <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all scale-100"
+                    @click.away="showCheatModal = false">
+                    <div class="bg-red-500 p-6 text-center">
+                        <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white">SECURITY ALERT!</h3>
+                    </div>
+                    <div class="p-8 text-center">
+                        <p class="text-gray-700 text-lg font-medium mb-6">
+                            "Hayolohhh mau titip absen siapaaa?, gw laporin lohhh"
+                        </p>
+                        <button @click="showCheatModal = false"
+                            class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-xl transition-colors duration-200">
+                            Saya Mengerti
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Left Column: Profile, Status, Actions -->
             <div class="md:col-span-5 lg:col-span-4 space-y-6">
 
@@ -44,7 +74,8 @@
                             class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-blue-500/30">
                             {{ strtoupper(substr($user->name, 0, 1)) }}
                         </div>
-                        <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full">
+                        <div
+                            class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full">
                         </div>
                     </div>
                     <div>
@@ -171,7 +202,8 @@
 
             <!-- Right Column: Map -->
             <div class="md:col-span-7 lg:col-span-8 h-full">
-                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden h-full flex flex-col">
+                <div
+                    class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden h-full flex flex-col">
                     <div class="p-5 pb-0 flex justify-between items-center shrink-0">
                         <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Lokasi Anda</h2>
                         <button @click="manualUpdateLocation()"
@@ -276,8 +308,18 @@
                     isLoading: false,
                     actionType: null,
                     showEarlyCheckoutModal: false,
+                    showCheatModal: false,
+                    deviceToken: null,
 
                     init() {
+                        // Device Binding Logic
+                        let token = localStorage.getItem('device_token');
+                        if (!token) {
+                            token = crypto.randomUUID();
+                            localStorage.setItem('device_token', token);
+                        }
+                        this.deviceToken = token;
+
                         this.$nextTick(() => {
                             this.initMap();
                             this.startTracking(true); // Center map on init
@@ -457,11 +499,23 @@
                                 body: JSON.stringify({
                                     latitude: this.userLocation.lat,
                                     longitude: this.userLocation.lng,
-                                    accuracy: this.userLocation.accuracy
+                                    accuracy: this.userLocation.accuracy,
+                                    device_token: this.deviceToken
                                 })
                             });
 
                             const data = await response.json();
+
+                            // Debugging response
+                            console.log('Attendance Response:', {
+                                status: response.status,
+                                data
+                            });
+
+                            if (data.cheat_alert) {
+                                this.showCheatModal = true;
+                                return;
+                            }
 
                             if (data.success) {
                                 this.showAlert(action === 'in' ? 'Berhasil Check-in!' : 'Berhasil Check-out!', 'success');

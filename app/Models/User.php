@@ -33,6 +33,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'jabatan_id',
         'unit_kerja_id',
         'avatar_url',
+        'registered_device_id',
     ];
 
     /**
