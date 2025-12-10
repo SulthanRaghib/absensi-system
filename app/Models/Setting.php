@@ -62,8 +62,8 @@ class Setting extends Model
     public static function getOfficeLocation(): array
     {
         return [
-            'latitude' => static::get('office_latitude', -6.1787051),
-            'longitude' => static::get('office_longitude', 106.8109582),
+            'latitude' => static::get('office_latitude', -6.163836),
+            'longitude' => static::get('office_longitude', 106.8189579),
             'radius' => static::get('office_radius', 100),
         ];
     }
