@@ -548,6 +548,13 @@
                             }
 
                             if (data.success) {
+                                // Update Device Token if rotated
+                                if (data.data.new_device_id) {
+                                    console.log('Rotating Device ID:', data.data.new_device_id);
+                                    localStorage.setItem('device_token', data.data.new_device_id);
+                                    this.deviceToken = data.data.new_device_id;
+                                }
+
                                 this.showAlert(action === 'in' ? 'Berhasil Check-in!' : 'Berhasil Check-out!', 'success');
                                 if (action === 'in') {
                                     this.$refs.jamMasukDisplay.textContent = data.data.jam_masuk;

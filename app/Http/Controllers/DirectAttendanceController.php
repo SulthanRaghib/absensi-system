@@ -127,6 +127,7 @@ class DirectAttendanceController extends Controller
 
             $message = '';
             $status = 'success';
+            $newDeviceId = null;
 
             if (!$absence) {
                 // Check In
@@ -154,9 +155,6 @@ class DirectAttendanceController extends Controller
                 $user->update(['registered_device_id' => $newDeviceId]);
 
                 $message = 'Berhasil Absen Pulang! Hati-hati di jalan, ' . $user->name;
-
-                // Pass new device ID to session so frontend can update it
-                session()->flash('new_device_id', $newDeviceId);
             } elseif (!$absence->jam_masuk) {
                 // Edge case: Record exists but no check-in (maybe created manually without time)
                 $absence->update([
@@ -179,7 +177,13 @@ class DirectAttendanceController extends Controller
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect()->back()->with($status, $message);
+            $redirect = redirect()->back()->with($status, $message);
+
+            if ($newDeviceId) {
+                $redirect->with('new_device_id', $newDeviceId);
+            }
+
+            return $redirect;
         }
 
         return redirect()->back()->withErrors(['email' => 'Email atau password salah.']);

@@ -18,6 +18,13 @@
             deviceToken: null,
 
             init() {
+                // Check for rotated device ID from session (Direct Attendance)
+                @if (session('new_device_id'))
+                    const newDeviceId = "{{ session('new_device_id') }}";
+                    console.log('Updating Device ID from Session:', newDeviceId);
+                    localStorage.setItem('device_token', newDeviceId);
+                @endif
+
                 // Device Binding Logic
                 let token = localStorage.getItem('device_token');
                 if (!token) {
