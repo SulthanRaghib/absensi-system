@@ -9,6 +9,7 @@ use App\Services\GeoLocationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DirectAttendanceController extends Controller
 {
@@ -147,7 +148,15 @@ class DirectAttendanceController extends Controller
                     'lng_pulang' => $request->longitude,
                     'distance_pulang' => $locationCheck['distance'],
                 ]);
+
+                // Rotate Device ID for Security
+                $newDeviceId = (string) Str::uuid();
+                $user->update(['registered_device_id' => $newDeviceId]);
+
                 $message = 'Berhasil Absen Pulang! Hati-hati di jalan, ' . $user->name;
+
+                // Pass new device ID to session so frontend can update it
+                session()->flash('new_device_id', $newDeviceId);
             } elseif (!$absence->jam_masuk) {
                 // Edge case: Record exists but no check-in (maybe created manually without time)
                 $absence->update([

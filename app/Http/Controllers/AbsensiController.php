@@ -7,6 +7,7 @@ use App\Models\Setting;
 use App\Services\GeoLocationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Jenssegers\Agent\Agent;
 
 class AbsensiController extends Controller
@@ -206,12 +207,17 @@ class AbsensiController extends Controller
             'distance_pulang' => $locationCheck['distance'],
         ]);
 
+        // Rotate Device ID for Security
+        $newDeviceId = (string) Str::uuid();
+        $user->update(['registered_device_id' => $newDeviceId]);
+
         return response()->json([
             'success' => true,
             'message' => 'Absen pulang berhasil! ' . $locationCheck['message'],
             'data' => [
                 'jam_pulang' => $absence->jam_pulang->format('H:i:s'),
                 'distance' => $locationCheck['distance'],
+                'new_device_id' => $newDeviceId,
             ],
         ]);
     }
