@@ -113,6 +113,33 @@ class UserResource extends Resource
                     ->searchable()
                     ->default('-'),
 
+                Tables\Columns\TextColumn::make('registered_device_id')
+                    ->label('Device ID')
+                    ->limit(20)
+                    ->copyable()
+                    ->color(function ($state, $record) {
+                        if (empty($state)) return null;
+
+                        $devices = json_decode($state, true);
+                        if (!is_array($devices)) {
+                            $devices = [$state];
+                        }
+
+                        foreach ($devices as $device) {
+                            // Check if this device ID exists in any other user's registered_device_id
+                            $exists = User::where('id', '!=', $record->id)
+                                ->where('registered_device_id', 'like', '%' . $device . '%')
+                                ->exists();
+
+                            if ($exists) {
+                                return 'danger';
+                            }
+                        }
+
+                        return null;
+                    })
+                    ->toggleable(),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat')
                     ->dateTime('d M Y')
