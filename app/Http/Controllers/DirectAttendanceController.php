@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Absence;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\GeoLocationService;
 use Illuminate\Http\Request;
@@ -84,12 +85,24 @@ class DirectAttendanceController extends Controller
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
-            // Device Binding Logic
-            if (!$user->registered_device_id) {
-                $user->update(['registered_device_id' => $request->device_token]);
-            } elseif ($user->registered_device_id !== $request->device_token) {
-                Auth::logout();
-                return redirect()->back()->with('fraud_alert', 'Hayolohhh mau titip absen siapaaa?, gw laporin lohhh');
+            // Check Device Validation Setting
+            $setting = Setting::where('key', 'device_validation_enabled')->first();
+            $isDeviceValidationEnabled = $setting ? filter_var($setting->value, FILTER_VALIDATE_BOOLEAN) : true;
+
+            if ($isDeviceValidationEnabled) {
+                // Strict Mode: Must have registered device and match
+                if (!$user->registered_device_id) {
+                    // If no device registered yet, register it automatically (First time setup)
+                    $user->update(['registered_device_id' => $request->device_token]);
+                } elseif ($user->registered_device_id !== $request->device_token) {
+                    Auth::logout();
+                    return redirect()->back()->with('fraud_alert', 'Hayolohhh mau titip absen siapaaa?, gw laporin lohhh');
+                }
+            } else {
+                // Loose Mode: Auto-register if empty
+                if (!$user->registered_device_id) {
+                    $user->update(['registered_device_id' => $request->device_token]);
+                }
             }
 
             $today = now()->toDateString();

@@ -39,6 +39,36 @@ class ListSettings extends ListRecords
 
                     $this->redirect(request()->header('Referer'));
                 }),
+
+            Action::make('toggleDeviceValidation')
+                ->label(fn() => (Setting::where('key', 'device_validation_enabled')->first()->value ?? '0') == '1' ? 'Device: ON' : 'Device: OFF')
+                ->color(fn() => (Setting::where('key', 'device_validation_enabled')->first()->value ?? '0') == '1' ? 'success' : 'danger')
+                ->icon(fn() => (Setting::where('key', 'device_validation_enabled')->first()->value ?? '0') == '1' ? 'heroicon-o-device-phone-mobile' : 'heroicon-o-device-tablet')
+                ->requiresConfirmation()
+                ->modalHeading(fn() => (Setting::where('key', 'device_validation_enabled')->first()->value ?? '0') == '1' ? 'Nonaktifkan Validasi Device?' : 'Aktifkan Validasi Device?')
+                ->modalDescription(fn() => (Setting::where('key', 'device_validation_enabled')->first()->value ?? '0') == '1'
+                    ? 'Apakah Anda yakin ingin menonaktifkan validasi device? Pegawai dapat login dan absen menggunakan device apa saja tanpa batasan.'
+                    : 'Apakah Anda yakin ingin mengaktifkan validasi device? Pegawai hanya dapat absen menggunakan device yang terdaftar.')
+                ->modalSubmitActionLabel(fn() => (Setting::where('key', 'device_validation_enabled')->first()->value ?? '0') == '1' ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan')
+                ->modalIcon(fn() => (Setting::where('key', 'device_validation_enabled')->first()->value ?? '0') == '1' ? 'heroicon-o-exclamation-triangle' : 'heroicon-o-check-circle')
+                ->action(function () {
+                    $setting = Setting::firstOrCreate(
+                        ['key' => 'device_validation_enabled'],
+                        ['type' => 'boolean', 'description' => 'Aktifkan validasi Device ID saat absen']
+                    );
+
+                    $current = $setting->value == '1';
+                    $setting->update(['value' => $current ? '0' : '1']);
+
+                    Notification::make()
+                        ->title('Pengaturan Device Validation Diperbarui')
+                        ->body('Status validasi device berhasil diubah.')
+                        ->success()
+                        ->send();
+
+                    $this->redirect(request()->header('Referer'));
+                }),
+
             CreateAction::make(),
         ];
     }

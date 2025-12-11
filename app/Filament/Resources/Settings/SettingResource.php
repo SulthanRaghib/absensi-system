@@ -83,7 +83,7 @@ class SettingResource extends Resource
                             ->dehydrated(false) // Do not save this field directly
                             ->afterStateUpdated(function ($state, $set) {
                                 // Sync the boolean state to the 'value' field
-                                $set('value', $state ? 'true' : 'false');
+                                $set('value', $state ? '1' : '0');
                             })
                             ->onColor('success')
                             ->offColor('danger'),

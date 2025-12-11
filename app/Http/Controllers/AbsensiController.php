@@ -44,15 +44,27 @@ class AbsensiController extends Controller
 
         $user = Auth::user();
 
-        // Device Binding Logic
-        if (!$user->registered_device_id) {
-            $user->update(['registered_device_id' => $validated['device_token']]);
-        } elseif ($user->registered_device_id !== $validated['device_token']) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Device mismatch detected.',
-                'cheat_alert' => true
-            ], 403);
+        // Check Device Validation Setting
+        $setting = Setting::where('key', 'device_validation_enabled')->first();
+        $isDeviceValidationEnabled = $setting ? filter_var($setting->value, FILTER_VALIDATE_BOOLEAN) : true;
+
+        if ($isDeviceValidationEnabled) {
+            // Strict Mode: Must have registered device and match
+            if (!$user->registered_device_id) {
+                // If no device registered yet, register it automatically (First time setup)
+                $user->update(['registered_device_id' => $validated['device_token']]);
+            } elseif ($user->registered_device_id !== $validated['device_token']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Device mismatch detected.',
+                    'cheat_alert' => true
+                ], 403);
+            }
+        } else {
+            // Loose Mode: Auto-register if empty, otherwise allow any
+            if (!$user->registered_device_id) {
+                $user->update(['registered_device_id' => $validated['device_token']]);
+            }
         }
 
         // Check if already checked in today
