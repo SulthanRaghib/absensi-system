@@ -150,7 +150,30 @@ class AbsenceResource extends Resource
                     ->copyable()
                     ->copyableState(fn(Absence $record): string => $record->user->registered_device_id ?? '')
                     ->tooltip(fn(Absence $record): string => $record->user->registered_device_id ?? '')
-                    ->searchable(),
+                    ->searchable()
+                    ->color(function ($state, $record) {
+                        if (empty($state)) return null;
+
+                        $devices = json_decode($state, true);
+                        if (!is_array($devices)) {
+                            $devices = [$state];
+                        }
+
+                        foreach ($devices as $device) {
+                            // Check if this device ID exists in any other user's registered_device_id
+                            $exists = Absence::where('user_id', '!=', $record->user_id)
+                                ->whereHas('user', function (Builder $query) use ($device) {
+                                    $query->where('registered_device_id', 'like', '%' . $device . '%');
+                                })
+                                ->exists();
+
+                            if ($exists) {
+                                return 'danger';
+                            }
+                        }
+
+                        return null;
+                    }),
 
                 Tables\Columns\IconColumn::make('status')
                     ->label('Status')
