@@ -23,18 +23,19 @@ class AdminLateListWidget extends Widget
     {
         $today = now()->toDateString();
 
-        // Work schedule and grace (fallback values)
+        // Work schedule
         $workStart = Carbon::createFromTimeString('07:30:00');
-        $graceMinutes = config('filament.widgets.attendance_grace_minutes') ?? 10;
+        // Grace minutes removed
+        // $graceMinutes = config('filament.widgets.attendance_grace_minutes') ?? 10;
 
         $records = Absence::with('user')
             ->whereDate('tanggal', $today)
             ->whereNotNull('jam_masuk')
             ->get()
-            ->filter(function ($r) use ($workStart, $graceMinutes) {
+            ->filter(function ($r) use ($workStart) {
                 if (! $r->jam_masuk) return false;
                 $jm = Carbon::parse($r->jam_masuk->format('H:i:s'));
-                return $jm->gt($workStart->copy()->addMinutes($graceMinutes));
+                return $jm->gt($workStart);
             })
             ->map(fn($r) => (object) [
                 'name' => optional($r->user)->name ?? '—',

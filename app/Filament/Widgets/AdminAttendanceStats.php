@@ -28,16 +28,17 @@ class AdminAttendanceStats extends BaseWidget
             $absent = max(0, $totalUsers - $presentToday);
 
             $workStart = Carbon::createFromTimeString('07:30:00');
-            $graceMinutes = Setting::get('attendance_grace_minutes', 10);
+            // Grace minutes removed
+            // $graceMinutes = Setting::get('attendance_grace_minutes', 10);
 
             $lateRecords = Absence::with('user')
                 ->whereDate('tanggal', $today)
                 ->whereNotNull('jam_masuk')
                 ->get()
-                ->filter(function ($r) use ($workStart, $graceMinutes) {
+                ->filter(function ($r) use ($workStart) {
                     if (! $r->jam_masuk) return false;
                     $jm = Carbon::parse($r->jam_masuk->format('H:i:s'));
-                    return $jm->gt($workStart->copy()->addMinutes($graceMinutes));
+                    return $jm->gt($workStart);
                 });
 
             $lateCount = $lateRecords->count();
