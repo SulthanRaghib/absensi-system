@@ -119,7 +119,7 @@ class AbsenceResource extends Resource
                     ->time('H:i')
                     ->placeholder('-')
                     ->badge()
-                    ->color('success'),
+                    ->color(fn($state) => \Carbon\Carbon::parse($state)->format('H:i') > '07:30' ? 'danger' : 'success'),
 
                 Tables\Columns\TextColumn::make('jam_pulang')
                     ->label('Jam Pulang')
@@ -142,6 +142,14 @@ class AbsenceResource extends Resource
                     ->label('Device Info')
                     ->limit(50)
                     ->tooltip(fn(Absence $record): string => $record->device_info ?? '')
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('user.registered_device_id')
+                    ->label('Device ID')
+                    ->limit(20)
+                    ->copyable()
+                    ->copyableState(fn(Absence $record): string => $record->user->registered_device_id ?? '')
+                    ->tooltip(fn(Absence $record): string => $record->user->registered_device_id ?? '')
                     ->searchable(),
 
                 Tables\Columns\IconColumn::make('status')

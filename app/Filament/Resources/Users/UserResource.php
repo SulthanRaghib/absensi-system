@@ -14,6 +14,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
+use Symfony\Component\DomCrawler\Form;
 
 class UserResource extends Resource
 {
@@ -82,6 +83,12 @@ class UserResource extends Resource
                             ->relationship('unitKerja', 'name')
                             ->searchable()
                             ->preload(),
+
+                        Forms\TextInput::make('registered_device_id')
+                            ->label('Registered Device ID')
+                            ->maxLength(255)
+                            ->helperText('Device ID yang terdaftar untuk validasi absensi pengguna ini'),
+
                     ])
                     ->columns(2),
             ]);
@@ -116,7 +123,8 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('registered_device_id')
                     ->label('Device ID')
                     ->limit(20)
-                    ->copyable()
+                    ->copyableState(fn(User $record): string => $record->registered_device_id ?? '')
+                    ->tooltip(fn($record) => $record->registered_device_id)
                     ->color(function ($state, $record) {
                         if (empty($state)) return null;
 
