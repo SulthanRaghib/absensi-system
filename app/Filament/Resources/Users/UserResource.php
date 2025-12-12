@@ -105,6 +105,7 @@ class UserResource extends Resource
 
                 Tables\Columns\ImageColumn::make('avatar_url')
                     ->label('Avatar')
+                    ->disk('public')
                     ->circular()
                     ->size(40),
 
