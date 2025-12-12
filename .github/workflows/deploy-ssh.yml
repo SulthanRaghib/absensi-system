@@ -78,6 +78,8 @@ jobs:
             --exclude='storage/framework/cache/*' \
             --exclude='storage/framework/views/*' \
             --exclude='storage/logs/*' \
+            --exclude='storage/app/public/*' \
+            --exclude='public/storage' \
             ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.TARGET_DIR }}
 
       # 6. Eksekusi Perintah Laravel di Server (Remote Command)
