@@ -103,6 +103,11 @@ class UserResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                Tables\Columns\ImageColumn::make('avatar_url')
+                    ->label('Avatar')
+                    ->circular()
+                    ->size(40),
+
                 Tables\Columns\TextColumn::make('email')
                     ->label('Email')
                     ->searchable()
