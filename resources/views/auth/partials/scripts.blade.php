@@ -202,6 +202,15 @@
                     }
 
                     if (data.status === 'check-out') {
+                        this.userAvatar = data.avatar_url;
+
+                        if (!this.userAvatar) {
+                            alert(
+                                'Anda belum mengatur foto profil! Wajib menggunakan foto profil untuk melakukan Check-out.');
+                            this.isLoading = false;
+                            return;
+                        }
+
                         this.showConfirm = true;
                         this.confirmMessage = data.message;
                         this.status = 'check-out';

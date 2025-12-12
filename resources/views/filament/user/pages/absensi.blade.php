@@ -728,6 +728,14 @@
                             return;
                         }
 
+                        // Check Avatar for Check Out
+                        if (action === 'out') {
+                            if (!config.userAvatar) {
+                                this.showNoAvatarModal = true;
+                                return;
+                            }
+                        }
+
                         // Early Checkout Validation
                         if (action === 'out' && !force) {
                             const now = new Date();
