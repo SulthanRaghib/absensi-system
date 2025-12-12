@@ -34,6 +34,7 @@
                 <input type="hidden" name="device_token" x-model="deviceToken">
                 <input type="hidden" name="email" x-model="email">
                 <input type="hidden" name="password" x-model="password">
+                <input type="hidden" name="image" x-model="capturedImage">
 
                 <!-- Header -->
                 <div class="p-6 border-b border-gray-100">
@@ -200,5 +201,56 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Face Verification Modal -->
+    <div x-show="showFaceModal" style="display: none;"
+        class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+        x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/75 backdrop-blur-sm" @click="closeFaceModal()"></div>
+
+        <!-- Modal Content -->
+        <div class="relative bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl flex flex-col items-center">
+            <h2 class="text-xl font-bold mb-4">Verifikasi Wajah</h2>
+
+            <div class="relative w-full aspect-[4/3] bg-black rounded-xl overflow-hidden mb-4">
+                <video x-ref="video" autoplay muted playsinline class="w-full h-full object-cover"
+                    style="transform: scaleX(-1);"></video>
+                <canvas x-ref="canvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+
+                <!-- Loading Overlay -->
+                <div x-show="isFaceLoading"
+                    class="absolute inset-0 flex items-center justify-center bg-black/50 text-white">
+                    <div class="flex flex-col items-center">
+                        <svg class="animate-spin h-8 w-8 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        <span x-text="faceStatus">Memuat Model...</span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-sm text-gray-500 mb-4 text-center" x-text="faceMessage"></p>
+
+            <div class="flex gap-3 w-full">
+                <button @click="closeFaceModal()"
+                    class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200">
+                    Batal
+                </button>
+                <button @click="captureAndVerify()" :disabled="isFaceLoading || !isModelLoaded"
+                    class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50">
+                    Verifikasi
+                </button>
+            </div>
+        </div>
     </div>
 </div>

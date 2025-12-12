@@ -7,6 +7,7 @@ use App\Models\Setting;
 use App\Services\GeoLocationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Jenssegers\Agent\Agent;
 
@@ -28,7 +29,10 @@ class AbsensiController extends Controller
         $todayAbsence = Absence::getTodayAbsence($user->id);
         $officeLocation = Setting::getOfficeLocation();
 
-        return view('absensi.index', compact('user', 'todayAbsence', 'officeLocation'));
+        $faceSetting = Setting::where('key', 'face_recognition_enabled')->first();
+        $faceRecognitionEnabled = $faceSetting ? filter_var($faceSetting->value, FILTER_VALIDATE_BOOLEAN) : false;
+
+        return view('absensi.index', compact('user', 'todayAbsence', 'officeLocation', 'faceRecognitionEnabled'));
     }
 
     /**
@@ -41,13 +45,14 @@ class AbsensiController extends Controller
             'longitude' => 'required|numeric|between:-180,180',
             'accuracy' => 'required|numeric|min:0',
             'device_token' => 'required|string',
+            'image' => 'nullable|string',
         ]);
 
         $user = Auth::user();
 
-        // Check Device Validation Setting
-        $setting = Setting::where('key', 'device_validation_enabled')->first();
-        $isDeviceValidationEnabled = $setting ? filter_var($setting->value, FILTER_VALIDATE_BOOLEAN) : true;
+        // 1. Check Device Validation Setting
+        $deviceSetting = Setting::where('key', 'device_validation_enabled')->first();
+        $isDeviceValidationEnabled = $deviceSetting ? filter_var($deviceSetting->value, FILTER_VALIDATE_BOOLEAN) : true;
 
         if ($isDeviceValidationEnabled) {
             // Strict Mode: Must have registered device and match
@@ -66,6 +71,29 @@ class AbsensiController extends Controller
             if (!$user->registered_device_id) {
                 $user->update(['registered_device_id' => $validated['device_token']]);
             }
+        }
+
+        // 2. Check Face Recognition Setting
+        $faceSetting = Setting::where('key', 'face_recognition_enabled')->first();
+        $isFaceRecognitionEnabled = $faceSetting ? filter_var($faceSetting->value, FILTER_VALIDATE_BOOLEAN) : false;
+        $imagePath = null;
+
+        if ($isFaceRecognitionEnabled) {
+            if (empty($validated['image'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Wajah wajib diverifikasi (Face Recognition Enabled).',
+                ], 400);
+            }
+
+            // Decode and save image
+            $image = $validated['image'];
+            $image = str_replace('data:image/png;base64,', '', $image);
+            $image = str_replace(' ', '+', $image);
+            $imageName = 'absensi_photos/' . Str::random(10) . '.png';
+
+            Storage::disk('public')->put($imageName, base64_decode($image));
+            $imagePath = $imageName;
         }
 
         // Check if already checked in today
@@ -134,6 +162,7 @@ class AbsensiController extends Controller
             'lng_masuk' => $validated['longitude'],
             'distance_masuk' => $locationCheck['distance'],
             'device_info' => $info,
+            'capture_image' => $imagePath,
         ]);
 
         return response()->json([

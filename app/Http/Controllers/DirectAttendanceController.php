@@ -9,6 +9,7 @@ use App\Services\GeoLocationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class DirectAttendanceController extends Controller
@@ -43,11 +44,14 @@ class DirectAttendanceController extends Controller
             ->whereDate('tanggal', $today)
             ->first();
 
+        $avatarUrl = $user->avatar_url ? asset('storage/' . $user->avatar_url) : null;
+
         if (!$absence) {
             return response()->json([
                 'status' => 'check-in',
                 'message' => 'Anda akan melakukan Absen Masuk.',
                 'user_name' => $user->name,
+                'avatar_url' => $avatarUrl,
             ]);
         } elseif ($absence->jam_masuk && !$absence->jam_pulang) {
             return response()->json([
@@ -55,18 +59,21 @@ class DirectAttendanceController extends Controller
                 'message' => 'Anda sudah Absen Masuk pada ' . $absence->jam_masuk->format('H:i') . '. Apakah Anda ingin Absen Pulang sekarang?',
                 'user_name' => $user->name,
                 'jam_masuk' => $absence->jam_masuk->format('H:i'),
+                'avatar_url' => $avatarUrl,
             ]);
         } elseif (!$absence->jam_masuk) {
             return response()->json([
                 'status' => 'check-in',
                 'message' => 'Anda akan melakukan Absen Masuk.',
                 'user_name' => $user->name,
+                'avatar_url' => $avatarUrl,
             ]);
         } else {
             return response()->json([
                 'status' => 'completed',
                 'message' => 'Anda sudah menyelesaikan absensi hari ini (Masuk & Pulang).',
                 'user_name' => $user->name,
+                'avatar_url' => $avatarUrl,
             ]);
         }
     }
@@ -79,6 +86,7 @@ class DirectAttendanceController extends Controller
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
             'device_token' => 'required|string',
+            'image' => 'nullable|string',
         ]);
 
         $credentials = $request->only('email', 'password');
@@ -106,6 +114,20 @@ class DirectAttendanceController extends Controller
                 }
             }
 
+            // Face Recognition Logic
+            $faceSetting = Setting::where('key', 'face_recognition_enabled')->first();
+            $isFaceRecognitionEnabled = $faceSetting ? filter_var($faceSetting->value, FILTER_VALIDATE_BOOLEAN) : false;
+            $imagePath = null;
+
+            if ($isFaceRecognitionEnabled && $request->filled('image')) {
+                $image = $request->image;
+                $image = str_replace('data:image/png;base64,', '', $image);
+                $image = str_replace(' ', '+', $image);
+                $imageName = 'absensi_photos/' . Str::random(10) . '.png';
+                Storage::disk('public')->put($imageName, base64_decode($image));
+                $imagePath = $imageName;
+            }
+
             $today = now()->toDateString();
             $now = now();
 
@@ -131,6 +153,11 @@ class DirectAttendanceController extends Controller
 
             if (!$absence) {
                 // Check In
+                if ($isFaceRecognitionEnabled && !$imagePath) {
+                    Auth::logout();
+                    return redirect()->back()->with('error', 'Wajah wajib diverifikasi untuk Absen Masuk.');
+                }
+
                 Absence::create([
                     'user_id' => $user->id,
                     'tanggal' => $today,
@@ -139,6 +166,7 @@ class DirectAttendanceController extends Controller
                     'lng_masuk' => $request->longitude,
                     'distance_masuk' => $locationCheck['distance'],
                     'device_info' => $this->geoService->getDeviceInfo($request),
+                    'capture_image' => $imagePath,
                 ]);
                 $message = 'Berhasil Absen Masuk! Selamat Bekerja, ' . $user->name;
             } elseif ($absence->jam_masuk && !$absence->jam_pulang) {

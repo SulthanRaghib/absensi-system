@@ -20,7 +20,10 @@ class AuthController extends Controller
         // Fetch office location for the map in the login/choice view
         $officeLocation = Setting::getOfficeLocation();
 
-        return view('auth.choice', compact('officeLocation'));
+        $faceSetting = Setting::where('key', 'face_recognition_enabled')->first();
+        $faceRecognitionEnabled = $faceSetting ? filter_var($faceSetting->value, FILTER_VALIDATE_BOOLEAN) : false;
+
+        return view('auth.choice', compact('officeLocation', 'faceRecognitionEnabled'));
     }
 
     /**

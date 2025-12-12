@@ -19,6 +19,7 @@ class Absence extends Model
         'distance_masuk',
         'distance_pulang',
         'device_info',
+        'capture_image',
     ];
 
     protected $casts = [

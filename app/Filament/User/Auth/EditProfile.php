@@ -53,4 +53,10 @@ class EditProfile extends BaseEditProfile
                     ]),
             ]);
     }
+
+    // Redirect to user panel after profile update
+    protected function getRedirectUrl(): string
+    {
+        return filament()->getPanel('user')->getUrl();
+    }
 }

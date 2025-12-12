@@ -16,6 +16,17 @@
             confirmMessage: '',
             status: '',
             deviceToken: null,
+            userAvatar: null,
+
+            // Face Recognition State
+            faceRecognitionEnabled: {{ $faceRecognitionEnabled ? 'true' : 'false' }},
+            showFaceModal: false,
+            isFaceLoading: false,
+            isModelLoaded: false,
+            faceStatus: 'Memuat Model...',
+            faceMessage: 'Posisikan wajah Anda di tengah kamera',
+            capturedImage: null,
+            videoStream: null,
 
             init() {
                 // Check for rotated device ID from session (Direct Attendance)
@@ -38,14 +49,133 @@
                         this.$nextTick(() => {
                             this.initMap();
                             this.getLocation();
+                            if (this.faceRecognitionEnabled) {
+                                this.loadFaceModels();
+                            }
                         });
                     } else {
                         // Reset state when closed
                         this.showConfirm = false;
                         this.email = '';
                         this.password = '';
+                        this.closeFaceModal();
                     }
                 });
+            },
+
+            async loadFaceModels() {
+                try {
+                    this.faceStatus = 'Memuat Model Wajah...';
+                    const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+
+                    await Promise.all([
+                        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+                        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+                    ]);
+
+                    this.isModelLoaded = true;
+                    console.log('Face API Models Loaded');
+                } catch (error) {
+                    console.error('Error loading face models:', error);
+                    alert('Gagal memuat sistem pengenalan wajah. Cek koneksi internet.');
+                }
+            },
+
+            async openFaceModal() {
+                this.showFaceModal = true;
+                this.isFaceLoading = true;
+                this.faceStatus = 'Menyiapkan Kamera...';
+                this.faceMessage = 'Posisikan wajah Anda di tengah kamera';
+
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {}
+                    });
+                    this.videoStream = stream;
+                    this.$refs.video.srcObject = stream;
+                    this.isFaceLoading = false;
+                } catch (err) {
+                    console.error(err);
+                    alert('Gagal mengakses kamera. Pastikan izin kamera diberikan.');
+                    this.closeFaceModal();
+                }
+            },
+
+            closeFaceModal() {
+                this.showFaceModal = false;
+                if (this.videoStream) {
+                    this.videoStream.getTracks().forEach(track => track.stop());
+                    this.videoStream = null;
+                }
+            },
+
+            async captureAndVerify() {
+                if (!this.isModelLoaded) return;
+
+                this.isFaceLoading = true;
+                this.faceStatus = 'Memverifikasi Wajah...';
+
+                const video = this.$refs.video;
+
+                // 1. Detect Face from Camera
+                const detection = await faceapi.detectSingleFace(video).withFaceLandmarks()
+                    .withFaceDescriptor();
+
+                if (!detection) {
+                    this.isFaceLoading = false;
+                    this.faceMessage = 'Wajah tidak terdeteksi! Pastikan pencahayaan cukup.';
+                    return;
+                }
+
+                // 2. Load User Avatar and Compute Descriptor
+                try {
+                    const img = await faceapi.fetchImage(this.userAvatar);
+                    const avatarDetection = await faceapi.detectSingleFace(img)
+                        .withFaceLandmarks().withFaceDescriptor();
+
+                    if (!avatarDetection) {
+                        this.isFaceLoading = false;
+                        alert(
+                            'Foto profil Anda tidak valid (wajah tidak terdeteksi). Harap ganti foto profil.'
+                        );
+                        this.closeFaceModal();
+                        return;
+                    }
+
+                    // 3. Compare Descriptors
+                    const distance = faceapi.euclideanDistance(detection.descriptor,
+                        avatarDetection.descriptor);
+                    const threshold = 0.6;
+
+                    console.log('Face Distance:', distance);
+
+                    if (distance < threshold) {
+                        // Match!
+                        const canvas = this.$refs.canvas;
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        this.capturedImage = canvas.toDataURL('image/png');
+                        console.log('Image captured, submitting form...');
+
+                        this.closeFaceModal();
+
+                        // Wait for Alpine to update the hidden input value
+                        this.$nextTick(() => {
+                            this.$refs.attendanceForm.submit();
+                        });
+                    } else {
+                        this.isFaceLoading = false;
+                        this.faceMessage = 'Wajah tidak cocok dengan foto profil!';
+                    }
+
+                } catch (error) {
+                    console.error(error);
+                    this.isFaceLoading = false;
+                    alert('Terjadi kesalahan saat verifikasi wajah.');
+                }
             },
 
             async checkAttendance() {
@@ -78,14 +208,32 @@
                     } else if (data.status === 'completed') {
                         alert(data.message);
                     } else {
-                        // check-in or others, submit immediately
-                        this.$refs.attendanceForm.submit();
+                        // check-in
+                        this.userAvatar = data.avatar_url;
+
+                        if (this.faceRecognitionEnabled) {
+                            if (!this.userAvatar) {
+                                alert(
+                                    'Anda belum mengatur foto profil! Harap hubungi admin atau login ke dashboard untuk mengatur foto profil.'
+                                );
+                                this.isLoading = false;
+                                return;
+                            }
+                            this.openFaceModal();
+                        } else {
+                            this.$refs.attendanceForm.submit();
+                        }
                     }
                 } catch (error) {
                     console.error(error);
                     alert('Terjadi kesalahan koneksi');
                 } finally {
-                    this.isLoading = false;
+                    // Only stop loading if we are NOT proceeding to face modal or submit
+                    // If we open face modal, we keep loading? No, openFaceModal handles its own loading state.
+                    // But the main button should probably stop loading.
+                    if (!this.showFaceModal) {
+                        this.isLoading = false;
+                    }
                 }
             },
 
@@ -154,8 +302,8 @@
                             }
                         }, {
                             enableHighAccuracy: true,
-                            timeout: 10000,
-                            maximumAge: 0
+                            timeout: 20000,
+                            maximumAge: 2000
                         }
                     );
                 } else {

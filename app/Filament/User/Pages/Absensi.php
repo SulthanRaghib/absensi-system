@@ -26,10 +26,14 @@ class Absensi extends Page
         $todayAbsence = Absence::getTodayAbsence($user->id);
         $officeLocation = Setting::getOfficeLocation();
 
+        $faceSetting = Setting::where('key', 'face_recognition_enabled')->first();
+        $faceRecognitionEnabled = $faceSetting ? filter_var($faceSetting->value, FILTER_VALIDATE_BOOLEAN) : false;
+
         return [
             'user' => $user,
             'todayAbsence' => $todayAbsence,
             'officeLocation' => $officeLocation,
+            'faceRecognitionEnabled' => $faceRecognitionEnabled,
         ];
     }
 }

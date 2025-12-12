@@ -4,6 +4,9 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
+        <!-- Face API -->
+        <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
+
         <style>
             .glass-card {
                 background: rgba(255, 255, 255, 0.95);
@@ -22,6 +25,11 @@
             .map-container {
                 box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
             }
+
+            video {
+                transform: scaleX(-1);
+                /* Mirror the video */
+            }
         </style>
 
         <div x-data="absensiMapData({
@@ -30,8 +38,60 @@
             officeRadius: {{ $officeLocation['radius'] }},
             checkInRoute: '{{ route('absensi.check-in') }}',
             checkOutRoute: '{{ route('absensi.check-out') }}',
-            csrfToken: '{{ csrf_token() }}'
+            csrfToken: '{{ csrf_token() }}',
+            faceRecognitionEnabled: {{ $faceRecognitionEnabled ? 'true' : 'false' }},
+            userAvatar: '{{ Auth::user()->avatar_url ? asset('storage/' . Auth::user()->avatar_url) : null }}'
         })" class="grid grid-cols-1 md:grid-cols-12 gap-6">
+
+            <!-- Face Verification Modal -->
+            <div x-show="showFaceModal" style="display: none;"
+                class="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+                x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+
+                <!-- Backdrop -->
+                <div class="absolute inset-0 bg-black/75 backdrop-blur-sm" @click="closeFaceModal()"></div>
+
+                <!-- Modal Content -->
+                <div class="relative bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl flex flex-col items-center">
+                    <h2 class="text-xl font-bold mb-4">Verifikasi Wajah</h2>
+
+                    <div class="relative w-full aspect-[4/3] bg-black rounded-xl overflow-hidden mb-4">
+                        <video x-ref="video" autoplay muted playsinline class="w-full h-full object-cover"></video>
+                        <canvas x-ref="canvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+
+                        <!-- Loading Overlay -->
+                        <div x-show="isFaceLoading"
+                            class="absolute inset-0 flex items-center justify-center bg-black/50 text-white">
+                            <div class="flex flex-col items-center">
+                                <svg class="animate-spin h-8 w-8 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                        stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
+                                <span x-text="faceStatus">Memuat Model...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-sm text-gray-500 mb-4 text-center" x-text="faceMessage"></p>
+
+                    <div class="flex gap-3 w-full">
+                        <button @click="closeFaceModal()"
+                            class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200">
+                            Batal
+                        </button>
+                        <button @click="captureAndVerify()" :disabled="isFaceLoading || !isModelLoaded"
+                            class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50">
+                            Verifikasi
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <!-- Cheat Alert Modal -->
             <div x-show="showCheatModal" style="display: none;"
@@ -93,6 +153,47 @@
                 </div>
             </div>
 
+            <!-- No Avatar Modal -->
+            <div x-show="showNoAvatarModal" style="display: none;"
+                class="fixed inset-0 z-[9999] flex items-center justify-center p-6"
+                x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+
+                <!-- Backdrop -->
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showNoAvatarModal = false"></div>
+
+                <!-- Modal Content -->
+                <div
+                    class="relative bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl flex flex-col items-center text-center">
+                    <div class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-yellow-600" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+
+                    <h2 class="text-2xl font-bold text-gray-900 mb-3">Foto Profil Belum Diatur</h2>
+
+                    <p class="text-gray-600 mb-8">
+                        Anda belum mengatur foto profil! Harap upload foto wajah yang jelas di menu Profil sebelum
+                        melakukan absen.
+                    </p>
+
+                    <div class="flex flex-col gap-3 w-full">
+                        <a href="{{ filament()->getProfileUrl() }}"
+                            class="w-full py-3.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
+                            Atur Foto Profil
+                        </a>
+                        <button @click="showNoAvatarModal = false"
+                            class="w-full py-3.5 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+                            Nanti Saja
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Left Column: Profile, Status, Actions -->
             <div class="md:col-span-5 lg:col-span-4 space-y-6">
 
@@ -100,10 +201,15 @@
                 <div
                     class="flex items-center space-x-4 bg-white p-4 rounded-3xl shadow-sm border border-gray-100 md:bg-transparent md:shadow-none md:border-0 md:p-0">
                     <div class="relative">
-                        <div
-                            class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-blue-500/30">
-                            {{ strtoupper(substr($user->name, 0, 1)) }}
-                        </div>
+                        @if ($user->avatar_url)
+                            <img src="{{ asset('storage/' . $user->avatar_url) }}" alt="{{ $user->name }}"
+                                class="w-16 h-16 rounded-2xl object-cover shadow-lg shadow-blue-500/30">
+                        @else
+                            <div
+                                class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-blue-500/30">
+                                {{ strtoupper(substr($user->name, 0, 1)) }}
+                            </div>
+                        @endif
                         <div
                             class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full">
                         </div>
@@ -173,7 +279,7 @@
 
                 <!-- Action Buttons -->
                 <div class="grid grid-cols-2 gap-4">
-                    <button @click="performAttendance('in')"
+                    <button @click="initiateCheckIn()"
                         class="btn-action group relative w-full flex flex-col items-center justify-center p-4 rounded-2xl bg-gray-900 text-white shadow-lg shadow-gray-900/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none overflow-hidden"
                         :disabled="!userLocation || isLoading || {{ $todayAbsence?->jam_masuk ? 'true' : 'false' }}">
                         <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -341,6 +447,16 @@
                     showCheatModal: false,
                     deviceToken: null,
 
+                    // Face Recognition State
+                    showFaceModal: false,
+                    showNoAvatarModal: false,
+                    isFaceLoading: false,
+                    isModelLoaded: false,
+                    faceStatus: 'Memuat Model...',
+                    faceMessage: 'Posisikan wajah Anda di tengah kamera',
+                    capturedImage: null,
+                    videoStream: null,
+
                     init() {
                         // Device Binding Logic
                         let token = localStorage.getItem('device_token');
@@ -353,7 +469,134 @@
                         this.$nextTick(() => {
                             this.initMap();
                             this.startTracking(true); // Center map on init
+
+                            if (config.faceRecognitionEnabled) {
+                                this.loadFaceModels();
+                            }
                         });
+                    },
+
+                    async loadFaceModels() {
+                        try {
+                            this.faceStatus = 'Memuat Model Wajah...';
+                            // Load models from CDN or local
+                            const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+
+                            await Promise.all([
+                                faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+                                faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                                faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+                            ]);
+
+                            this.isModelLoaded = true;
+                            console.log('Face API Models Loaded');
+                        } catch (error) {
+                            console.error('Error loading face models:', error);
+                            this.showAlert('Gagal memuat sistem pengenalan wajah. Cek koneksi internet.', 'error');
+                        }
+                    },
+
+                    initiateCheckIn() {
+                        if (config.faceRecognitionEnabled) {
+                            if (!config.userAvatar) {
+                                this.showNoAvatarModal = true;
+                                return;
+                            }
+                            this.openFaceModal();
+                        } else {
+                            this.performAttendance('in');
+                        }
+                    },
+
+                    async openFaceModal() {
+                        this.showFaceModal = true;
+                        this.isFaceLoading = true;
+                        this.faceStatus = 'Menyiapkan Kamera...';
+                        this.faceMessage = 'Posisikan wajah Anda di tengah kamera';
+
+                        try {
+                            const stream = await navigator.mediaDevices.getUserMedia({
+                                video: {}
+                            });
+                            this.videoStream = stream;
+                            this.$refs.video.srcObject = stream;
+                            this.isFaceLoading = false;
+                        } catch (err) {
+                            console.error(err);
+                            this.showAlert('Gagal mengakses kamera. Pastikan izin kamera diberikan.', 'error');
+                            this.closeFaceModal();
+                        }
+                    },
+
+                    closeFaceModal() {
+                        this.showFaceModal = false;
+                        if (this.videoStream) {
+                            this.videoStream.getTracks().forEach(track => track.stop());
+                            this.videoStream = null;
+                        }
+                    },
+
+                    async captureAndVerify() {
+                        if (!this.isModelLoaded) return;
+
+                        this.isFaceLoading = true;
+                        this.faceStatus = 'Memverifikasi Wajah...';
+
+                        const video = this.$refs.video;
+
+                        // 1. Detect Face from Camera
+                        const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+
+                        if (!detection) {
+                            this.isFaceLoading = false;
+                            this.faceMessage = 'Wajah tidak terdeteksi! Pastikan pencahayaan cukup.';
+                            return;
+                        }
+
+                        // 2. Load User Avatar and Compute Descriptor
+                        try {
+                            // We need to load the avatar image as an HTMLImageElement
+                            const img = await faceapi.fetchImage(config.userAvatar);
+                            const avatarDetection = await faceapi.detectSingleFace(img).withFaceLandmarks()
+                                .withFaceDescriptor();
+
+                            if (!avatarDetection) {
+                                this.isFaceLoading = false;
+                                this.showAlert(
+                                    'Foto profil Anda tidak valid (wajah tidak terdeteksi). Harap ganti foto profil.',
+                                    'error');
+                                this.closeFaceModal();
+                                return;
+                            }
+
+                            // 3. Compare Descriptors
+                            const distance = faceapi.euclideanDistance(detection.descriptor, avatarDetection.descriptor);
+                            const threshold = 0.6;
+
+                            console.log('Face Distance:', distance);
+
+                            if (distance < threshold) {
+                                // Match!
+                                // Capture Image
+                                const canvas = this.$refs.canvas;
+                                canvas.width = video.videoWidth;
+                                canvas.height = video.videoHeight;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                                this.capturedImage = canvas.toDataURL('image/png');
+
+                                this.closeFaceModal();
+                                this.performAttendance('in', false, this.capturedImage);
+                            } else {
+                                this.isFaceLoading = false;
+                                this.faceMessage = 'Wajah tidak cocok dengan foto profil!';
+                            }
+
+                        } catch (error) {
+                            console.error(error);
+                            this.isFaceLoading = false;
+                            this.showAlert('Terjadi kesalahan saat verifikasi wajah.', 'error');
+                        }
                     },
 
                     initMap() {
@@ -435,8 +678,8 @@
                                 this.showAlert(message, 'error');
                             }, {
                                 enableHighAccuracy: true,
-                                timeout: 10000,
-                                maximumAge: 0
+                                timeout: 20000,
+                                maximumAge: 2000
                             }
                         );
                     },
@@ -479,7 +722,7 @@
                         return R * c;
                     },
 
-                    async performAttendance(action, force = false) {
+                    async performAttendance(action, force = false, image = null) {
                         if (!this.userLocation) {
                             this.showAlert('Lokasi belum ditemukan!', 'error');
                             return;
@@ -530,7 +773,8 @@
                                     latitude: this.userLocation.lat,
                                     longitude: this.userLocation.lng,
                                     accuracy: this.userLocation.accuracy,
-                                    device_token: this.deviceToken
+                                    device_token: this.deviceToken,
+                                    image: image // Send captured image if available
                                 })
                             });
 

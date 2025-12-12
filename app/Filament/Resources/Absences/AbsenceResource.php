@@ -108,6 +108,11 @@ class AbsenceResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                Tables\Columns\ImageColumn::make('capture_image')
+                    ->label('Foto')
+                    ->disk('public')
+                    ->circular(),
+
                 Tables\Columns\TextColumn::make('tanggal')
                     ->label('Tanggal')
                     ->date('d M Y')

@@ -69,6 +69,35 @@ class ListSettings extends ListRecords
                     $this->redirect(request()->header('Referer'));
                 }),
 
+            Action::make('toggleFaceRecognition')
+                ->label(fn() => (Setting::where('key', 'face_recognition_enabled')->first()->value ?? '0') == '1' ? 'Face Rec: ON' : 'Face Rec: OFF')
+                ->color(fn() => (Setting::where('key', 'face_recognition_enabled')->first()->value ?? '0') == '1' ? 'success' : 'danger')
+                ->icon(fn() => (Setting::where('key', 'face_recognition_enabled')->first()->value ?? '0') == '1' ? 'heroicon-o-face-smile' : 'heroicon-o-face-frown')
+                ->requiresConfirmation()
+                ->modalHeading(fn() => (Setting::where('key', 'face_recognition_enabled')->first()->value ?? '0') == '1' ? 'Nonaktifkan Face Recognition?' : 'Aktifkan Face Recognition?')
+                ->modalDescription(fn() => (Setting::where('key', 'face_recognition_enabled')->first()->value ?? '0') == '1'
+                    ? 'Apakah Anda yakin ingin menonaktifkan validasi wajah? Pegawai dapat absen tanpa perlu verifikasi wajah.'
+                    : 'Apakah Anda yakin ingin mengaktifkan validasi wajah? Pegawai harus melakukan verifikasi wajah saat absen.')
+                ->modalSubmitActionLabel(fn() => (Setting::where('key', 'face_recognition_enabled')->first()->value ?? '0') == '1' ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan')
+                ->modalIcon(fn() => (Setting::where('key', 'face_recognition_enabled')->first()->value ?? '0') == '1' ? 'heroicon-o-exclamation-triangle' : 'heroicon-o-check-circle')
+                ->action(function () {
+                    $setting = Setting::firstOrCreate(
+                        ['key' => 'face_recognition_enabled'],
+                        ['type' => 'boolean', 'description' => 'Aktifkan validasi Wajah (Face Recognition) saat absen']
+                    );
+
+                    $current = $setting->value == '1';
+                    $setting->update(['value' => $current ? '0' : '1']);
+
+                    Notification::make()
+                        ->title('Pengaturan Face Recognition Diperbarui')
+                        ->body('Status validasi wajah berhasil diubah.')
+                        ->success()
+                        ->send();
+
+                    $this->redirect(request()->header('Referer'));
+                }),
+
             CreateAction::make(),
         ];
     }

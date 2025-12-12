@@ -21,5 +21,14 @@ class SettingSeeder extends Seeder
                 'description' => 'Aktifkan validasi Device ID saat absen',
             ]
         );
+
+        Setting::updateOrCreate(
+            ['key' => 'face_recognition_enabled'],
+            [
+                'value' => '1',
+                'type' => 'boolean',
+                'description' => 'Aktifkan validasi Wajah (Face Recognition) saat absen',
+            ]
+        );
     }
 }

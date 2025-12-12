@@ -6,6 +6,9 @@ use App\Filament\Resources\Settings\Pages;
 use App\Models\Setting;
 use BackedEnum;
 use Filament\Actions;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components as Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components as Schemas;
@@ -152,8 +155,17 @@ class SettingResource extends Resource
                     ]),
             ])
             ->actions([
-                Actions\EditAction::make(),
-                Actions\DeleteAction::make(),
+                EditAction::make(),
+                DeleteAction::make(),
+                Action::make('toggle')
+                    ->label(fn(Setting $record) => filter_var($record->value, FILTER_VALIDATE_BOOLEAN) ? 'Non-Aktifkan' : 'Aktifkan')
+                    ->icon(fn(Setting $record) => filter_var($record->value, FILTER_VALIDATE_BOOLEAN) ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
+                    ->color(fn(Setting $record) => filter_var($record->value, FILTER_VALIDATE_BOOLEAN) ? 'danger' : 'success')
+                    ->visible(fn(Setting $record) => $record->type === 'boolean')
+                    ->action(function (Setting $record) {
+                        $newValue = filter_var($record->value, FILTER_VALIDATE_BOOLEAN) ? '0' : '1';
+                        $record->update(['value' => $newValue]);
+                    }),
             ])
             ->bulkActions([
                 Actions\BulkActionGroup::make([
