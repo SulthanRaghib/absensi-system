@@ -101,6 +101,16 @@
                     const file = e.target.files[0];
                     if (!file) return;
 
+                    // Allow all image formats to be selected; block obvious non-images.
+                    // Some browsers may provide empty file.type for certain formats.
+                    if (file.type && !file.type.startsWith('image/')) {
+                        this.validationStatus = 'invalid';
+                        this.errorMessage =
+                            'File yang dipilih bukan gambar. Silakan pilih file gambar.';
+                        this.$refs.fileInput.value = '';
+                        return;
+                    }
+
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         this.cropperImage = e.target.result;
@@ -268,7 +278,7 @@
                         clearTimeout(timeoutId);
                         this.validationStatus = 'invalid';
                         this.errorMessage =
-                            'File gambar rusak atau tidak dapat dibaca.';
+                            'Format gambar tidak dapat dibaca oleh browser. Silakan coba JPG/PNG/WebP atau konversi file terlebih dahulu.';
                         this.isAnalyzing = false;
                     };
                 },

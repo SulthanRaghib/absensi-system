@@ -71,8 +71,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        <input type="file" class="hidden" accept="image/*" @change="handleFileSelect"
-                            x-ref="fileInput">
+                        <input type="file" class="hidden" accept="image/*,.heic,.heif,.tif,.tiff,.bmp"
+                            @change="handleFileSelect" x-ref="fileInput">
                     </label>
 
                     <!-- Cancel Button -->
