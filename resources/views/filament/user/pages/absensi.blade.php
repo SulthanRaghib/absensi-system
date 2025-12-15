@@ -182,7 +182,7 @@
                     </p>
 
                     <div class="flex flex-col gap-3 w-full">
-                        <a href="{{ filament()->getProfileUrl() }}"
+                        <a href="{{ route('filament.user.pages.profile') }}"
                             class="w-full py-3.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
                             Atur Foto Profil
                         </a>

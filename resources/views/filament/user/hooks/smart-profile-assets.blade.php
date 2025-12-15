@@ -17,6 +17,9 @@
                 errorMessage: '',
                 modelsLoaded: false,
 
+                // Delete Avatar Modal
+                showDeleteAvatarModal: false,
+
                 // Cropper State
                 showCropperModal: false,
                 cropper: null,
@@ -75,6 +78,23 @@
                     if (this.$wire) {
                         this.$wire.set('newAvatar', null);
                     }
+                },
+
+                openDeleteAvatarModal() {
+                    this.showDeleteAvatarModal = true;
+                },
+
+                closeDeleteAvatarModal() {
+                    this.showDeleteAvatarModal = false;
+                },
+
+                async confirmDeleteAvatar() {
+                    if (!this.$wire) return;
+
+                    await this.$wire.call('deleteAvatar');
+                    this.userAvatar = '';
+                    this.timestamp = Date.now();
+                    this.showDeleteAvatarModal = false;
                 },
 
                 async handleFileSelect(e) {

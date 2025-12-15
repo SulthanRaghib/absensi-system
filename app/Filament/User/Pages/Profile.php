@@ -138,6 +138,25 @@ class Profile extends Page implements HasForms
         $this->redirect('/user');
     }
 
+    public function deleteAvatar(): void
+    {
+        $user = Auth::user();
+
+        if ($user->avatar_url && Storage::disk('public')->exists($user->avatar_url)) {
+            Storage::disk('public')->delete($user->avatar_url);
+        }
+
+        $user->avatar_url = null;
+        $user->save();
+
+        $this->newAvatar = null;
+
+        Notification::make()
+            ->success()
+            ->title('Foto profil berhasil dihapus')
+            ->send();
+    }
+
     protected function getFormActions(): array
     {
         return [

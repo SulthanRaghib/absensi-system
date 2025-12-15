@@ -50,6 +50,17 @@
                         </div>
                     </div>
 
+                    <!-- Delete Current Avatar Button (X) -->
+                    <button x-show="!previewUrl && userAvatar" @click="openDeleteAvatarModal" type="button"
+                        class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 shadow-md hover:bg-red-600 transition-colors z-30"
+                        title="Hapus Foto Profil">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+
                     <!-- Upload Button -->
                     <label
                         class="absolute bottom-2 right-2 bg-blue-600 text-white p-2.5 rounded-full cursor-pointer hover:bg-blue-700 transition-colors shadow-md z-20">
@@ -66,7 +77,7 @@
 
                     <!-- Cancel Button -->
                     <button x-show="previewUrl" @click="resetUpload" type="button"
-                        class="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1.5 shadow-md hover:bg-red-600 transition-colors z-30 transform translate-x-1/4 -translate-y-1/4"
+                        class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 shadow-md hover:bg-red-600 transition-colors z-30"
                         title="Batalkan Upload">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
@@ -74,6 +85,32 @@
                                 clip-rule="evenodd" />
                         </svg>
                     </button>
+                </div>
+
+                <!-- Delete Avatar Confirmation Modal -->
+                <div x-show="showDeleteAvatarModal" x-cloak style="display: none;"
+                    class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+                    x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
+                    x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+
+                    <div class="absolute inset-0" @click="closeDeleteAvatarModal"></div>
+
+                    <div class="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
+                        <h3 class="text-lg font-semibold text-gray-900">Hapus Foto Profil?</h3>
+                        <p class="text-sm text-gray-600 mt-2">Foto profil akan dihapus dari sistem.</p>
+
+                        <div class="mt-6 flex gap-3 justify-end">
+                            <button type="button" @click="closeDeleteAvatarModal"
+                                class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-medium hover:bg-gray-200">
+                                Tidak
+                            </button>
+                            <button type="button" @click="confirmDeleteAvatar"
+                                class="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700">
+                                Ya, Hapus
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Validation Status -->
