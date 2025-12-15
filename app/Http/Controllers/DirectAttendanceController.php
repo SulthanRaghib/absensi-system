@@ -99,20 +99,43 @@ class DirectAttendanceController extends Controller
             $setting = Setting::where('key', 'device_validation_enabled')->first();
             $isDeviceValidationEnabled = $setting ? filter_var($setting->value, FILTER_VALIDATE_BOOLEAN) : true;
 
+            $deviceToken = $request->device_token;
+            $riskLevel = 'safe';
+
             if ($isDeviceValidationEnabled) {
-                // Strict Mode: Must have registered device and match
-                if (!$user->registered_device_id) {
-                    // If no device registered yet, register it automatically (First time setup)
-                    $user->update(['registered_device_id' => $request->device_token]);
-                } elseif ($user->registered_device_id !== $request->device_token) {
-                    Auth::logout();
-                    return redirect()->back()->with('fraud_alert', 'Hayolohhh mau titip absen siapaaa?, gw laporin lohhh');
+                // Step A: Record Device
+                $userDevice = \App\Models\UserDevice::firstOrCreate(
+                    ['user_id' => $user->id, 'device_unique_id' => $deviceToken],
+                    ['last_used_at' => now()]
+                );
+                $userDevice->update(['last_used_at' => now()]);
+
+                // Step B: Collision Detection
+                $otherUsersWithSameDevice = \App\Models\UserDevice::where('device_unique_id', $deviceToken)
+                    ->where('user_id', '!=', $user->id)
+                    ->get();
+
+                // Step C: Risk Logic
+                if ($otherUsersWithSameDevice->isNotEmpty()) {
+                    $riskLevel = 'danger';
+
+                    // Update other users' attendance records
+                    foreach ($otherUsersWithSameDevice as $otherDevice) {
+                        $otherUserAbsence = Absence::where('user_id', $otherDevice->user_id)
+                            ->whereDate('tanggal', today())
+                            ->first();
+
+                        if ($otherUserAbsence) {
+                            $otherUserAbsence->update(['risk_level' => 'warning']);
+                        }
+                    }
                 }
             } else {
-                // Loose Mode: Auto-register if empty
-                if (!$user->registered_device_id) {
-                    $user->update(['registered_device_id' => $request->device_token]);
-                }
+                // Loose Mode: Record history but don't flag risk
+                \App\Models\UserDevice::firstOrCreate(
+                    ['user_id' => $user->id, 'device_unique_id' => $deviceToken],
+                    ['last_used_at' => now()]
+                )->update(['last_used_at' => now()]);
             }
 
             // Face Recognition Logic
@@ -175,6 +198,7 @@ class DirectAttendanceController extends Controller
                     'distance_masuk' => $locationCheck['distance'],
                     'device_info' => $this->geoService->getDeviceInfo($request),
                     'capture_image' => $imagePath,
+                    'risk_level' => $riskLevel,
                 ]);
                 $message = 'Berhasil Absen Masuk! Selamat Bekerja, ' . $user->name;
             } elseif ($absence->jam_masuk && !$absence->jam_pulang) {
@@ -185,10 +209,6 @@ class DirectAttendanceController extends Controller
                     'lng_pulang' => $request->longitude,
                     'distance_pulang' => $locationCheck['distance'],
                 ]);
-
-                // Rotate Device ID for Security
-                $newDeviceId = (string) Str::uuid();
-                $user->update(['registered_device_id' => $newDeviceId]);
 
                 $message = 'Berhasil Absen Pulang! Hati-hati di jalan, ' . $user->name;
             } elseif (!$absence->jam_masuk) {
@@ -214,10 +234,6 @@ class DirectAttendanceController extends Controller
             $request->session()->regenerateToken();
 
             $redirect = redirect()->back()->with($status, $message);
-
-            if ($newDeviceId) {
-                $redirect->with('new_device_id', $newDeviceId);
-            }
 
             return $redirect;
         }

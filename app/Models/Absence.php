@@ -20,6 +20,7 @@ class Absence extends Model
         'distance_pulang',
         'device_info',
         'capture_image',
+        'risk_level',
     ];
 
     protected $casts = [

@@ -129,4 +129,9 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             ->whereNotNull('jam_pulang')
             ->exists();
     }
+
+    public function userDevices(): HasMany
+    {
+        return $this->hasMany(UserDevice::class);
+    }
 }

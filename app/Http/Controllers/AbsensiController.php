@@ -50,27 +50,47 @@ class AbsensiController extends Controller
 
         $user = Auth::user();
 
-        // 1. Check Device Validation Setting
+        // 1. Device Validation & Risk Assessment
         $deviceSetting = Setting::where('key', 'device_validation_enabled')->first();
         $isDeviceValidationEnabled = $deviceSetting ? filter_var($deviceSetting->value, FILTER_VALIDATE_BOOLEAN) : true;
 
+        $deviceToken = $validated['device_token'];
+        $riskLevel = 'safe';
+
         if ($isDeviceValidationEnabled) {
-            // Strict Mode: Must have registered device and match
-            if (!$user->registered_device_id) {
-                // If no device registered yet, register it automatically (First time setup)
-                $user->update(['registered_device_id' => $validated['device_token']]);
-            } elseif ($user->registered_device_id !== $validated['device_token']) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Device mismatch detected.',
-                    'cheat_alert' => true
-                ], 403);
+            // Step A: Record Device
+            $userDevice = \App\Models\UserDevice::firstOrCreate(
+                ['user_id' => $user->id, 'device_unique_id' => $deviceToken],
+                ['last_used_at' => now()]
+            );
+            $userDevice->update(['last_used_at' => now()]);
+
+            // Step B: Collision Detection
+            $otherUsersWithSameDevice = \App\Models\UserDevice::where('device_unique_id', $deviceToken)
+                ->where('user_id', '!=', $user->id)
+                ->get();
+
+            // Step C: Risk Logic
+            if ($otherUsersWithSameDevice->isNotEmpty()) {
+                $riskLevel = 'danger';
+
+                // Update other users' attendance records
+                foreach ($otherUsersWithSameDevice as $otherDevice) {
+                    $otherUserAbsence = Absence::where('user_id', $otherDevice->user_id)
+                        ->whereDate('tanggal', today())
+                        ->first();
+
+                    if ($otherUserAbsence) {
+                        $otherUserAbsence->update(['risk_level' => 'warning']);
+                    }
+                }
             }
         } else {
-            // Loose Mode: Auto-register if empty, otherwise allow any
-            if (!$user->registered_device_id) {
-                $user->update(['registered_device_id' => $validated['device_token']]);
-            }
+            // If validation is disabled, we still record the device for history but don't calculate risk
+            \App\Models\UserDevice::firstOrCreate(
+                ['user_id' => $user->id, 'device_unique_id' => $deviceToken],
+                ['last_used_at' => now()]
+            )->update(['last_used_at' => now()]);
         }
 
         // 2. Check Face Recognition Setting
@@ -163,6 +183,7 @@ class AbsensiController extends Controller
             'distance_masuk' => $locationCheck['distance'],
             'device_info' => $info,
             'capture_image' => $imagePath,
+            'risk_level' => $riskLevel,
         ]);
 
         return response()->json([
@@ -236,17 +257,12 @@ class AbsensiController extends Controller
             'distance_pulang' => $locationCheck['distance'],
         ]);
 
-        // Rotate Device ID for Security
-        $newDeviceId = (string) Str::uuid();
-        $user->update(['registered_device_id' => $newDeviceId]);
-
         return response()->json([
             'success' => true,
             'message' => 'Absen pulang berhasil! ' . $locationCheck['message'],
             'data' => [
                 'jam_pulang' => $absence->jam_pulang->format('H:i:s'),
                 'distance' => $locationCheck['distance'],
-                'new_device_id' => $newDeviceId,
             ],
         ]);
     }
