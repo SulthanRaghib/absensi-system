@@ -87,6 +87,16 @@ class GeoLocationService
      */
     public function validateAccuracy(float $accuracy, float $maxAccuracy = 10000): array
     {
+        // If radius check is disabled, we also disable strict accuracy check
+        // allowing users to check in from anywhere even with poor GPS (e.g. PC/Laptop without GPS)
+        if (!Setting::isRadiusEnabled()) {
+            return [
+                'valid' => true,
+                'accuracy' => $accuracy,
+                'message' => "Akurasi GPS diabaikan (Radius Check Disabled). Akurasi: {$accuracy} meter.",
+            ];
+        }
+
         $isValid = $accuracy <= $maxAccuracy;
 
         return [
