@@ -25,10 +25,18 @@
             showFaceModal: false,
             isFaceLoading: false,
             isModelLoaded: false,
-            faceStatus: 'Memuat Model...',
-            faceMessage: 'Posisikan wajah Anda di tengah kamera',
+            faceStatus: 'scanning', // scanning, detecting, success, error
+            faceMessage: 'Memulai kamera...',
             capturedImage: null,
             videoStream: null,
+
+            // Auto-Scan State
+            isScanning: false,
+            isMatched: false,
+            showRetry: false,
+            scanInterval: null,
+            scanTimeout: null,
+            userDescriptor: null,
 
             init() {
                 // Check for rotated device ID from session (Direct Attendance)
@@ -71,8 +79,11 @@
 
             async loadFaceModels() {
                 try {
-                    this.faceStatus = 'Memuat Model Wajah...';
-                    const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+                    this.faceStatus = 'scanning';
+                    this.faceMessage = 'Memuat Model Wajah...';
+
+                    // Load models from /models
+                    const MODEL_URL = '/models';
 
                     await Promise.all([
                         faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
@@ -88,18 +99,57 @@
                 }
             },
 
+            async loadUserDescriptor() {
+                if (!this.userAvatar) return;
+                try {
+                    // Use fetchImage to handle CORS if needed
+                    const img = await faceapi.fetchImage(this.userAvatar);
+                    const detection = await faceapi.detectSingleFace(img).withFaceLandmarks()
+                        .withFaceDescriptor();
+
+                    if (detection) {
+                        this.userDescriptor = detection.descriptor;
+                        console.log('User descriptor loaded');
+                    } else {
+                        console.warn('No face found in user avatar');
+                        alert(
+                            'Foto profil Anda tidak valid (wajah tidak terdeteksi). Harap ganti foto profil.');
+                    }
+                } catch (e) {
+                    console.error('Error loading user avatar descriptor', e);
+                    alert('Gagal memuat data wajah user.');
+                }
+            },
+
             async openFaceModal() {
                 this.showFaceModal = true;
-                this.isFaceLoading = true;
-                this.faceStatus = 'Menyiapkan Kamera...';
-                this.faceMessage = 'Posisikan wajah Anda di tengah kamera';
+                this.showRetry = false;
+                this.isMatched = false;
+                this.faceStatus = 'scanning';
+                this.faceMessage = 'Memulai kamera...';
 
+                await this.startCamera();
+                this.startScanning();
+            },
+
+            async startCamera() {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({
-                        video: {}
+                        video: {
+                            facingMode: 'user'
+                        }
                     });
                     this.videoStream = stream;
                     this.$refs.video.srcObject = stream;
+
+                    // Wait for video to be ready
+                    await new Promise(resolve => {
+                        this.$refs.video.onloadedmetadata = () => {
+                            this.$refs.video.play();
+                            resolve();
+                        };
+                    });
+
                     this.isFaceLoading = false;
                 } catch (err) {
                     console.error(err);
@@ -108,79 +158,97 @@
                 }
             },
 
+            startScanning() {
+                this.isScanning = true;
+                this.faceStatus = 'scanning';
+                this.faceMessage = 'Mencari wajah...';
+
+                // Timeout 15s
+                if (this.scanTimeout) clearTimeout(this.scanTimeout);
+                this.scanTimeout = setTimeout(() => {
+                    this.stopScanning();
+                    if (!this.isMatched) {
+                        this.showRetry = true;
+                        this.faceStatus = 'error';
+                        this.faceMessage = 'Waktu habis';
+                    }
+                }, 15000);
+
+                if (this.scanInterval) clearInterval(this.scanInterval);
+                this.scanInterval = setInterval(async () => {
+                    if (!this.videoStream || this.isMatched || !this.isModelLoaded || !
+                        this.isScanning) return;
+
+                    const video = this.$refs.video;
+
+                    // Detect
+                    const detection = await faceapi.detectSingleFace(video)
+                        .withFaceLandmarks().withFaceDescriptor();
+
+                    if (detection) {
+                        this.faceStatus = 'detecting';
+                        this.faceMessage = 'Verifikasi...';
+
+                        if (this.userDescriptor) {
+                            const distance = faceapi.euclideanDistance(detection
+                                .descriptor, this.userDescriptor);
+                            console.log('Distance:', distance);
+
+                            if (distance < 0.5) { // Strict match
+                                this.handleMatch(video);
+                            } else {
+                                this.faceMessage = 'Wajah tidak cocok';
+                            }
+                        } else {
+                            this.faceMessage = 'Data wajah user tidak valid';
+                        }
+                    } else {
+                        this.faceStatus = 'scanning';
+                        this.faceMessage = 'Mencari wajah...';
+                    }
+                }, 500); // Check every 500ms
+            },
+
+            stopScanning() {
+                this.isScanning = false;
+                if (this.scanInterval) clearInterval(this.scanInterval);
+                if (this.scanTimeout) clearTimeout(this.scanTimeout);
+            },
+
+            handleMatch(video) {
+                this.isMatched = true;
+                this.stopScanning();
+                this.faceStatus = 'success';
+                this.faceMessage = 'Berhasil! Memproses...';
+
+                // Capture Image
+                const canvas = this.$refs.canvas;
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0);
+                this.capturedImage = canvas.toDataURL('image/png');
+
+                // Submit after short delay
+                setTimeout(() => {
+                    this.closeFaceModal();
+                    this.$nextTick(() => {
+                        this.$refs.attendanceForm.submit();
+                    });
+                }, 1000);
+            },
+
+            retryScan() {
+                this.showRetry = false;
+                this.startScanning();
+            },
+
             closeFaceModal() {
                 this.showFaceModal = false;
+                this.stopScanning();
                 if (this.videoStream) {
                     this.videoStream.getTracks().forEach(track => track.stop());
                     this.videoStream = null;
-                }
-            },
-
-            async captureAndVerify() {
-                if (!this.isModelLoaded) return;
-
-                this.isFaceLoading = true;
-                this.faceStatus = 'Memverifikasi Wajah...';
-
-                const video = this.$refs.video;
-
-                // 1. Detect Face from Camera
-                const detection = await faceapi.detectSingleFace(video).withFaceLandmarks()
-                    .withFaceDescriptor();
-
-                if (!detection) {
-                    this.isFaceLoading = false;
-                    this.faceMessage = 'Wajah tidak terdeteksi! Pastikan pencahayaan cukup.';
-                    return;
-                }
-
-                // 2. Load User Avatar and Compute Descriptor
-                try {
-                    const img = await faceapi.fetchImage(this.userAvatar);
-                    const avatarDetection = await faceapi.detectSingleFace(img)
-                        .withFaceLandmarks().withFaceDescriptor();
-
-                    if (!avatarDetection) {
-                        this.isFaceLoading = false;
-                        alert(
-                            'Foto profil Anda tidak valid (wajah tidak terdeteksi). Harap ganti foto profil.'
-                        );
-                        this.closeFaceModal();
-                        return;
-                    }
-
-                    // 3. Compare Descriptors
-                    const distance = faceapi.euclideanDistance(detection.descriptor,
-                        avatarDetection.descriptor);
-                    const threshold = 0.6;
-
-                    console.log('Face Distance:', distance);
-
-                    if (distance < threshold) {
-                        // Match!
-                        const canvas = this.$refs.canvas;
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        this.capturedImage = canvas.toDataURL('image/png');
-                        console.log('Image captured, submitting form...');
-
-                        this.closeFaceModal();
-
-                        // Wait for Alpine to update the hidden input value
-                        this.$nextTick(() => {
-                            this.$refs.attendanceForm.submit();
-                        });
-                    } else {
-                        this.isFaceLoading = false;
-                        this.faceMessage = 'Wajah tidak cocok dengan foto profil!';
-                    }
-
-                } catch (error) {
-                    console.error(error);
-                    this.isFaceLoading = false;
-                    alert('Terjadi kesalahan saat verifikasi wajah.');
                 }
             },
 
@@ -235,7 +303,14 @@
                                 this.isLoading = false;
                                 return;
                             }
-                            this.openFaceModal();
+
+                            // Load descriptor before opening modal
+                            await this.loadUserDescriptor();
+                            if (this.userDescriptor) {
+                                this.openFaceModal();
+                            } else {
+                                this.isLoading = false;
+                            }
                         } else {
                             this.$refs.attendanceForm.submit();
                         }
@@ -244,9 +319,6 @@
                     console.error(error);
                     alert('Terjadi kesalahan koneksi');
                 } finally {
-                    // Only stop loading if we are NOT proceeding to face modal or submit
-                    // If we open face modal, we keep loading? No, openFaceModal handles its own loading state.
-                    // But the main button should probably stop loading.
                     if (!this.showFaceModal) {
                         this.isLoading = false;
                     }
@@ -256,6 +328,7 @@
             submitForm() {
                 this.$refs.attendanceForm.submit();
             },
+
 
             initMap() {
                 if (this.map) return;

@@ -4,9 +4,6 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
-        <!-- Face API -->
-        <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
-
         <style>
             .glass-card {
                 background: rgba(255, 255, 255, 0.95);
@@ -30,6 +27,30 @@
                 transform: scaleX(-1);
                 /* Mirror the video */
             }
+
+            @keyframes scan {
+                0% {
+                    top: 0%;
+                    opacity: 0;
+                }
+
+                10% {
+                    opacity: 1;
+                }
+
+                90% {
+                    opacity: 1;
+                }
+
+                100% {
+                    top: 100%;
+                    opacity: 0;
+                }
+            }
+
+            .animate-scan {
+                animation: scan 2s linear infinite;
+            }
         </style>
 
         <div x-data="absensiMapData({
@@ -51,43 +72,77 @@
                 x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
 
                 <!-- Backdrop -->
-                <div class="absolute inset-0 bg-black/75 backdrop-blur-sm" @click="closeFaceModal()"></div>
+                <div class="absolute inset-0 bg-black/90 backdrop-blur-md" @click="closeFaceModal()"></div>
 
                 <!-- Modal Content -->
-                <div class="relative bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl flex flex-col items-center">
-                    <h2 class="text-xl font-bold mb-4">Verifikasi Wajah</h2>
+                <div class="relative w-full max-w-md mx-auto flex flex-col items-center justify-center min-h-[500px]">
 
-                    <div class="relative w-full aspect-[4/3] bg-black rounded-xl overflow-hidden mb-4">
-                        <video x-ref="video" autoplay muted playsinline class="w-full h-full object-cover"></video>
-                        <canvas x-ref="canvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
-
-                        <!-- Loading Overlay -->
-                        <div x-show="isFaceLoading"
-                            class="absolute inset-0 flex items-center justify-center bg-black/50 text-white">
-                            <div class="flex flex-col items-center">
-                                <svg class="animate-spin h-8 w-8 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                    viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10"
-                                        stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor"
-                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                    </path>
-                                </svg>
-                                <span x-text="faceStatus">Memuat Model...</span>
+                    <!-- Status Badge -->
+                    <div class="absolute top-0 z-20 mt-8">
+                        <div class="px-4 py-2 rounded-full backdrop-blur-md border border-white/10 shadow-xl transition-all duration-300"
+                            :class="{
+                                'bg-white/10 text-white': faceStatus === 'scanning',
+                                'bg-blue-500/20 text-blue-200 border-blue-500/50': faceStatus === 'detecting',
+                                'bg-green-500/20 text-green-200 border-green-500/50': faceStatus === 'success',
+                                'bg-red-500/20 text-red-200 border-red-500/50': faceStatus === 'error'
+                            }">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full animate-pulse"
+                                    :class="{
+                                        'bg-white': faceStatus === 'scanning',
+                                        'bg-blue-400': faceStatus === 'detecting',
+                                        'bg-green-400': faceStatus === 'success',
+                                        'bg-red-400': faceStatus === 'error'
+                                    }">
+                                </div>
+                                <span class="text-sm font-medium tracking-wide" x-text="faceMessage"></span>
                             </div>
                         </div>
                     </div>
 
-                    <p class="text-sm text-gray-500 mb-4 text-center" x-text="faceMessage"></p>
+                    <!-- Camera Container -->
+                    <div
+                        class="relative w-72 h-72 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10 shadow-2xl bg-black">
+                        <video x-ref="video" autoplay muted playsinline
+                            class="w-full h-full object-cover transform scale-x-[-1]"></video>
+                        <canvas x-ref="canvas"
+                            class="absolute inset-0 w-full h-full pointer-events-none transform scale-x-[-1]"></canvas>
 
-                    <div class="flex gap-3 w-full">
-                        <button @click="closeFaceModal()"
-                            class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200">
-                            Batal
+                        <!-- Scanning Overlay -->
+                        <div x-show="isScanning && !isMatched"
+                            class="absolute inset-0 bg-gradient-to-b from-blue-500/0 via-blue-500/10 to-blue-500/0 animate-scan pointer-events-none">
+                            <div class="h-[2px] w-full bg-blue-400/50 shadow-[0_0_15px_rgba(96,165,250,0.8)]"></div>
+                        </div>
+
+                        <!-- Success Overlay -->
+                        <div x-show="isMatched"
+                            class="absolute inset-0 flex items-center justify-center bg-green-500/20 backdrop-blur-[2px] transition-all duration-500">
+                            <div class="bg-white rounded-full p-4 shadow-lg animate-bounce">
+                                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                        d="M5 13l4 4L19 7">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Instructions / Controls -->
+                    <div class="mt-8 text-center space-y-4 z-20">
+                        <p class="text-white/60 text-sm max-w-[200px] mx-auto leading-relaxed"
+                            x-show="!showRetry && !isMatched">
+                            Posisikan wajah Anda di dalam lingkaran
+                        </p>
+
+                        <button x-show="showRetry" @click="retryScan()"
+                            class="px-6 py-2 bg-white text-gray-900 rounded-full font-medium hover:bg-gray-100 transition-colors shadow-lg transform hover:scale-105 active:scale-95">
+                            Coba Lagi
                         </button>
-                        <button @click="captureAndVerify()" :disabled="isFaceLoading || !isModelLoaded"
-                            class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50">
-                            Verifikasi
+
+                        <button @click="closeFaceModal()"
+                            class="text-white/40 text-sm hover:text-white transition-colors mt-4">
+                            Batalkan
                         </button>
                     </div>
                 </div>
@@ -452,10 +507,18 @@
                     showNoAvatarModal: false,
                     isFaceLoading: false,
                     isModelLoaded: false,
-                    faceStatus: 'Memuat Model...',
-                    faceMessage: 'Posisikan wajah Anda di tengah kamera',
+                    faceStatus: 'scanning', // scanning, detecting, success, error
+                    faceMessage: 'Memulai kamera...',
                     capturedImage: null,
                     videoStream: null,
+
+                    // Auto-Scan State
+                    isScanning: false,
+                    isMatched: false,
+                    showRetry: false,
+                    scanInterval: null,
+                    scanTimeout: null,
+                    userDescriptor: null,
 
                     init() {
                         // Device Binding Logic
@@ -478,9 +541,11 @@
 
                     async loadFaceModels() {
                         try {
-                            this.faceStatus = 'Memuat Model Wajah...';
-                            // Load models from CDN or local
-                            const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+                            this.faceStatus = 'scanning';
+                            this.faceMessage = 'Memuat Model Wajah...';
+
+                            // Load models from local asset path to ensure correct URL in subfolders
+                            const MODEL_URL = "{{ asset('models') }}";
 
                             await Promise.all([
                                 faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
@@ -490,19 +555,66 @@
 
                             this.isModelLoaded = true;
                             console.log('Face API Models Loaded');
+
+                            // Pre-load user descriptor
+                            await this.loadUserDescriptor();
+
                         } catch (error) {
                             console.error('Error loading face models:', error);
-                            this.showAlert('Gagal memuat sistem pengenalan wajah. Cek koneksi internet.', 'error');
+                            this.showAlert('Gagal memuat sistem pengenalan wajah. Pastikan folder /public/models ada.',
+                                'error');
                         }
                     },
 
-                    initiateCheckIn() {
+                    async loadUserDescriptor() {
+                        if (!config.userAvatar) return;
+                        try {
+                            // Use fetchImage to handle CORS if needed
+                            const img = await faceapi.fetchImage(config.userAvatar);
+                            const detection = await faceapi.detectSingleFace(img).withFaceLandmarks()
+                                .withFaceDescriptor();
+
+                            if (detection) {
+                                this.userDescriptor = detection.descriptor;
+                                console.log('User descriptor loaded');
+                            } else {
+                                console.warn('No face found in user avatar');
+                                this.showAlert(
+                                    'Foto profil Anda tidak valid (wajah tidak terdeteksi). Harap ganti foto profil.',
+                                    'error');
+                            }
+                        } catch (e) {
+                            console.error('Error loading user avatar descriptor', e);
+                            this.showAlert('Gagal memuat data wajah user.', 'error');
+                        }
+                    },
+
+                    async initiateCheckIn() {
+                        console.log('Initiating Check-in...');
                         if (config.faceRecognitionEnabled) {
                             if (!config.userAvatar) {
                                 this.showNoAvatarModal = true;
                                 return;
                             }
-                            this.openFaceModal();
+
+                            if (!this.isModelLoaded) {
+                                this.showAlert('Sistem wajah sedang memuat. Tunggu sebentar...', 'warning');
+                                return;
+                            }
+
+                            // Ensure descriptor is loaded before opening modal
+                            if (!this.userDescriptor) {
+                                this.isLoading = true;
+                                await this.loadUserDescriptor();
+                                this.isLoading = false;
+                            }
+
+                            if (this.userDescriptor) {
+                                this.openFaceModal();
+                            } else {
+                                this.showAlert('Wajah tidak ditemukan di foto profil. Harap ganti foto profil yang jelas.',
+                                    'error');
+                            }
                         } else {
                             this.performAttendance('in');
                         }
@@ -510,16 +622,33 @@
 
                     async openFaceModal() {
                         this.showFaceModal = true;
-                        this.isFaceLoading = true;
-                        this.faceStatus = 'Menyiapkan Kamera...';
-                        this.faceMessage = 'Posisikan wajah Anda di tengah kamera';
+                        this.showRetry = false;
+                        this.isMatched = false;
+                        this.faceStatus = 'scanning';
+                        this.faceMessage = 'Memulai kamera...';
 
+                        await this.startCamera();
+                        this.startScanning();
+                    },
+
+                    async startCamera() {
                         try {
                             const stream = await navigator.mediaDevices.getUserMedia({
-                                video: {}
+                                video: {
+                                    facingMode: 'user'
+                                }
                             });
                             this.videoStream = stream;
                             this.$refs.video.srcObject = stream;
+
+                            // Wait for video to be ready
+                            await new Promise(resolve => {
+                                this.$refs.video.onloadedmetadata = () => {
+                                    this.$refs.video.play();
+                                    resolve();
+                                };
+                            });
+
                             this.isFaceLoading = false;
                         } catch (err) {
                             console.error(err);
@@ -528,74 +657,96 @@
                         }
                     },
 
+                    startScanning() {
+                        this.isScanning = true;
+                        this.faceStatus = 'scanning';
+                        this.faceMessage = 'Mencari wajah...';
+
+                        // Timeout 15s
+                        if (this.scanTimeout) clearTimeout(this.scanTimeout);
+                        this.scanTimeout = setTimeout(() => {
+                            this.stopScanning();
+                            if (!this.isMatched) {
+                                this.showRetry = true;
+                                this.faceStatus = 'error';
+                                this.faceMessage = 'Waktu habis';
+                            }
+                        }, 15000);
+
+                        if (this.scanInterval) clearInterval(this.scanInterval);
+                        this.scanInterval = setInterval(async () => {
+                            if (!this.videoStream || this.isMatched || !this.isModelLoaded || !
+                                this.isScanning) return;
+
+                            const video = this.$refs.video;
+
+                            // Detect
+                            const detection = await faceapi.detectSingleFace(video)
+                                .withFaceLandmarks().withFaceDescriptor();
+
+                            if (detection) {
+                                this.faceStatus = 'detecting';
+                                this.faceMessage = 'Verifikasi...';
+
+                                if (this.userDescriptor) {
+                                    const distance = faceapi.euclideanDistance(detection
+                                        .descriptor, this.userDescriptor);
+                                    console.log('Distance:', distance);
+
+                                    if (distance < 0.5) { // Strict match
+                                        this.handleMatch(video);
+                                    } else {
+                                        this.faceMessage = 'Wajah tidak cocok';
+                                    }
+                                } else {
+                                    this.faceMessage = 'Data wajah user tidak valid';
+                                }
+                            } else {
+                                this.faceStatus = 'scanning';
+                                this.faceMessage = 'Mencari wajah...';
+                            }
+                        }, 500); // Check every 500ms
+                    },
+
+
+                    stopScanning() {
+                        this.isScanning = false;
+                        if (this.scanInterval) clearInterval(this.scanInterval);
+                        if (this.scanTimeout) clearTimeout(this.scanTimeout);
+                    },
+
+                    handleMatch(video) {
+                        this.isMatched = true;
+                        this.stopScanning();
+                        this.faceStatus = 'success';
+                        this.faceMessage = 'Berhasil! Memproses...';
+
+                        // Capture Image
+                        const canvas = this.$refs.canvas;
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(video, 0, 0);
+                        this.capturedImage = canvas.toDataURL('image/png');
+
+                        // Submit after short delay
+                        setTimeout(() => {
+                            this.closeFaceModal();
+                            this.performAttendance('in', false, this.capturedImage);
+                        }, 1000);
+                    },
+
+                    retryScan() {
+                        this.showRetry = false;
+                        this.startScanning();
+                    },
+
                     closeFaceModal() {
                         this.showFaceModal = false;
+                        this.stopScanning();
                         if (this.videoStream) {
                             this.videoStream.getTracks().forEach(track => track.stop());
                             this.videoStream = null;
-                        }
-                    },
-
-                    async captureAndVerify() {
-                        if (!this.isModelLoaded) return;
-
-                        this.isFaceLoading = true;
-                        this.faceStatus = 'Memverifikasi Wajah...';
-
-                        const video = this.$refs.video;
-
-                        // 1. Detect Face from Camera
-                        const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-
-                        if (!detection) {
-                            this.isFaceLoading = false;
-                            this.faceMessage = 'Wajah tidak terdeteksi! Pastikan pencahayaan cukup.';
-                            return;
-                        }
-
-                        // 2. Load User Avatar and Compute Descriptor
-                        try {
-                            // We need to load the avatar image as an HTMLImageElement
-                            const img = await faceapi.fetchImage(config.userAvatar);
-                            const avatarDetection = await faceapi.detectSingleFace(img).withFaceLandmarks()
-                                .withFaceDescriptor();
-
-                            if (!avatarDetection) {
-                                this.isFaceLoading = false;
-                                this.showAlert(
-                                    'Foto profil Anda tidak valid (wajah tidak terdeteksi). Harap ganti foto profil.',
-                                    'error');
-                                this.closeFaceModal();
-                                return;
-                            }
-
-                            // 3. Compare Descriptors
-                            const distance = faceapi.euclideanDistance(detection.descriptor, avatarDetection.descriptor);
-                            const threshold = 0.6;
-
-                            console.log('Face Distance:', distance);
-
-                            if (distance < threshold) {
-                                // Match!
-                                // Capture Image
-                                const canvas = this.$refs.canvas;
-                                canvas.width = video.videoWidth;
-                                canvas.height = video.videoHeight;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                                this.capturedImage = canvas.toDataURL('image/png');
-
-                                this.closeFaceModal();
-                                this.performAttendance('in', false, this.capturedImage);
-                            } else {
-                                this.isFaceLoading = false;
-                                this.faceMessage = 'Wajah tidak cocok dengan foto profil!';
-                            }
-
-                        } catch (error) {
-                            console.error(error);
-                            this.isFaceLoading = false;
-                            this.showAlert('Terjadi kesalahan saat verifikasi wajah.', 'error');
                         }
                     },
 
