@@ -4,9 +4,11 @@
             openDirect: false,
             latitude: null,
             longitude: null,
+            accuracy: null,
             locationError: null,
             map: null,
             userMarker: null,
+            watchId: null,
 
             // Form & State
             email: '',
@@ -58,6 +60,10 @@
                         this.showConfirm = false;
                         this.email = '';
                         this.password = '';
+                        if (this.watchId) {
+                            navigator.geolocation.clearWatch(this.watchId);
+                            this.watchId = null;
+                        }
                         this.closeFaceModal();
                     }
                 });
@@ -206,7 +212,8 @@
 
                         if (!this.userAvatar) {
                             alert(
-                                'Anda belum mengatur foto profil! Wajib menggunakan foto profil untuk melakukan Check-out.');
+                                'Anda belum mengatur foto profil! Wajib menggunakan foto profil untuk melakukan Check-out.'
+                            );
                             this.isLoading = false;
                             return;
                         }
@@ -285,39 +292,60 @@
             },
 
             getLocation() {
-                if (navigator.geolocation) {
-                    navigator.geolocation.watchPosition(
-                        (position) => {
-                            this.latitude = position.coords.latitude;
-                            this.longitude = position.coords.longitude;
-                            this.locationError = null;
-                            this.updateUserLocation(position.coords);
-                        },
-                        (error) => {
-                            switch (error.code) {
-                                case error.PERMISSION_DENIED:
-                                    this.locationError =
-                                        'Izin lokasi ditolak. Mohon aktifkan izin lokasi.';
-                                    break;
-                                case error.POSITION_UNAVAILABLE:
-                                    this.locationError = 'Informasi lokasi tidak tersedia.';
-                                    break;
-                                case error.TIMEOUT:
-                                    this.locationError = 'Waktu permintaan lokasi habis.';
-                                    break;
-                                default:
-                                    this.locationError =
-                                        'Terjadi kesalahan yang tidak diketahui.';
-                            }
-                        }, {
-                            enableHighAccuracy: true,
-                            timeout: 20000,
-                            maximumAge: 2000
-                        }
-                    );
-                } else {
+                if (!navigator.geolocation) {
                     this.locationError = 'Geolocation tidak didukung oleh browser ini.';
+                    return;
                 }
+
+                if (this.watchId) {
+                    navigator.geolocation.clearWatch(this.watchId);
+                    this.watchId = null;
+                }
+
+                const onPosition = (position) => {
+                    this.latitude = position.coords.latitude;
+                    this.longitude = position.coords.longitude;
+                    this.accuracy = position.coords.accuracy;
+                    this.locationError = null;
+                    this.updateUserLocation(position.coords);
+                };
+
+                const onError = (error) => {
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            this.locationError =
+                                'Izin lokasi ditolak. Mohon aktifkan izin lokasi.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            this.locationError = 'Informasi lokasi tidak tersedia.';
+                            break;
+                        case error.TIMEOUT:
+                            this.locationError = 'Waktu permintaan lokasi habis.';
+                            break;
+                        default:
+                            this.locationError = 'Terjadi kesalahan yang tidak diketahui.';
+                    }
+                };
+
+                // Fast path: attempt cached / low-power fix
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => onPosition(pos),
+                    () => {}, {
+                        enableHighAccuracy: false,
+                        timeout: 8000,
+                        maximumAge: 60000
+                    }
+                );
+
+                // Keep updating with high accuracy, but allow caching and longer timeout to reduce TIMEOUT errors
+                this.watchId = navigator.geolocation.watchPosition(
+                    (pos) => onPosition(pos),
+                    (err) => onError(err), {
+                        enableHighAccuracy: true,
+                        timeout: 60000,
+                        maximumAge: 10000
+                    }
+                );
             },
 
             updateUserLocation(coords) {

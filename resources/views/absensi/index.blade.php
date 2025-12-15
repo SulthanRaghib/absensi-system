@@ -399,109 +399,145 @@
 
             if (watchId) navigator.geolocation.clearWatch(watchId);
 
-            watchId = navigator.geolocation.watchPosition(
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    const accuracy = position.coords.accuracy;
+            const updateFromPosition = (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
 
-                    // Update UI
-                    document.getElementById('lat-display').textContent = lat.toFixed(5);
-                    document.getElementById('lng-display').textContent = lng.toFixed(5);
-                    document.getElementById('accuracy-display').textContent = `±${accuracy.toFixed(0)}m`;
+                // Update UI
+                document.getElementById('lat-display').textContent = lat.toFixed(5);
+                document.getElementById('lng-display').textContent = lng.toFixed(5);
+                document.getElementById('accuracy-display').textContent = `±${accuracy.toFixed(0)}m`;
 
-                    const distance = calculateDistance(lat, lng, OFFICE_LAT, OFFICE_LNG);
-                    document.getElementById('distance-display').textContent = `${distance.toFixed(0)}m`;
+                const distance = calculateDistance(lat, lng, OFFICE_LAT, OFFICE_LNG);
+                document.getElementById('distance-display').textContent = `${distance.toFixed(0)}m`;
 
-                    // Update Map
-                    if (userMarker) map.removeLayer(userMarker);
+                // Update Map
+                if (userMarker) map.removeLayer(userMarker);
 
-                    const userIcon = L.divIcon({
-                        className: 'custom-div-icon',
-                        html: `<div class="relative">
-                                <div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md"></div>
-                                <div class="absolute -inset-2 bg-blue-500/20 rounded-full animate-ping"></div>
-                               </div>`,
-                        iconSize: [16, 16],
-                        iconAnchor: [8, 8]
-                    });
+                const userIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div class="relative">
+                            <div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md"></div>
+                            <div class="absolute -inset-2 bg-blue-500/20 rounded-full animate-ping"></div>
+                           </div>`,
+                    iconSize: [16, 16],
+                    iconAnchor: [8, 8]
+                });
 
-                    userMarker = L.marker([lat, lng], {
-                        icon: userIcon
-                    }).addTo(map);
+                userMarker = L.marker([lat, lng], {
+                    icon: userIcon
+                }).addTo(map);
 
-                    // Fit bounds to show both office and user
-                    const bounds = L.latLngBounds([
-                        [OFFICE_LAT, OFFICE_LNG],
-                        [lat, lng]
-                    ]);
-                    map.fitBounds(bounds, {
-                        padding: [50, 50]
-                    });
+                // Fit bounds to show both office and user
+                const bounds = L.latLngBounds([
+                    [OFFICE_LAT, OFFICE_LNG],
+                    [lat, lng]
+                ]);
+                map.fitBounds(bounds, {
+                    padding: [50, 50]
+                });
 
-                    // Validate accuracy
-                    if (accuracy > MAX_ACCURACY) {
-                        showAlert(`Akurasi GPS rendah (${accuracy.toFixed(0)}m). Menunggu sinyal lebih baik...`,
-                            'warning');
-                        btnGetLocation.innerHTML = `
-                            <svg class="animate-spin h-3 w-3 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span>Akurasi: ${accuracy.toFixed(0)}m</span>
-                        `;
-                        return;
-                    }
-
-                    userLocation = {
-                        lat,
-                        lng,
-                        accuracy,
-                        distance
-                    };
-
-                    if (distance <= OFFICE_RADIUS) {
-                        showAlert('Lokasi terverifikasi! Anda berada di area kantor.', 'success');
-                    } else {
-                        showAlert(`Anda berada di luar jangkauan (${distance.toFixed(0)}m).`, 'error');
-                    }
-
+                // Validate accuracy
+                if (accuracy > MAX_ACCURACY) {
+                    showAlert(`Akurasi GPS rendah (${accuracy.toFixed(0)}m). Menunggu sinyal lebih baik...`, 'warning');
                     btnGetLocation.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        <svg class="animate-spin h-3 w-3 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <span>Lokasi OK</span>
+                        <span>Akurasi: ${accuracy.toFixed(0)}m</span>
                     `;
-                    btnGetLocation.disabled = false;
+                    return false;
+                }
 
-                    // Stop watching once we have a good location
-                    navigator.geolocation.clearWatch(watchId);
-                    watchId = null;
-                },
-                (error) => {
-                    console.error('Geolocation error:', error);
-                    let message = 'Gagal mengambil lokasi.';
-                    if (error.code === 1) {
-                        message = 'Izin lokasi ditolak. Pastikan GPS aktif dan izin browser diberikan.';
-                        if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
-                            message += ' (Wajib HTTPS)';
-                        }
+                userLocation = {
+                    lat,
+                    lng,
+                    accuracy,
+                    distance
+                };
+
+                if (distance <= OFFICE_RADIUS) {
+                    showAlert('Lokasi terverifikasi! Anda berada di area kantor.', 'success');
+                } else {
+                    showAlert(`Anda berada di luar jangkauan (${distance.toFixed(0)}m).`, 'error');
+                }
+
+                btnGetLocation.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Lokasi OK</span>
+                `;
+                btnGetLocation.disabled = false;
+
+                return true;
+            };
+
+            const handleError = (error) => {
+                console.error('Geolocation error:', error);
+                let message = 'Gagal mengambil lokasi.';
+                if (error.code === 1) {
+                    message = 'Izin lokasi ditolak. Pastikan GPS aktif dan izin browser diberikan.';
+                    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+                        message += ' (Wajib HTTPS)';
                     }
-                    if (error.code === 2) message = 'Sinyal GPS tidak ditemukan. Pastikan GPS aktif.';
-                    if (error.code === 3) message = 'Waktu permintaan habis. Coba lagi.';
+                }
+                if (error.code === 2) message = 'Sinyal GPS tidak ditemukan. Pastikan GPS aktif.';
+                if (error.code === 3) message = 'Waktu permintaan habis. Coba lagi.';
 
-                    showAlert(message, 'error');
-                    btnGetLocation.innerHTML = `<span>Ambil Lokasi</span>`;
-                    btnGetLocation.disabled = false;
+                showAlert(message, 'error');
+                btnGetLocation.innerHTML = `<span>Ambil Lokasi</span>`;
+                btnGetLocation.disabled = false;
 
-                    if (watchId) navigator.geolocation.clearWatch(watchId);
-                    watchId = null;
+                if (watchId) navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            };
+
+            // Fast path: try cached / low-power location first (reduces TIMEOUT frequency)
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const accepted = updateFromPosition(position);
+                    if (accepted) {
+                        if (watchId) navigator.geolocation.clearWatch(watchId);
+                        watchId = null;
+                    } else {
+                        // If accuracy still poor, start high accuracy watch below.
+                        startHighAccuracyWatch();
+                    }
+                },
+                () => {
+                    // Ignore and fallback to high accuracy watch.
+                    startHighAccuracyWatch();
                 }, {
-                    enableHighAccuracy: true,
-                    timeout: 20000,
-                    maximumAge: 0
+                    enableHighAccuracy: false,
+                    timeout: 8000,
+                    maximumAge: 60000
                 }
             );
+
+            function startHighAccuracyWatch() {
+                if (watchId) navigator.geolocation.clearWatch(watchId);
+
+                watchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        const accepted = updateFromPosition(position);
+                        if (accepted) {
+                            navigator.geolocation.clearWatch(watchId);
+                            watchId = null;
+                        }
+                    },
+                    (error) => {
+                        // With longer timeout, TIMEOUT should be rarer; handle normally.
+                        handleError(error);
+                    }, {
+                        enableHighAccuracy: true,
+                        timeout: 60000,
+                        maximumAge: 10000
+                    }
+                );
+            }
         }
 
         // Pending action when requesting location

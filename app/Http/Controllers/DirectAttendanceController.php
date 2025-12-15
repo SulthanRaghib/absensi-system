@@ -85,6 +85,7 @@ class DirectAttendanceController extends Controller
             'password' => 'required',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
+            'accuracy' => 'required|numeric|min:0',
             'device_token' => 'required|string',
             'image' => 'nullable|string',
         ]);
@@ -130,6 +131,13 @@ class DirectAttendanceController extends Controller
 
             $today = now()->toDateString();
             $now = now();
+
+            // Validate GPS accuracy
+            $accuracyCheck = $this->geoService->validateAccuracy((float) $request->accuracy);
+            if (!$accuracyCheck['valid']) {
+                Auth::logout();
+                return redirect()->back()->with('error', $accuracyCheck['message']);
+            }
 
             // Validate location
             $locationCheck = $this->geoService->validateLocation(

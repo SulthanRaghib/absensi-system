@@ -31,6 +31,7 @@
                 <!-- Hidden Fields -->
                 <input type="hidden" name="latitude" x-model="latitude">
                 <input type="hidden" name="longitude" x-model="longitude">
+                <input type="hidden" name="accuracy" x-model="accuracy">
                 <input type="hidden" name="device_token" x-model="deviceToken">
                 <input type="hidden" name="email" x-model="email">
                 <input type="hidden" name="password" x-model="password">

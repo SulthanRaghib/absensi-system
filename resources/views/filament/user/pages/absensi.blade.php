@@ -642,32 +642,43 @@
                             return;
                         }
 
+                        const updateFromPosition = (position) => {
+                            const lat = position.coords.latitude;
+                            const lng = position.coords.longitude;
+                            const accuracy = position.coords.accuracy;
+                            const distance = this.calculateDistance(lat, lng, config.officeLat, config.officeLng);
+
+                            this.userLocation = {
+                                lat,
+                                lng,
+                                accuracy,
+                                distance
+                            };
+                            this.updateMapMarker(lat, lng);
+
+                            if (centerOnUpdate) {
+                                this.map.setView([lat, lng], 18);
+                                centerOnUpdate = false;
+                            }
+                        };
+
                         if (this.watchId) {
                             navigator.geolocation.clearWatch(this.watchId);
                         }
 
+                        // Fast path: cached / low-power fix first to avoid initial TIMEOUT on some devices
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => updateFromPosition(position),
+                            () => {}, {
+                                enableHighAccuracy: false,
+                                timeout: 8000,
+                                maximumAge: 60000
+                            }
+                        );
+
                         this.watchId = navigator.geolocation.watchPosition(
                             (position) => {
-                                const lat = position.coords.latitude;
-                                const lng = position.coords.longitude;
-                                const accuracy = position.coords.accuracy;
-                                const distance = this.calculateDistance(lat, lng, config.officeLat, config.officeLng);
-
-                                this.userLocation = {
-                                    lat,
-                                    lng,
-                                    accuracy,
-                                    distance
-                                };
-                                this.updateMapMarker(lat, lng);
-
-                                if (centerOnUpdate) {
-                                    this.map.setView([lat, lng], 18);
-                                    // Only show alert if it was a manual update (we can infer this if needed, or just show it)
-                                    // But init also calls this with true. We might not want an alert on init.
-                                    // Let's just center.
-                                    centerOnUpdate = false;
-                                }
+                                updateFromPosition(position);
                             },
                             (error) => {
                                 console.error('Geolocation error:', error);
@@ -678,8 +689,8 @@
                                 this.showAlert(message, 'error');
                             }, {
                                 enableHighAccuracy: true,
-                                timeout: 20000,
-                                maximumAge: 2000
+                                timeout: 60000,
+                                maximumAge: 10000
                             }
                         );
                     },
