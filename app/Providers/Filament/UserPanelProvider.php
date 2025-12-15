@@ -15,6 +15,7 @@ use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
+use Illuminate\Support\Str;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -34,7 +35,7 @@ class UserPanelProvider extends PanelProvider
             ->brandLogo(asset('images/Logo_bapeten.png'))
             ->brandLogoHeight('5rem')
             ->brandName('Absensi Maganghub - BAPETEN')
-            ->profile(EditProfile::class, isSimple: false)
+            // ->profile(EditProfile::class, isSimple: false)
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -63,6 +64,10 @@ class UserPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE, fn() => Filament::getCurrentPanel()?->getId() === 'user' ? view('filament.auth.login-heading')->render() : '')
-            ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, fn() => Filament::getCurrentPanel()?->getId() === 'user' ? view('filament.auth.back-button', ['home' => route('home')])->render() : '');
+            ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, fn() => Filament::getCurrentPanel()?->getId() === 'user' ? view('filament.auth.back-button', ['home' => route('home')])->render() : '')
+            // Load Smart Profile assets early so Alpine can evaluate x-data safely (SPA pages don't re-run inline scripts).
+            ->renderHook(PanelsRenderHook::HEAD_END, fn() => Filament::getCurrentPanel()?->getId() === 'user'
+                ? view('filament.user.hooks.smart-profile-assets')->render()
+                : '');
     }
 }
