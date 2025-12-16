@@ -17,6 +17,8 @@
             showNoAvatarModal: false,
             isFaceLoading: false,
             isModelLoaded: false,
+            modelLoadingPromise: null,
+            descriptorLoadingPromise: null,
             faceStatus: 'scanning', // scanning, detecting, success, error
             faceMessage: 'Memulai kamera...',
             capturedImage: null,
@@ -48,9 +50,47 @@
                     this.startTracking(true); // Center map on init
 
                     if (config.faceRecognitionEnabled) {
-                        this.loadFaceModels();
+                        // Preload in background (don’t block UI).
+                        this.ensureFaceModelsLoaded();
+                        this.ensureUserDescriptorLoaded();
                     }
                 });
+            },
+
+            waitForFaceApi() {
+                return new Promise((resolve, reject) => {
+                    if (window.faceapi) return resolve(true);
+                    const startedAt = Date.now();
+                    const tick = () => {
+                        if (window.faceapi) return resolve(true);
+                        if (Date.now() - startedAt > 10000) {
+                            return reject(new Error('faceapi tidak siap'));
+                        }
+                        setTimeout(tick, 50);
+                    };
+                    tick();
+                });
+            },
+
+            ensureFaceModelsLoaded() {
+                if (this.isModelLoaded) return Promise.resolve(true);
+                if (this.modelLoadingPromise) return this.modelLoadingPromise;
+                this.modelLoadingPromise = this.loadFaceModels().finally(() => {
+                    // Allow re-try if load failed
+                    if (!this.isModelLoaded) this.modelLoadingPromise = null;
+                });
+                return this.modelLoadingPromise;
+            },
+
+            ensureUserDescriptorLoaded() {
+                if (this.userDescriptor) return Promise.resolve(true);
+                if (!config.userAvatar) return Promise.resolve(false);
+                if (this.descriptorLoadingPromise) return this.descriptorLoadingPromise;
+                this.descriptorLoadingPromise = this.loadUserDescriptor().finally(() => {
+                    // Allow re-try if descriptor load failed
+                    if (!this.userDescriptor) this.descriptorLoadingPromise = null;
+                });
+                return this.descriptorLoadingPromise;
             },
 
             ensureLeafletAssets() {
@@ -150,8 +190,7 @@
 
             async loadFaceModels() {
                 try {
-                    this.faceStatus = 'scanning';
-                    this.faceMessage = 'Memuat Model Wajah...';
+                    await this.waitForFaceApi();
 
                     // Load models from local asset path to ensure correct URL in subfolders
                     const MODEL_URL = "{{ asset('models') }}";
@@ -164,14 +203,12 @@
 
                     this.isModelLoaded = true;
                     console.log('Face API Models Loaded');
-
-                    // Pre-load user descriptor
-                    await this.loadUserDescriptor();
-
+                    return true;
                 } catch (error) {
                     console.error('Error loading face models:', error);
                     this.showAlert('Gagal memuat sistem pengenalan wajah. Pastikan folder /public/models ada.',
                         'error');
+                    return false;
                 }
             },
 
@@ -186,15 +223,18 @@
                     if (detection) {
                         this.userDescriptor = detection.descriptor;
                         console.log('User descriptor loaded');
+                        return true;
                     } else {
                         console.warn('No face found in user avatar');
                         this.showAlert(
                             'Foto profil Anda tidak valid (wajah tidak terdeteksi). Harap ganti foto profil.',
                             'error');
+                        return false;
                     }
                 } catch (e) {
                     console.error('Error loading user avatar descriptor', e);
                     this.showAlert('Gagal memuat data wajah user.', 'error');
+                    return false;
                 }
             },
 
@@ -206,24 +246,9 @@
                         return;
                     }
 
-                    if (!this.isModelLoaded) {
-                        this.showAlert('Sistem wajah sedang memuat. Tunggu sebentar...', 'warning');
-                        return;
-                    }
-
-                    // Ensure descriptor is loaded before opening modal
-                    if (!this.userDescriptor) {
-                        this.isLoading = true;
-                        await this.loadUserDescriptor();
-                        this.isLoading = false;
-                    }
-
-                    if (this.userDescriptor) {
-                        this.openFaceModal();
-                    } else {
-                        this.showAlert('Wajah tidak ditemukan di foto profil. Harap ganti foto profil yang jelas.',
-                            'error');
-                    }
+                    // Match Direct Attendance UX: open modal + camera immediately,
+                    // while models/descriptor load in the background.
+                    this.openFaceModal();
                 } else {
                     this.performAttendance('in');
                 }
@@ -236,8 +261,53 @@
                 this.faceStatus = 'scanning';
                 this.faceMessage = 'Memulai kamera...';
 
+                // Start loading in background ASAP (don’t await here).
+                this.ensureFaceModelsLoaded();
+                this.ensureUserDescriptorLoaded();
+
                 await this.startCamera();
-                this.startScanning();
+
+                // After camera starts, wait for prerequisites then scan.
+                // (Keeps modal responsive even if models are still downloading.)
+                this.prepareFaceVerification();
+            },
+
+            async prepareFaceVerification() {
+                try {
+                    if (!this.showFaceModal) return;
+
+                    // Show a clear message while waiting.
+                    if (!this.isModelLoaded) {
+                        this.faceStatus = 'scanning';
+                        this.faceMessage = 'Memuat Model Wajah...';
+                    }
+
+                    await Promise.all([
+                        this.ensureFaceModelsLoaded(),
+                        this.ensureUserDescriptorLoaded(),
+                    ]);
+
+                    if (!this.showFaceModal) return;
+
+                    if (!this.isModelLoaded) {
+                        this.showAlert('Sistem wajah gagal dimuat. Coba refresh sekali.', 'error');
+                        this.closeFaceModal();
+                        return;
+                    }
+
+                    if (!this.userDescriptor) {
+                        this.showAlert('Wajah tidak ditemukan di foto profil. Harap ganti foto profil yang jelas.',
+                            'error');
+                        this.closeFaceModal();
+                        return;
+                    }
+
+                    this.startScanning();
+                } catch (e) {
+                    console.error(e);
+                    this.showAlert('Gagal menyiapkan verifikasi wajah. Coba lagi.', 'error');
+                    this.closeFaceModal();
+                }
             },
 
             async startCamera() {
@@ -269,7 +339,7 @@
             startScanning() {
                 this.isScanning = true;
                 this.faceStatus = 'scanning';
-                this.faceMessage = 'Mencari wajah...';
+                this.faceMessage = this.isModelLoaded ? 'Mencari wajah...' : 'Memuat Model Wajah...';
 
                 // Timeout 15s
                 if (this.scanTimeout) clearTimeout(this.scanTimeout);
