@@ -520,7 +520,7 @@
                     scanTimeout: null,
                     userDescriptor: null,
 
-                    init() {
+                    async init() {
                         // Device Binding Logic
                         let token = localStorage.getItem('device_token');
                         if (!token) {
@@ -529,14 +529,113 @@
                         }
                         this.deviceToken = token;
 
-                        this.$nextTick(() => {
+                        this.$nextTick(async () => {
+                            await this.ensureLeafletAssets();
+                            await this.waitForMapContainerReady();
+
                             this.initMap();
+                            this.forceMapReflow();
                             this.startTracking(true); // Center map on init
 
                             if (config.faceRecognitionEnabled) {
                                 this.loadFaceModels();
                             }
                         });
+                    },
+
+                    ensureLeafletAssets() {
+                        return new Promise((resolve, reject) => {
+                            // Leaflet already available
+                            if (window.L && typeof window.L.map === 'function') {
+                                resolve();
+                                return;
+                            }
+
+                            // Ensure CSS
+                            const cssHref = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+                            if (!document.querySelector(`link[href="${cssHref}"]`)) {
+                                const link = document.createElement('link');
+                                link.rel = 'stylesheet';
+                                link.href = cssHref;
+                                document.head.appendChild(link);
+                            }
+
+                            // Load JS (in case SPA navigation skipped executing the inline script tag)
+                            const jsSrc = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+                            let script = document.querySelector(`script[src="${jsSrc}"]`);
+
+                            if (script && (window.L && typeof window.L.map === 'function')) {
+                                resolve();
+                                return;
+                            }
+
+                            if (!script) {
+                                script = document.createElement('script');
+                                script.src = jsSrc;
+                                script.async = true;
+                                script.onload = () => resolve();
+                                script.onerror = () => reject(new Error('Gagal memuat Leaflet.js'));
+                                document.head.appendChild(script);
+                            } else {
+                                // Existing script tag present; wait a bit for it to finish loading
+                                const startedAt = Date.now();
+                                const tick = () => {
+                                    if (window.L && typeof window.L.map === 'function') {
+                                        resolve();
+                                        return;
+                                    }
+                                    if (Date.now() - startedAt > 10000) {
+                                        reject(new Error('Leaflet.js tidak siap'));
+                                        return;
+                                    }
+                                    setTimeout(tick, 50);
+                                };
+                                tick();
+                            }
+                        }).catch((e) => {
+                            console.error(e);
+                            this.showAlert('Gagal memuat peta. Coba refresh sekali.', 'error');
+                        });
+                    },
+
+                    waitForMapContainerReady() {
+                        return new Promise((resolve) => {
+                            const startedAt = Date.now();
+                            const tick = () => {
+                                const el = document.getElementById('map');
+                                if (el && el.offsetWidth > 0 && el.offsetHeight > 0) {
+                                    resolve();
+                                    return;
+                                }
+                                if (Date.now() - startedAt > 3000) {
+                                    // Don't block forever; still try init + invalidateSize.
+                                    resolve();
+                                    return;
+                                }
+                                requestAnimationFrame(tick);
+                            };
+                            tick();
+                        });
+                    },
+
+                    forceMapReflow() {
+                        // Leaflet often renders blank if the container is still transitioning/resizing.
+                        // These delayed invalidateSize calls make it reliable on sidebar navigation.
+                        if (!this.map) return;
+
+                        const invalidate = () => {
+                            if (!this.map) return;
+                            try {
+                                this.map.invalidateSize(true);
+                            } catch (e) {
+                                // ignore
+                            }
+                        };
+
+                        requestAnimationFrame(invalidate);
+                        setTimeout(invalidate, 50);
+                        setTimeout(invalidate, 250);
+                        setTimeout(invalidate, 800);
                     },
 
                     async loadFaceModels() {
@@ -753,6 +852,11 @@
                     initMap() {
                         if (this.map) return;
 
+                        if (!window.L || typeof window.L.map !== 'function') {
+                            // Leaflet not ready yet; init() will call ensureLeafletAssets and retry.
+                            return;
+                        }
+
                         this.map = L.map('map', {
                             zoomControl: false,
                             attributionControl: false
@@ -780,6 +884,8 @@
                             weight: 1,
                             radius: config.officeRadius
                         }).addTo(this.map);
+
+                        this.forceMapReflow();
                     },
 
                     manualUpdateLocation() {
@@ -847,6 +953,7 @@
                     },
 
                     updateMapMarker(lat, lng) {
+                        if (!this.map) return;
                         if (this.userMarker) {
                             this.userMarker.setLatLng([lat, lng]);
                         } else {
