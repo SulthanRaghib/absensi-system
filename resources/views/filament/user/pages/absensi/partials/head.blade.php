@@ -2,6 +2,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
+{{-- Face API is loaded globally for the user panel via HEAD_END hook (see smart-profile-assets). --}}
+
 <style>
     .glass-card {
         background: rgba(255, 255, 255, 0.95);

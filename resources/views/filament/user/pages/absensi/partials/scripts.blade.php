@@ -86,7 +86,13 @@
                 if (this.userDescriptor) return Promise.resolve(true);
                 if (!config.userAvatar) return Promise.resolve(false);
                 if (this.descriptorLoadingPromise) return this.descriptorLoadingPromise;
-                this.descriptorLoadingPromise = this.loadUserDescriptor().finally(() => {
+                this.descriptorLoadingPromise = (async () => {
+                    // Always ensure models are loaded before descriptor detection to avoid
+                    // "load model before inference" errors.
+                    const modelsOk = await this.ensureFaceModelsLoaded();
+                    if (!modelsOk) return false;
+                    return this.loadUserDescriptor();
+                })().finally(() => {
                     // Allow re-try if descriptor load failed
                     if (!this.userDescriptor) this.descriptorLoadingPromise = null;
                 });
@@ -192,8 +198,8 @@
                 try {
                     await this.waitForFaceApi();
 
-                    // Load models from local asset path to ensure correct URL in subfolders
-                    const MODEL_URL = "{{ asset('models') }}";
+                    // Match Direct Attendance: load from public /models
+                    const MODEL_URL = '/models';
 
                     await Promise.all([
                         faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
@@ -201,8 +207,16 @@
                         faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
                     ]);
 
-                    this.isModelLoaded = true;
+                    // Extra guard: verify nets actually marked as loaded
+                    const ok = faceapi.nets.ssdMobilenetv1.isLoaded &&
+                        faceapi.nets.faceLandmark68Net.isLoaded &&
+                        faceapi.nets.faceRecognitionNet.isLoaded;
+
+                    this.isModelLoaded = ok;
                     console.log('Face API Models Loaded');
+                    if (!ok) {
+                        throw new Error('Model belum siap (isLoaded=false)');
+                    }
                     return true;
                 } catch (error) {
                     console.error('Error loading face models:', error);
@@ -261,9 +275,8 @@
                 this.faceStatus = 'scanning';
                 this.faceMessage = 'Memulai kamera...';
 
-                // Start loading in background ASAP (don’t await here).
+                // Start loading models in background ASAP (don’t await here).
                 this.ensureFaceModelsLoaded();
-                this.ensureUserDescriptorLoaded();
 
                 await this.startCamera();
 
