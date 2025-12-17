@@ -248,6 +248,20 @@
                 <canvas x-ref="canvas"
                     class="absolute inset-0 w-full h-full pointer-events-none transform scale-x-[-1]"></canvas>
 
+                <!-- Hold-Still Progress Ring (only for threshold 0.0 / detection-only) -->
+                <div x-show="Number(faceThreshold ?? 0.5) === 0" style="display: none;"
+                    class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <svg class="w-[92%] h-[92%]" viewBox="0 0 120 120" aria-hidden="true">
+                        <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.10)"
+                            stroke-width="6" />
+                        <circle cx="60" cy="60" r="52" fill="none" stroke-width="6"
+                            stroke-linecap="round" :stroke="faceProgressPercent >= 100 ? '#22c55e' : '#3b82f6'"
+                            :stroke-dasharray="faceProgressDashArray" :stroke-dashoffset="faceProgressDashOffset"
+                            transform="rotate(-90 60 60)"
+                            style="transition: stroke-dashoffset 120ms linear, stroke 200ms ease;" />
+                    </svg>
+                </div>
+
                 <!-- Scanning Overlay -->
                 <div x-show="isScanning && !isMatched"
                     class="absolute inset-0 bg-gradient-to-b from-blue-500/0 via-blue-500/10 to-blue-500/0 animate-scan pointer-events-none">

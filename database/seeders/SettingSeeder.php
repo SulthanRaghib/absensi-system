@@ -30,5 +30,14 @@ class SettingSeeder extends Seeder
                 'description' => 'Aktifkan validasi Wajah (Face Recognition) saat absen',
             ]
         );
+
+        Setting::updateOrCreate(
+            ['key' => 'face_threshold'],
+            [
+                'value' => '0.5',
+                'type' => 'select',
+                'description' => 'Ambang batas Face Recognition (semakin kecil semakin longgar). 0.0 = deteksi wajah saja.',
+            ]
+        );
     }
 }

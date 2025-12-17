@@ -32,6 +32,13 @@
             scanTimeout: null,
             userDescriptor: null,
 
+            // Hold-still stability
+            stabilityCounter: 0,
+            stabilityTarget: 20,
+            faceProgressPercent: 0,
+            faceProgressDashArray: 0,
+            faceProgressDashOffset: 0,
+
             async init() {
                 // Device Binding Logic
                 let token = localStorage.getItem('device_token');
@@ -52,9 +59,75 @@
                     if (config.faceRecognitionEnabled) {
                         // Preload in background (don’t block UI).
                         this.ensureFaceModelsLoaded();
-                        this.ensureUserDescriptorLoaded();
+                        // Descriptor will be loaded on-demand after models are ready.
                     }
                 });
+            },
+
+            initFaceProgressRing() {
+                const r = 52;
+                const c = 2 * Math.PI * r;
+                this.faceProgressDashArray = c;
+                this.faceProgressDashOffset = c;
+            },
+
+            updateFaceProgress() {
+                const r = 52;
+                const c = 2 * Math.PI * r;
+                const p = Math.max(0, Math.min(1, this.stabilityCounter / this.stabilityTarget));
+                this.faceProgressPercent = Math.round(p * 100);
+                this.faceProgressDashOffset = c * (1 - p);
+            },
+
+            resetStability() {
+                this.stabilityCounter = 0;
+                this.updateFaceProgress();
+            },
+
+            isFaceCentered(detection, video) {
+                try {
+                    const box = detection?.detection?.box;
+                    if (!box || !video?.videoWidth || !video?.videoHeight) return false;
+
+                    const w = video.videoWidth;
+                    const h = video.videoHeight;
+                    const cx = box.x + box.width / 2;
+                    const cy = box.y + box.height / 2;
+
+                    // Must be reasonably centered (avoid edges)
+                    const minX = w * 0.20;
+                    const maxX = w * 0.80;
+                    const minY = h * 0.20;
+                    const maxY = h * 0.80;
+
+                    // Also require face to be large enough
+                    const minFaceSize = Math.min(w, h) * 0.18;
+                    const sizeOk = box.width >= minFaceSize && box.height >= minFaceSize;
+
+                    return cx >= minX && cx <= maxX && cy >= minY && cy <= maxY && sizeOk;
+                } catch (e) {
+                    return false;
+                }
+            },
+
+            drawFaceOverlay(video, detection, color = 'rgba(59,130,246,0.9)') {
+                const canvas = this.$refs.canvas;
+                if (!canvas || !video) return;
+
+                const ctx = canvas.getContext('2d');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (!detection?.detection?.box) return;
+
+                const box = detection.detection.box;
+                ctx.lineWidth = Math.max(3, Math.round(Math.min(canvas.width, canvas.height) * 0.006));
+                ctx.strokeStyle = color;
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 10;
+                ctx.strokeRect(box.x, box.y, box.width, box.height);
+                ctx.shadowBlur = 0;
             },
 
             waitForFaceApi() {
@@ -275,6 +348,10 @@
                 this.faceStatus = 'scanning';
                 this.faceMessage = 'Memulai kamera...';
 
+                this.resetStability();
+                this.initFaceProgressRing();
+                this.updateFaceProgress();
+
                 // Start loading models in background ASAP (don’t await here).
                 this.ensureFaceModelsLoaded();
 
@@ -308,11 +385,18 @@
                         return;
                     }
 
-                    if (!this.userDescriptor) {
-                        this.showAlert('Wajah tidak ditemukan di foto profil. Harap ganti foto profil yang jelas.',
-                            'error');
-                        this.closeFaceModal();
-                        return;
+                    // If threshold == 0.0 => detection only (no matching required)
+                    const threshold = Number(config.faceThreshold ?? 0.5);
+                    const detectionOnly = threshold === 0;
+                    if (!detectionOnly) {
+                        await this.ensureUserDescriptorLoaded();
+                        if (!this.userDescriptor) {
+                            this.showAlert(
+                                'Wajah tidak ditemukan di foto profil. Harap ganti foto profil yang jelas.',
+                                'error');
+                            this.closeFaceModal();
+                            return;
+                        }
                     }
 
                     this.startScanning();
@@ -353,6 +437,7 @@
                 this.isScanning = true;
                 this.faceStatus = 'scanning';
                 this.faceMessage = this.isModelLoaded ? 'Mencari wajah...' : 'Memuat Model Wajah...';
+                this.resetStability();
 
                 // Timeout 15s
                 if (this.scanTimeout) clearTimeout(this.scanTimeout);
@@ -362,6 +447,7 @@
                         this.showRetry = true;
                         this.faceStatus = 'error';
                         this.faceMessage = 'Waktu habis';
+                        this.resetStability();
                     }
                 }, 15000);
 
@@ -372,30 +458,75 @@
 
                     const video = this.$refs.video;
 
+                    // Threshold config
+                    const threshold = Number(config.faceThreshold ?? 0.5);
+                    const detectionOnly = threshold === 0;
+
                     // Detect
                     const detection = await faceapi.detectSingleFace(video)
                         .withFaceLandmarks().withFaceDescriptor();
 
-                    if (detection) {
-                        this.faceStatus = 'detecting';
-                        this.faceMessage = 'Verifikasi...';
-
-                        if (this.userDescriptor) {
-                            const distance = faceapi.euclideanDistance(detection.descriptor, this
-                                .userDescriptor);
-                            console.log('Distance:', distance);
-
-                            if (distance < 0.5) { // Strict match
-                                this.handleMatch(video);
-                            } else {
-                                this.faceMessage = 'Wajah tidak cocok';
-                            }
-                        } else {
-                            this.faceMessage = 'Data wajah user tidak valid';
-                        }
-                    } else {
+                    if (!detection) {
                         this.faceStatus = 'scanning';
                         this.faceMessage = 'Mencari wajah...';
+                        this.resetStability();
+                        this.drawFaceOverlay(video, null);
+                        return;
+                    }
+
+                    // Must be centered (hold still)
+                    const centered = this.isFaceCentered(detection, video);
+                    if (!centered) {
+                        this.faceStatus = 'scanning';
+                        this.faceMessage = 'Posisikan wajah di tengah';
+                        this.resetStability();
+                        this.drawFaceOverlay(video, detection, 'rgba(59,130,246,0.9)');
+                        return;
+                    }
+
+                    if (detectionOnly) {
+                        // Threshold 0.0: detection-only, but still requires "hold still" stability.
+                        this.stabilityCounter += 1;
+                        this.updateFaceProgress();
+
+                        this.faceStatus = 'detecting';
+                        this.faceMessage = 'Tahan... Jangan Bergerak 📸';
+
+                        const p = Math.max(0, Math.min(1, this.stabilityCounter / this.stabilityTarget));
+                        const g = Math.round(130 + (80 * p));
+                        const color = `rgba(34, ${g}, 94, 0.95)`; // green-ish
+                        this.drawFaceOverlay(video, detection, color);
+
+                        if (this.stabilityCounter > this.stabilityTarget) {
+                            this.handleMatch(video);
+                        }
+                        return;
+                    }
+
+                    // Threshold != 0.0: verify match and capture immediately when matched (no waiting).
+                    if (!this.userDescriptor) {
+                        // Descriptor missing should not happen here (prepareFaceVerification guards),
+                        // but keep it safe.
+                        this.faceStatus = 'scanning';
+                        this.faceMessage = 'Menyiapkan verifikasi...';
+                        this.resetStability();
+                        return;
+                    }
+
+                    const distance = faceapi.euclideanDistance(detection.descriptor, this.userDescriptor);
+                    const isOk = distance < threshold;
+
+                    if (isOk) {
+                        this.faceStatus = 'success';
+                        this.faceMessage = 'Berhasil! Memproses...';
+                        this.drawFaceOverlay(video, detection, 'rgba(34,197,94,0.95)');
+                        this.handleMatch(video);
+                    } else {
+                        this.faceStatus = 'error';
+                        this.faceMessage = 'Wajah Tidak Cocok';
+                        this.resetStability();
+                        this.drawFaceOverlay(video, detection, 'rgba(239,68,68,0.95)');
+                        console.log('Distance:', distance, 'threshold:', threshold);
                     }
                 }, 500); // Check every 500ms
             },
@@ -404,6 +535,7 @@
                 this.isScanning = false;
                 if (this.scanInterval) clearInterval(this.scanInterval);
                 if (this.scanTimeout) clearTimeout(this.scanTimeout);
+                this.resetStability();
             },
 
             handleMatch(video) {

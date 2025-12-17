@@ -22,6 +22,7 @@
 
             // Face Recognition State
             faceRecognitionEnabled: {{ $faceRecognitionEnabled ? 'true' : 'false' }},
+            faceThreshold: {{ (float) ($faceThreshold ?? 0.5) }},
             showFaceModal: false,
             isFaceLoading: false,
             isModelLoaded: false,
@@ -37,6 +38,71 @@
             scanInterval: null,
             scanTimeout: null,
             userDescriptor: null,
+
+            // Hold-still stability (only for threshold 0.0)
+            stabilityCounter: 0,
+            stabilityTarget: 20,
+
+            // Progress ring state (used when faceThreshold == 0.0)
+            faceProgressPercent: 0,
+            faceProgressDashArray: 0,
+            faceProgressDashOffset: 0,
+
+            initFaceProgressRing() {
+                const r = 52;
+                const c = 2 * Math.PI * r;
+                this.faceProgressDashArray = c;
+                this.faceProgressDashOffset = c;
+            },
+
+            updateFaceProgress() {
+                const r = 52;
+                const c = 2 * Math.PI * r;
+                const p = Math.max(0, Math.min(1, this.stabilityCounter / this.stabilityTarget));
+                this.faceProgressPercent = Math.round(p * 100);
+                this.faceProgressDashOffset = c * (1 - p);
+            },
+
+            resetStability() {
+                this.stabilityCounter = 0;
+                this.updateFaceProgress();
+            },
+
+            clearFaceCanvas() {
+                const canvas = this.$refs.canvas;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width || 0, canvas.height || 0);
+            },
+
+            drawFaceOverlay(video, detection, color = 'rgba(59,130,246,0.9)') {
+                const canvas = this.$refs.canvas;
+                if (!canvas || !video) return;
+
+                const ctx = canvas.getContext('2d');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // If no detection => draw a red frame to indicate "not detected"
+                if (!detection?.detection?.box) {
+                    ctx.lineWidth = Math.max(4, Math.round(Math.min(canvas.width, canvas.height) *
+                        0.01));
+                    ctx.strokeStyle = 'rgba(239,68,68,0.95)';
+                    ctx.strokeRect(0, 0, canvas.width, canvas.height);
+                    return;
+                }
+
+                const box = detection.detection.box;
+                ctx.lineWidth = Math.max(3, Math.round(Math.min(canvas.width, canvas.height) *
+                    0.006));
+                ctx.strokeStyle = color;
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 10;
+                ctx.strokeRect(box.x, box.y, box.width, box.height);
+                ctx.shadowBlur = 0;
+            },
 
             init() {
                 // Check for rotated device ID from session (Direct Attendance)
@@ -113,7 +179,8 @@
                     } else {
                         console.warn('No face found in user avatar');
                         alert(
-                            'Foto profil Anda tidak valid (wajah tidak terdeteksi). Harap ganti foto profil.');
+                            'Foto profil Anda tidak valid (wajah tidak terdeteksi). Harap ganti foto profil.'
+                        );
                     }
                 } catch (e) {
                     console.error('Error loading user avatar descriptor', e);
@@ -128,8 +195,35 @@
                 this.faceStatus = 'scanning';
                 this.faceMessage = 'Memulai kamera...';
 
+                this.initFaceProgressRing();
+                this.resetStability();
+
                 await this.startCamera();
                 this.startScanning();
+            },
+
+            isFaceCentered(detection, video) {
+                try {
+                    const box = detection?.detection?.box;
+                    if (!box || !video?.videoWidth || !video?.videoHeight) return false;
+
+                    const w = video.videoWidth;
+                    const h = video.videoHeight;
+                    const cx = box.x + box.width / 2;
+                    const cy = box.y + box.height / 2;
+
+                    const minX = w * 0.20;
+                    const maxX = w * 0.80;
+                    const minY = h * 0.20;
+                    const maxY = h * 0.80;
+
+                    const minFaceSize = Math.min(w, h) * 0.18;
+                    const sizeOk = box.width >= minFaceSize && box.height >= minFaceSize;
+
+                    return cx >= minX && cx <= maxX && cy >= minY && cy <= maxY && sizeOk;
+                } catch (e) {
+                    return false;
+                }
             },
 
             async startCamera() {
@@ -162,6 +256,7 @@
                 this.isScanning = true;
                 this.faceStatus = 'scanning';
                 this.faceMessage = 'Mencari wajah...';
+                this.resetStability();
 
                 // Timeout 15s
                 if (this.scanTimeout) clearTimeout(this.scanTimeout);
@@ -181,30 +276,73 @@
 
                     const video = this.$refs.video;
 
+                    const threshold = Number(this.faceThreshold ?? 0.5);
+                    const detectionOnly = threshold === 0;
+
                     // Detect
                     const detection = await faceapi.detectSingleFace(video)
                         .withFaceLandmarks().withFaceDescriptor();
 
-                    if (detection) {
-                        this.faceStatus = 'detecting';
-                        this.faceMessage = 'Verifikasi...';
-
-                        if (this.userDescriptor) {
-                            const distance = faceapi.euclideanDistance(detection
-                                .descriptor, this.userDescriptor);
-                            console.log('Distance:', distance);
-
-                            if (distance < 0.5) { // Strict match
-                                this.handleMatch(video);
-                            } else {
-                                this.faceMessage = 'Wajah tidak cocok';
-                            }
-                        } else {
-                            this.faceMessage = 'Data wajah user tidak valid';
-                        }
-                    } else {
+                    if (!detection) {
                         this.faceStatus = 'scanning';
                         this.faceMessage = 'Mencari wajah...';
+                        this.resetStability();
+                        this.drawFaceOverlay(video, null);
+                        return;
+                    }
+
+                    // Require centered face (same as Absensi)
+                    const centered = this.isFaceCentered(detection, video);
+                    if (!centered) {
+                        this.faceStatus = 'scanning';
+                        this.faceMessage = 'Posisikan wajah di tengah';
+                        this.resetStability();
+                        this.drawFaceOverlay(video, detection, 'rgba(59,130,246,0.9)');
+                        return;
+                    }
+
+                    if (detectionOnly) {
+                        // Threshold 0.0: detection-only, but still requires hold-still stability.
+                        this.faceStatus = 'detecting';
+                        this.faceMessage = 'Tahan... Jangan Bergerak';
+                        this.stabilityCounter += 1;
+                        this.updateFaceProgress();
+
+                        const p = Math.max(0, Math.min(1, this.stabilityCounter / this
+                            .stabilityTarget));
+                        const g = Math.round(130 + (80 * p));
+                        const color = `rgba(34, ${g}, 94, 0.95)`;
+                        this.drawFaceOverlay(video, detection, color);
+
+                        if (this.stabilityCounter > this.stabilityTarget) {
+                            this.handleMatch(video);
+                        }
+                        return;
+                    }
+
+                    // Threshold != 0.0: capture immediately when matched.
+                    this.faceStatus = 'detecting';
+                    this.faceMessage = 'Verifikasi...';
+
+                    if (!this.userDescriptor) {
+                        this.faceMessage = 'Data wajah user tidak valid';
+                        this.resetStability();
+                        this.drawFaceOverlay(video, detection, 'rgba(239,68,68,0.95)');
+                        return;
+                    }
+
+                    const distance = faceapi.euclideanDistance(detection.descriptor,
+                        this.userDescriptor);
+                    console.log('Distance:', distance, 'threshold:', threshold);
+
+                    if (distance < threshold) {
+                        this.drawFaceOverlay(video, detection, 'rgba(34,197,94,0.95)');
+                        this.handleMatch(video);
+                    } else {
+                        this.faceStatus = 'error';
+                        this.faceMessage = 'Wajah tidak cocok';
+                        this.resetStability();
+                        this.drawFaceOverlay(video, detection, 'rgba(239,68,68,0.95)');
                     }
                 }, 500); // Check every 500ms
             },
@@ -213,6 +351,7 @@
                 this.isScanning = false;
                 if (this.scanInterval) clearInterval(this.scanInterval);
                 if (this.scanTimeout) clearTimeout(this.scanTimeout);
+                this.resetStability();
             },
 
             handleMatch(video) {
@@ -246,6 +385,7 @@
             closeFaceModal() {
                 this.showFaceModal = false;
                 this.stopScanning();
+                this.clearFaceCanvas();
                 if (this.videoStream) {
                     this.videoStream.getTracks().forEach(track => track.stop());
                     this.videoStream = null;

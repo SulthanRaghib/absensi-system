@@ -23,7 +23,10 @@ class AuthController extends Controller
         $faceSetting = Setting::where('key', 'face_recognition_enabled')->first();
         $faceRecognitionEnabled = $faceSetting ? filter_var($faceSetting->value, FILTER_VALIDATE_BOOLEAN) : false;
 
-        return view('auth.choice', compact('officeLocation', 'faceRecognitionEnabled'));
+        $thresholdSetting = Setting::where('key', 'face_threshold')->first();
+        $faceThreshold = $thresholdSetting ? (float) $thresholdSetting->value : 0.5;
+
+        return view('auth.choice', compact('officeLocation', 'faceRecognitionEnabled', 'faceThreshold'));
     }
 
     /**

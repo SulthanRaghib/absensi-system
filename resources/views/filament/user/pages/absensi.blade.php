@@ -10,6 +10,7 @@
             checkOutRoute: '{{ route('absensi.check-out') }}',
             csrfToken: '{{ csrf_token() }}',
             faceRecognitionEnabled: {{ $faceRecognitionEnabled ? 'true' : 'false' }},
+            faceThreshold: {{ (float) ($faceThreshold ?? 0.5) }},
             userAvatar: '{{ Auth::user()->avatar_url ? asset('storage/' . Auth::user()->avatar_url) : null }}'
         })" class="grid grid-cols-1 md:grid-cols-12 gap-6">
 

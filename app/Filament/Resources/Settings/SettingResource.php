@@ -52,6 +52,7 @@ class SettingResource extends Resource
                                 'number' => 'Number',
                                 'json' => 'JSON',
                                 'boolean' => 'Boolean',
+                                'select' => 'Select',
                             ])
                             ->default('string')
                             ->required()
@@ -68,9 +69,29 @@ class SettingResource extends Resource
                         Forms\TextInput::make('value')
                             ->label('Nilai')
                             ->required()
-                            ->hidden(fn($get) => $get('type') === 'boolean')
+                            ->hidden(fn($get) => in_array($get('type'), ['boolean', 'select'], true))
                             ->dehydrated(true) // Ensure it is always saved, even if hidden (for boolean sync)
                             ->helperText('Masukkan nilai sesuai tipe data'),
+
+                        // Handle select options (currently used for face_threshold)
+                        Forms\Select::make('value')
+                            ->label('Nilai')
+                            ->required()
+                            ->visible(fn($get) => $get('type') === 'select')
+                            ->options(fn($get) => $get('key') === 'face_threshold'
+                                ? [
+                                    '0.6' => '0.6 (Strict / Ketat)',
+                                    '0.5' => '0.5 (Standard / Normal)',
+                                    '0.4' => '0.4 (Loose / Longgar)',
+                                    '0.3' => '0.3 (Very Loose / Sangat Longgar)',
+                                    '0.2' => '0.2 (Extremely Loose / Ekstrem Sangat Longgar)',
+                                    '0.0' => '0.0 (Face Detection Only)',
+                                ]
+                                : [])
+                            ->helperText(fn($get) => $get('key') === 'face_threshold'
+                                ? 'Semakin kecil semakin mudah match. 0.0 hanya butuh deteksi wajah.'
+                                : 'Pilih nilai sesuai opsi')
+                            ->dehydrated(true),
 
                         // Handle boolean toggle
                         Forms\Toggle::make('value_boolean')
