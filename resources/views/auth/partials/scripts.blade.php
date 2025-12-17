@@ -41,7 +41,7 @@
 
             // Hold-still stability (only for threshold 0.0)
             stabilityCounter: 0,
-            stabilityTarget: 20,
+            stabilityTarget: 10, // e.g., 10 counts = 5 seconds (500ms interval)
 
             // Progress ring state (used when faceThreshold == 0.0)
             faceProgressPercent: 0,
@@ -258,7 +258,7 @@
                 this.faceMessage = 'Mencari wajah...';
                 this.resetStability();
 
-                // Timeout 15s
+                // Timeout 30s
                 if (this.scanTimeout) clearTimeout(this.scanTimeout);
                 this.scanTimeout = setTimeout(() => {
                     this.stopScanning();
@@ -267,7 +267,7 @@
                         this.faceStatus = 'error';
                         this.faceMessage = 'Waktu habis';
                     }
-                }, 15000);
+                }, 30000);
 
                 if (this.scanInterval) clearInterval(this.scanInterval);
                 this.scanInterval = setInterval(async () => {
@@ -314,7 +314,7 @@
                         const color = `rgba(34, ${g}, 94, 0.95)`;
                         this.drawFaceOverlay(video, detection, color);
 
-                        if (this.stabilityCounter > this.stabilityTarget) {
+                        if (this.stabilityCounter >= this.stabilityTarget) {
                             this.handleMatch(video);
                         }
                         return;

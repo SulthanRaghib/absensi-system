@@ -34,7 +34,7 @@
 
             // Hold-still stability
             stabilityCounter: 0,
-            stabilityTarget: 20,
+            stabilityTarget: 10, // e.g., 10 counts = 5 seconds (500ms interval)
             faceProgressPercent: 0,
             faceProgressDashArray: 0,
             faceProgressDashOffset: 0,
@@ -439,7 +439,7 @@
                 this.faceMessage = this.isModelLoaded ? 'Mencari wajah...' : 'Memuat Model Wajah...';
                 this.resetStability();
 
-                // Timeout 15s
+                // Timeout 30s
                 if (this.scanTimeout) clearTimeout(this.scanTimeout);
                 this.scanTimeout = setTimeout(() => {
                     this.stopScanning();
@@ -449,7 +449,7 @@
                         this.faceMessage = 'Waktu habis';
                         this.resetStability();
                     }
-                }, 15000);
+                }, 30000);
 
                 if (this.scanInterval) clearInterval(this.scanInterval);
                 this.scanInterval = setInterval(async () => {
@@ -497,7 +497,7 @@
                         const color = `rgba(34, ${g}, 94, 0.95)`; // green-ish
                         this.drawFaceOverlay(video, detection, color);
 
-                        if (this.stabilityCounter > this.stabilityTarget) {
+                        if (this.stabilityCounter >= this.stabilityTarget) {
                             this.handleMatch(video);
                         }
                         return;
