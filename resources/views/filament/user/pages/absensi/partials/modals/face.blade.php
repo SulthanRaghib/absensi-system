@@ -36,10 +36,10 @@
         <!-- Camera Container -->
         <div
             class="relative w-72 h-72 sm:w-80 sm:h-80 rounded-full overflow-hidden border-4 border-white/10 shadow-2xl bg-black">
-            <video x-ref="video" autoplay muted playsinline
-                class="w-full h-full object-cover transform scale-x-[-1]"></video>
-            <canvas x-ref="canvas"
-                class="absolute inset-0 w-full h-full pointer-events-none transform scale-x-[-1]"></canvas>
+            <video x-ref="video" autoplay muted playsinline class="w-full h-full object-cover"
+                style="transform: scaleX(-1); transform-origin: center;"></video>
+            <canvas x-ref="canvas" class="absolute inset-0 w-full h-full pointer-events-none"
+                style="transform: scaleX(-1); transform-origin: center;"></canvas>
 
             <!-- Hold-Still Progress Ring -->
             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
