@@ -75,7 +75,8 @@ class UserAttendanceInfoWidget extends BaseWidget
             } elseif ($todayAbsence->jam_masuk) {
                 // Check punctuality
                 $arrivedAt = Carbon::parse($todayAbsence->jam_masuk->format('H:i:s'));
-                $isLate = $arrivedAt->gt($workStart->copy()->addMinutes($graceMinutes));
+                // For today's status, do NOT apply grace minutes — arriving at 07:30 is considered late
+                $isLate = $arrivedAt->gte($workStart);
                 $todayStatus = $isLate ? 'Telat' : 'Sudah Check In';
                 $todayColor = $isLate ? 'warning' : 'success';
                 $todayIcon = $isLate ? 'heroicon-m-clock' : 'heroicon-m-check-circle';
