@@ -56,6 +56,16 @@ class MyAbsenceResource extends Resource
                     ])
                     ->columns(3),
 
+                // Large preview photo for modern, eye-catching UX
+                Schemas\Section::make('Preview Foto')
+                    ->schema([
+                        Forms\Placeholder::make('capture_preview')
+                            ->label('Foto Cek In')
+                            ->content(fn($get) => $get('capture_image') ? "<div class='w-full flex justify-center'><img src='" . asset('storage/' . $get('capture_image')) . "' alt='Foto Absensi' class='max-h-[360px] rounded-lg shadow-lg object-contain' /></div>" : "<div class='text-sm text-gray-500'>Tidak ada foto</div>")
+                            ->html(),
+                    ])
+                    ->columns(1),
+
                 Schemas\Section::make('Lokasi Check In')
                     ->schema([
                         Forms\TextInput::make('lat_masuk')
@@ -101,6 +111,11 @@ class MyAbsenceResource extends Resource
                     ->date('d M Y')
                     ->sortable()
                     ->searchable(),
+
+                Tables\Columns\ImageColumn::make('capture_image')
+                    ->label('Foto')
+                    ->disk('public')
+                    ->circular(),
 
                 Tables\Columns\TextColumn::make('jam_masuk')
                     ->label('Jam Masuk')
@@ -156,7 +171,10 @@ class MyAbsenceResource extends Resource
 
             ])
             ->actions([
-                Actions\ViewAction::make(),
+                Actions\ViewAction::make()
+                    ->label('Lihat')
+                    ->icon('heroicon-o-eye')
+                    ->modalHeading('Lihat Absensi')
             ]);
     }
 
