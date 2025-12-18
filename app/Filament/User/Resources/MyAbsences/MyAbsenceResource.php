@@ -168,21 +168,30 @@ class MyAbsenceResource extends Resource
                     ->label('Bulan Ini')
                     ->query(fn(Builder $query) => $query->whereMonth('tanggal', now()->month))
                     ->default(),
-                Filter::make('tanggal')
+                Filter::make('from_date')
+                    ->label('Dari Tanggal')
                     ->form([
-                        Forms\DatePicker::make('dari')
-                            ->label('Dari Tanggal')
-                            ->default(today()),
-                        Forms\DatePicker::make('sampai')
-                            ->label('Sampai Tanggal')
-                            ->default(today()),
+                        Forms\DatePicker::make('from')
+                            ->label('Dari Tanggal'),
                     ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when($data['dari'], fn($query, $date) => $query->whereDate('tanggal', '>=', $date))
-                            ->when($data['sampai'], fn($query, $date) => $query->whereDate('tanggal', '<=', $date));
+                    ->query(function (Builder $query, array $data) {
+                        return $query->when(
+                            $data['from'],
+                            fn(Builder $query, $date) => $query->whereDate('tanggal', '>=', $date),
+                        );
                     }),
-
+                Filter::make('to_date')
+                    ->label('Sampai Tanggal')
+                    ->form([
+                        Forms\DatePicker::make('to')
+                            ->label('Sampai Tanggal'),
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        return $query->when(
+                            $data['to'],
+                            fn(Builder $query, $date) => $query->whereDate('tanggal', '<=', $date),
+                        );
+                    }),
             ])
             ->actions([
                 Actions\ViewAction::make()
