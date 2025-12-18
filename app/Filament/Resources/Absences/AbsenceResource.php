@@ -56,6 +56,16 @@ class AbsenceResource extends Resource
                     ])
                     ->columns(2),
 
+                // Large preview photo for modern, easy-to-review UI
+                Schemas\Section::make('Preview Foto')
+                    ->schema([
+                        Forms\Placeholder::make('capture_preview')
+                            ->label('Foto Cek')
+                            ->content(fn($get) => $get('capture_image') ? "<div class='w-full flex justify-center'><img src='" . asset('storage/' . $get('capture_image')) . "' alt='Foto Absensi' class='max-h-[360px] rounded-lg shadow-lg object-contain' /></div>" : "<div class='text-sm text-gray-500'>Tidak ada foto</div>")
+                            ->html(),
+                    ])
+                    ->columns(1),
+
                 Schemas\Section::make('Lokasi Masuk')
                     ->schema([
                         Forms\TextInput::make('lat_masuk')
@@ -224,7 +234,10 @@ class AbsenceResource extends Resource
             ])
             ->actions([
                 Actions\EditAction::make(),
-                Actions\ViewAction::make(),
+                Actions\ViewAction::make()
+                    ->label('Lihat')
+                    ->icon('heroicon-o-eye')
+                    ->modalHeading('Lihat Absensi'),
                 Actions\DeleteAction::make(),
             ])
             ->bulkActions([
@@ -240,7 +253,6 @@ class AbsenceResource extends Resource
             'index' => Pages\ListAbsences::route('/'),
             'create' => Pages\CreateAbsence::route('/create'),
             'edit' => Pages\EditAbsence::route('/{record}/edit'),
-            'view' => Pages\ViewAbsence::route('/{record}'),
         ];
     }
 }
