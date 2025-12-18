@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
+use UnitEnum;
 
 class Profile extends Page implements HasForms
 {
@@ -27,6 +28,7 @@ class Profile extends Page implements HasForms
     use WithFileUploads;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-user-circle';
+    protected static UnitEnum|string|null $navigationGroup = 'Setting';
     protected string $view = 'filament.user.pages.profile';
     protected static ?string $navigationLabel = 'Profil Saya';
     protected static ?string $title = 'Edit Profil';

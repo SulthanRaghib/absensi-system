@@ -11,9 +11,11 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components as Schemas;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 
 class MyAbsenceResource extends Resource
 {
@@ -22,6 +24,7 @@ class MyAbsenceResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
 
     protected static ?string $navigationLabel = 'Riwayat Absensi';
+    protected static UnitEnum|string|null $navigationGroup = 'Absen & Riwayat';
 
     protected static ?int $navigationSort = 1;
 
@@ -161,13 +164,24 @@ class MyAbsenceResource extends Resource
             ])
             ->defaultSort('tanggal', 'desc')
             ->filters([
-                Tables\Filters\Filter::make('bulan_ini')
+                Filter::make('bulan_ini')
                     ->label('Bulan Ini')
                     ->query(fn(Builder $query) => $query->whereMonth('tanggal', now()->month))
                     ->default(),
-                Tables\Filters\Filter::make('semua_data')
-                    ->label('Semua Data')
-                    ->query(fn(Builder $query) => $query),
+                Filter::make('tanggal')
+                    ->form([
+                        Forms\DatePicker::make('dari')
+                            ->label('Dari Tanggal')
+                            ->default(today()),
+                        Forms\DatePicker::make('sampai')
+                            ->label('Sampai Tanggal')
+                            ->default(today()),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['dari'], fn($query, $date) => $query->whereDate('tanggal', '>=', $date))
+                            ->when($data['sampai'], fn($query, $date) => $query->whereDate('tanggal', '<=', $date));
+                    }),
 
             ])
             ->actions([

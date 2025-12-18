@@ -7,6 +7,7 @@ use App\Models\Setting;
 use BackedEnum;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 
 class Absensi extends Page
 {
@@ -15,6 +16,7 @@ class Absensi extends Page
     protected string $view = 'filament.user.pages.absensi';
 
     protected static ?string $navigationLabel = 'Absensi';
+    protected static UnitEnum|string|null $navigationGroup = 'Absen & Riwayat';
 
     protected static ?string $title = 'Absensi';
 
