@@ -15,6 +15,7 @@ use Filament\Tables\Table;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 class AbsenceResource extends Resource
 {
@@ -23,8 +24,8 @@ class AbsenceResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-check';
 
     protected static ?string $navigationLabel = 'Daftar Kehadiran';
-
-    protected static ?int $navigationSort = 2;
+    protected static UnitEnum|string|null $navigationGroup = 'Absen & Perizinan';
+    protected static ?int $navigationSort = 0;
 
     public static function getEloquentQuery(): Builder
     {
