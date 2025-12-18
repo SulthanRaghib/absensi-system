@@ -1,209 +1,215 @@
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-# 📍 Sistem Absensi & Manajemen Pemagang BAPETEN
+# 📍 Sistem Absensi Pintar & Manajemen Kepegawaian (BAPETEN)
 
 ![Laravel](https://img.shields.io/badge/Laravel-v12-FF2D20?style=for-the-badge&logo=laravel)
-![Filament](https://img.shields.io/badge/Filament-v4-F2C94C?style=for-the-badge&logo=laravel)
+![Filament](https://img.shields.io/badge/Filament-v4-F2C94C?style=for-the-badge&logo=filament)
 ![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?style=for-the-badge&logo=pwa)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v3-38B2AC?style=for-the-badge&logo=tailwind-css)
+![FaceAPI](https://img.shields.io/badge/AI-Face%20Recognition-blue?style=for-the-badge&logo=google-lens)
 
-> **Platform Absensi Modern** berbasis Geolocation dan validasi perangkat, dirancang khusus untuk mempermudah manajemen kehadiran pegawai dan peserta magang di lingkungan BAPETEN.
+> **Platform Absensi Generasi Berikutnya** yang menggabungkan Geolocation, Biometrik Wajah, dan Analisis Risiko Perangkat untuk mencegah kecurangan (anti-joki) dalam lingkungan kerja modern.
 
 ---
 
 ## 📋 Daftar Isi
+
 1. [Tentang Sistem](#-tentang-sistem)
-2. [Fitur Unggulan](#-fitur-unggulan)
-3. [Teknologi & Arsitektur](#-teknologi--arsitektur)
+2. [Fitur Unggulan & Keamanan](#-fitur-unggulan--keamanan)
+3. [Arsitektur & Teknologi](#-arsitektur--teknologi)
 4. [Struktur Project](#-struktur-project)
-5. [Prasyarat Instalasi](#-prasyarat-instalasi)
-6. [Panduan Instalasi & Setup](#-panduan-instalasi--setup)
-7. [Penggunaan Aplikasi](#-penggunaan-aplikasi)
+5. [Prasyarat Sistem](#-prasyarat-sistem)
+6. [Panduan Instalasi](#-panduan-instalasi)
+7. [Alur Penggunaan (User Guide)](#-alur-penggunaan)
 
 ---
 
 ## 📖 Tentang Sistem
 
-Aplikasi ini adalah solusi *end-to-end* untuk pencatatan kehadiran. Tidak seperti sistem absensi konvensional, aplikasi ini menggunakan **Panel Filament** ganda (Admin & User) dan teknologi **PWA (Progressive Web App)**, memungkinkan pengguna menginstal aplikasi langsung di HP mereka tanpa melalui App Store/Play Store.
+Aplikasi ini bukan sekadar pencatat jam masuk/pulang. Sistem ini dirancang sebagai **Progressive Web App (PWA)** yang berjalan di _Admin Panel_ dan _User Panel_ terpisah menggunakan ekosistem **FilamentPHP**.
 
-Sistem dilengkapi dengan validasi ketat:
-* **Geo-Fencing:** Memastikan user berada dalam radius kantor.
-* **Device Fingerprinting:** Mencatat informasi perangkat yang digunakan.
-* **Time Validation:** Validasi jam masuk/pulang sesuai setting dinamis.
+Fokus utama sistem ini adalah **Validasi Berlapis** untuk memastikan integritas data kehadiran:
 
----
-
-## 🚀 Fitur Unggulan
-
-### 🔐 Panel Autentikasi & Keamanan
-* **Single Login Page:** Halaman login terpusat yang cerdas mengarahkan user sesuai Role (Admin -> Admin Panel, Staff/Magang -> User Panel).
-* **Registration Links:** Fitur *Generate QR Code* atau Link unik dengan *expiration time* untuk pendaftaran massal peserta magang.
-* **Role-Based Access Control (RBAC):** Pemisahan hak akses yang ketat.
-
-### 📱 User Panel (Karyawan/Magang)
-* **PWA Installable:** Dapat diinstal di Android/iOS layaknya aplikasi native.
-* **Smart Attendance:** Tombol Check-In/Out hanya aktif jika GPS valid dan jam sesuai.
-* **Alert System:** Widget peringatan di dashboard jika user lupa absen hari ini.
-* **Riwayat Mandiri:** Tabel riwayat kehadiran pribadi yang mudah dipantau.
-
-### 🛠 Admin Panel (Manajemen)
-* **Dashboard Statistik:** Grafik kehadiran 7 hari terakhir, total telat, dan widget ringkasan *real-time*.
-* **Manajemen Master Data:** CRUD lengkap untuk User, Jabatan, dan Unit Kerja.
-* **Pengaturan Sistem (Settings):** Mengatur jam masuk, jam pulang (Senin-Kamis/Jumat), dan radius kantor secara dinamis tanpa koding.
-* **Laporan & Ekspor:** Fitur ekspor data absensi bulanan ke format **CSV/Excel** dengan *styling* header otomatis.
-
-### 🤖 Logika Validasi (Backend Logic)
-* **GeoLocationService:** Menghitung jarak User vs Kantor menggunakan *Haversine Formula*.
-* **Device Detector:** Menyimpan metadata browser dan OS user (`jenssegers/agent`).
+1.  **Dimana?** (Validasi Radius/GPS).
+2.  **Siapa?** (Validasi Wajah Real-time).
+3.  **Pakai Apa?** (Validasi Device ID & Risk Analysis).
 
 ---
 
-## 🛠 Teknologi & Arsitektur
+## 🚀 Fitur Unggulan & Keamanan
 
-Project ini dibangun di atas ekosistem **TALL Stack** yang telah dimodernisasi:
+### 🛡️ 1. Anti-Fraud & Risk Analysis (Logika Anti-Joki)
 
-| Komponen | Teknologi | Keterangan |
-| :--- | :--- | :--- |
-| **Framework** | Laravel 12 | Core backend framework (PHP 8.2+). |
-| **Admin Panel** | Filament 4 | Generator dashboard admin, form, dan tabel. |
-| **Database** | MySQL | Relational Database Management System. |
-| **Frontend** | Blade & Livewire 3 | Interaktivitas reaktif tanpa menulis banyak JS. |
-| **Styling** | Tailwind CSS | Utility-first CSS framework via Vite. |
-| **PWA** | Laravel PWA | Dukungan Service Worker & Manifest JSON. |
-| **Package Pendukung** | Spatie, Maatwebsite, Jenssegers | Handling permission, Excel export, & User Agent. |
+Sistem menggunakan algoritma _Risk-Based Authentication_ pada `AbsensiController`:
+
+-   **Safe (Hijau):** Absen menggunakan perangkat pribadi yang terdaftar pertama kali.
+-   **Warning (Kuning):** Perangkat pengguna dipinjam oleh orang lain untuk absen.
+-   **Danger (Merah):** Pengguna terdeteksi melakukan "Joki" (menggunakan perangkat milik orang lain yang sudah terdaftar).
+-   **Device History:** Melacak riwayat pemakaian perangkat di tabel `user_devices`.
+
+### 📸 2. Smart Face Verification (AI Powered)
+
+Menggunakan `face-api.js` di sisi klien untuk pengalaman yang cepat dan hemat server:
+
+-   **Passive Liveness:** Fitur _"Hold Still"_ yang meminta pengguna tidak bergerak selama 1-2 detik sebelum otomatis mengambil gambar.
+-   **Selfie Mode:** Tampilan kamera _mirrored_ (seperti cermin) agar natural saat digunakan.
+-   **Dynamic Threshold:** Tingkat akurasi kecocokan wajah dapat diatur oleh Admin (Ketat/Longgar/Hanya Deteksi).
+
+### 📱 3. User Experience (PWA)
+
+-   **Installable:** Dapat diinstal di Android/iOS tanpa masuk App Store.
+-   **Offline Support:** Halaman fallback cerdas saat internet putus.
+-   **Interactive Dashboard:** Widget peringatan jika belum absen dan statistik kehadiran bulanan.
+
+### 🛠 4. Admin Management
+
+-   **Dynamic Settings:** Atur Radius (Meter), Jam Kerja, Toggle Validasi Wajah/Device secara _real-time_ tanpa menyentuh kodingan.
+-   **Registration Links:** Generate QR Code/Link unik untuk pendaftaran massal peserta magang.
+-   **Reporting:** Ekspor data kehadiran ke Excel/CSV dengan format rapi.
+
+---
+
+## 🛠 Arsitektur & Teknologi
+
+Project ini dibangun dengan stack teknologi modern:
+
+| Kategori                 | Teknologi                | Kegunaan                                      |
+| :----------------------- | :----------------------- | :-------------------------------------------- |
+| **Backend Framework**    | Laravel 11/12            | Core logic, routing, dan ORM.                 |
+| **Admin/User Panel**     | FilamentPHP v3/v4        | Generator UI Dashboard yang elegan.           |
+| **Frontend Interaction** | Alpine.js & Livewire     | Reaktivitas tanpa refresh halaman (SPA-like). |
+| **Database**             | MySQL / MariaDB          | Penyimpanan data relasional.                  |
+| **AI Library**           | Face-api.js (TensorFlow) | Deteksi dan pencocokan wajah di browser.      |
+| **Styling**              | Tailwind CSS             | Utility-first CSS framework.                  |
+| **PWA**                  | Silviolleite Laravel PWA | Service Worker & Manifest generator.          |
 
 ---
 
 ## 📂 Struktur Project
 
-Berikut adalah peta struktur folder penting untuk memahami alur kode:
+Peta direktori penting untuk memahami logika aplikasi:
 
 ```bash
 ├── app
 │   ├── Filament
-│   │   ├── Exports         # Logika Export Excel (AbsenceExporter)
-│   │   ├── Imports         # Logika Import User Massal
-│   │   ├── Resources       # CRUD Modules (Absence, User, Jabatan, UnitKerja)
-│   │   ├── Widgets         # Komponen Dashboard (Chart, Stats, Warning Banner)
-│   │   ├── AdminPanelProvider.php # Konfigurasi Panel Admin
-│   │   └── UserPanelProvider.php  # Konfigurasi Panel User
+│   │   ├── Resources       # CRUD (Absence, User, UnitKerja)
+│   │   ├── Pages           # Halaman Custom (Absensi.php, Profile.php)
+│   │   └── Widgets         # Widget Dashboard & Statistik
 │   ├── Http
-│   │   ├── Controllers     # Custom Logic (Absensi, Auth, Export)
-│   ├── Models              # Eloquent (Absence, User, Setting, RegistrationLink)
-│   └── Services            # Business Logic (GeoLocationService)
-├── config
-│   ├── laravelpwa.php      # Konfigurasi Icon & Manifest PWA
-│   └── filament.php        # Konfigurasi Global Filament
-├── database
-│   ├── migrations          # Schema Database
-│   └── seeders             # Data Awal (Admin, Unit Kerja, Settings)
+│   │   ├── Controllers     # Logic Absensi (CheckIn/Out logic yang kompleks ada di sini)
+│   │   └── Services        # GeoLocationService (Haversine Formula)
+│   ├── Models              # User, Absence, UserDevice, Setting
+├── public
+│   ├── models              # File Model AI (.shard & .json) untuk Face API
+│   └── images              # Aset Logo & Icon PWA
 ├── resources
 │   └── views
-│       ├── auth            # Tampilan Login Custom
-│       ├── components      # Reusable Blade Components (SEO Head)
-│       └── filament        # Custom View Widget/Pages
-└── routes                  # Definisi Route (web.php)
-````
+│       └── filament
+│           └── user
+│               └── pages   # View Blade untuk Kamera & Peta (absensi.blade.php)
+└── config
+    └── laravelpwa.php      # Konfigurasi nama & warna aplikasi
 
------
+```
 
-## ⚙️ Prasyarat Instalasi
+---
 
-Sebelum memulai, pastikan server atau komputer lokal Anda memiliki:
+## ⚙️ Prasyarat Sistem
 
-  * **PHP** \>= 8.2
-  * **Composer** (Terbaru)
-  * **Node.js** & **NPM** (Versi LTS, min v18)
-  * **MySQL** Database
+Pastikan lingkungan server Anda memenuhi syarat berikut:
 
------
+-   **PHP** >= 8.2 (Wajib, karena fitur Laravel modern).
+-   **Extensions:** BCMath, Ctype, Fileinfo, JSON, Mbstring, OpenSSL, PDO, Tokenizer, XML.
+-   **Database:** MySQL 8.0+ atau MariaDB 10.6+.
+-   **Web Server:** Nginx atau Apache (dengan mod_rewrite).
+-   **SSL (HTTPS):** **WAJIB** untuk fitur Kamera & GPS Browser.
 
-## 📥 Panduan Instalasi & Setup
+---
 
-Ikuti langkah-langkah berikut untuk menjalankan aplikasi di *local environment*:
+## 📥 Panduan Instalasi
 
-### 1\. Clone & Install Dependencies
+### 1. Clone & Setup Dependencies
 
 ```bash
 git clone [https://github.com/username/absensi-system.git](https://github.com/username/absensi-system.git)
 cd absensi-system
 
-# Install PHP Dependencies
+# Install PHP Packages
 composer install
 
-# Install Frontend Dependencies
-npm install
+# Install JS Packages & Build Assets
+npm install && npm run build
+
 ```
 
-### 2\. Konfigurasi Environment
+### 2. Konfigurasi Environment
 
-Duplikat file `.env.example` dan sesuaikan koneksi database.
+Salin file `.env` dan atur database Anda.
 
 ```bash
 cp .env.example .env
 php artisan key:generate
+
 ```
 
-*Buka file `.env` dan atur `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`.*
+_Edit file `.env`, sesuaikan `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, dan `APP_URL` (Pastikan HTTPS jika di production)._
 
-### 3\. Database Migration & Seeding
-
-Jalankan migrasi untuk membuat tabel dan mengisi data awal (Admin default, Unit Kerja, Jabatan).
+### 3. Database & Seeding
 
 ```bash
 php artisan migrate --seed
+
 ```
 
-*\> **Catatan:** Seeder akan membuat Unit Kerja BAPETEN, Jabatan standar, dan Setting jam kerja default.*
+_Command ini akan membuat tabel dan mengisi data awal (Admin default, Setting default)._
 
-### 4\. Build Aset Frontend (Vite)
-
-```bash
-npm run build
-```
-
-### 5\. Setup Storage Link & PWA
+### 4. Link Storage & PWA
 
 ```bash
 php artisan storage:link
 php artisan pwa:publish
+
 ```
 
-### 6\. Jalankan Server
+### 5. Jalankan Server
 
 ```bash
 php artisan serve
+
 ```
 
-Akses aplikasi di: `http://127.0.0.1:8000`
+Akses di: `http://127.0.0.1:8000` (Gunakan Ngrok atau Valet jika butuh HTTPS di local untuk tes kamera).
 
------
+---
 
-## 📱 Penggunaan Aplikasi
+## 📱 Alur Penggunaan
 
-### Login Akun
+### Bagi Pengguna (Karyawan/Magang)
 
-  * **Admin:** Gunakan kredensial yang dibuat di seeder (atau buat manual via `tinker`).
-  * **User/Pemagang:** Gunakan email/password yang didaftarkan atau scan QR Code pendaftaran.
+1. **Buka Aplikasi:** Login melalui halaman web atau PWA.
+2. **Menu Absensi:** Klik menu "Absensi" di sidebar.
+3. **Deteksi Wajah:**
 
-### Cara Melakukan Absensi (User)
+-   Kamera akan terbuka otomatis (Mode Cermin).
+-   Posisikan wajah di tengah layar.
+-   Tunggu instruksi **"Tahan... Jangan Bergerak"**.
+-   Sistem otomatis memotret jika wajah stabil.
 
-1.  Login ke panel aplikasi.
-2.  Pastikan izin lokasi (GPS) di browser aktif.
-3.  Klik menu **"Absensi"**.
-4.  Peta akan memuat lokasi Anda. Jika dalam radius, tombol **Check-In** akan aktif.
-5.  Klik tombol. Data lokasi dan perangkat akan tersimpan otomatis.
+4. **Cek Lokasi:** Jika wajah valid, sistem memverifikasi Radius Lokasi.
+5. **Selesai:** Data tersimpan.
 
-### Cara Export Laporan (Admin)
+### Bagi Admin
 
-1.  Masuk ke **Admin Panel**.
-2.  Buka menu **Absences**.
-3.  Filter data berdasarkan tanggal/bulan (opsional).
-4.  Klik tombol **Export** di header tabel.
-5.  Pilih format (CSV/Excel) -\> Unduh.
+1. **Dashboard:** Memantau grafik kehadiran harian.
+2. **Laporan:** Masuk ke menu _Absences_ -> Filter Tanggal -> Export Excel.
+3. **Pengaturan:** Masuk ke menu _Settings_ untuk mengubah:
 
------
+-   Titik Koordinat Kantor.
+-   Radius Maksimum (Meter).
+-   Akurasi Wajah (Face Threshold).
+-   Mengaktifkan/Mematikan Validasi Device ID.
+
+---
 
 <p align="center">
-<b>Dibuat dengan ❤️ dan ☕ menggunakan Laravel Filament.</b>
+<b>Dibuat dengan ❤️ untuk efisiensi dan integritas data.</b>
 </p>
