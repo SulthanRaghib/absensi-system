@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
 use UnitEnum;
 
 class PermissionResource extends Resource
@@ -28,6 +29,21 @@ class PermissionResource extends Resource
     protected static ?int $navigationSort = 2;
 
     protected static ?string $recordTitleAttribute = 'type';
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('status', 'pending')->count() ?: null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return static::getModel()::where('status', 'pending')->count() > 0 ? 'danger' : 'primary';
+    }
+
+    public static function getNavigationBadgeTooltip(): string
+    {
+        return 'Permintaan Menunggu Approval';
+    }
 
     public static function form(Schema $schema): Schema
     {

@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Permission;
+use App\Observers\PermissionObserver;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -12,8 +16,8 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(
-            \Filament\Http\Responses\Auth\Contracts\LoginResponse::class,
-            \App\Http\Responses\LoginResponse::class
+            \Filament\Auth\Http\Responses\Contracts\LoginResponse::class,
+            LoginResponse::class
         );
 
         $this->app->bind(
@@ -27,8 +31,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Permission::observe(PermissionObserver::class);
+
         if ($this->app->environment('production')) {
-            \URL::forceScheme('https');
+            URL::forceScheme('https');
         }
     }
 }
