@@ -20,6 +20,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->avatar_url ? Storage::url($this->avatar_url) : null;
     }
 
+    public function permissions(): HasMany
+    {
+        return $this->hasMany(Permission::class);
+    }
+
     /**
      * The attributes that are mass assignable.
      *
