@@ -4,10 +4,13 @@ namespace App\Observers;
 
 use App\Filament\Resources\Permissions\PermissionResource;
 use App\Filament\User\Resources\Permissions\PermissionResource as UserPermissionResource;
+use App\Models\Absence;
 use App\Models\Permission;
 use App\Models\User;
+use Carbon\CarbonPeriod;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Schema;
 
 class PermissionObserver
 {
@@ -44,6 +47,49 @@ class PermissionObserver
                     ->body("Izin {$permission->type} Anda untuk tanggal {$permission->start_date} telah disetujui.")
                     ->success()
                     ->sendToDatabase($permission->user);
+
+                if ($permission->type === 'dinas_luar' && $permission->start_date && $permission->end_date) {
+                    $hasStatusColumn = Schema::hasColumn('absences', 'status');
+                    $hasRemarksColumn = Schema::hasColumn('absences', 'remarks');
+                    $hasIsLateColumn = Schema::hasColumn('absences', 'is_late');
+
+                    $period = CarbonPeriod::create($permission->start_date, $permission->end_date);
+
+                    foreach ($period as $date) {
+                        if ($date->isWeekend()) {
+                            continue;
+                        }
+
+                        $checkOutTime = $date->isFriday() ? '16:30:00' : '16:00:00';
+
+                        $values = [
+                            'jam_masuk' => '07:30:00',
+                            'jam_pulang' => $checkOutTime,
+                        ];
+
+                        if ($hasStatusColumn) {
+                            $values['status'] = 'Hadir';
+                        }
+
+                        if ($hasRemarksColumn) {
+                            $values['remarks'] = 'Otomatis dari Izin Dinas Luar';
+                        }
+
+                        if ($hasIsLateColumn) {
+                            $values['is_late'] = false;
+                        }
+
+                        Absence::unguarded(function () use ($permission, $date, $values) {
+                            Absence::updateOrCreate(
+                                [
+                                    'user_id' => $permission->user_id,
+                                    'tanggal' => $date->toDateString(),
+                                ],
+                                $values
+                            );
+                        });
+                    }
+                }
             } elseif ($permission->status === 'rejected') {
                 Notification::make()
                     ->title('Pengajuan Izin Ditolak ❌')
