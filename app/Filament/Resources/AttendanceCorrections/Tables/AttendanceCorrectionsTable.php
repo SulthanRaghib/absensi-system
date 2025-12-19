@@ -7,10 +7,10 @@ use App\Models\AttendanceCorrection;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -82,6 +82,7 @@ class AttendanceCorrectionsTable
                     }),
             ])
             ->actions([
+                EditAction::make(),
                 ViewAction::make(),
 
                 Action::make('approve')
@@ -120,13 +121,6 @@ class AttendanceCorrectionsTable
                         }
 
                         $absence->save();
-
-                        // 4. Notify User
-                        Notification::make()
-                            ->title('Koreksi Absen Disetujui')
-                            ->body("Pengajuan koreksi absen Anda untuk tanggal {$record->date->format('d M Y')} telah disetujui.")
-                            ->success()
-                            ->sendToDatabase($record->user);
                     }),
 
                 Action::make('reject')
@@ -144,13 +138,8 @@ class AttendanceCorrectionsTable
                         $record->update([
                             'status' => 'rejected',
                             'approved_by' => Auth::id(),
+                            'rejection_note' => $data['rejection_reason'],
                         ]);
-
-                        Notification::make()
-                            ->title('Koreksi Absen Ditolak')
-                            ->body("Pengajuan koreksi absen Anda ditolak. Alasan: {$data['rejection_reason']}")
-                            ->danger()
-                            ->sendToDatabase($record->user);
                     }),
             ])
             ->bulkActions([

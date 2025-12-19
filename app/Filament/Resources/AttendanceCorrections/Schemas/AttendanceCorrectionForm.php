@@ -79,6 +79,10 @@ class AttendanceCorrectionForm
                             ->label('Disetujui Oleh')
                             ->nullable()
                             ->disabled(),
+
+                        Textarea::make('rejection_note')
+                            ->label('Alasan Penolakan')
+                            ->columnSpanFull(),
                     ])
                     ->columns(2),
             ]);
