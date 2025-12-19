@@ -91,6 +91,22 @@ class UserResource extends Resource
 
                     ])
                     ->columns(2),
+
+                Schemas\Section::make('Avatar')
+                    ->schema([
+                        Forms\FileUpload::make('avatar_url')
+                            ->label('Foto Profil')
+                            ->directory('avatars')
+                            ->disk('public')
+                            ->imageEditor()
+                            ->imageEditorAspectRatios([
+                                null,
+                                '1:1',
+                            ])
+                            ->maxSize(1024)
+                            ->helperText('Maksimal ukuran file 1MB.'),
+                    ])
+                    ->columns(1),
             ]);
     }
 
