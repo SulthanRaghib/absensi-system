@@ -32,7 +32,7 @@ class PermissionForm
                                 'dinas_luar' => 'Dinas Luar',
                             ])
                             ->required()
-                            ->disabled(fn(Get $get) => $get('status') !== 'pending')
+                            ->disabled(fn(Get $get) => filled($get('status')) && $get('status') !== 'pending')
                             ->columnSpan(4),
                         DatePicker::make('start_date')
                             ->label('Tanggal Mulai')
@@ -65,18 +65,18 @@ class PermissionForm
                                     }
                                 };
                             })
-                            ->disabled(fn(Get $get) => $get('status') !== 'pending')
+                            ->disabled(fn(Get $get) => filled($get('status')) && $get('status') !== 'pending')
                             ->columnSpan(2),
                         DatePicker::make('end_date')
                             ->label('Tanggal Selesai')
                             ->required()
                             ->afterOrEqual('start_date')
-                            ->disabled(fn(Get $get) => $get('status') !== 'pending')
+                            ->disabled(fn(Get $get) => filled($get('status')) && $get('status') !== 'pending')
                             ->columnSpan(2),
                         Textarea::make('reason')
                             ->label('Alasan Perizinan')
                             ->required()
-                            ->disabled(fn(Get $get) => $get('status') !== 'pending')
+                            ->disabled(fn(Get $get) => filled($get('status')) && $get('status') !== 'pending')
                             ->columnSpan(4),
 
                     ])
@@ -92,7 +92,7 @@ class PermissionForm
                             ->openable()
                             ->downloadable()
                             ->previewable(true)
-                            ->disabled(fn(Get $get) => $get('status') !== 'pending'),
+                            ->disabled(fn(Get $get) => filled($get('status')) && $get('status') !== 'pending'),
                     ])
                     ->columns(1)
             ]);
