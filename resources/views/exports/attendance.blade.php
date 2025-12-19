@@ -42,14 +42,43 @@
         .bg-red {
             background-color: #ffcccc;
         }
+
+        /* Totals header colors */
+        .bg-hadir {
+            background-color: #d1e7dd;
+            /* light green */
+        }
+
+        .bg-izin {
+            background-color: #fff3cd;
+            /* light yellow */
+        }
+
+        .bg-sakit {
+            background-color: #cfe2ff;
+            /* light blue */
+        }
+
+        .bg-terlambat {
+            background-color: #ffd6d6;
+            /* light red */
+        }
+
+        .bg-alpa {
+            background-color: #f8d7da;
+            /* pinkish */
+        }
     </style>
 </head>
 
 <body>
+    @php
+        $officeEntryTime = $jamMasukKantor ? \Carbon\Carbon::parse($jamMasukKantor)->format('H:i') : '07:30';
+    @endphp
     <table>
         <!-- Header Rows -->
         <tr>
-            <td colspan="{{ 2 + $daysInMonth * 2 + 3 }}" class="header-title" style="border: none;">Rekapitulasi Kehadiran
+            <td colspan="{{ 2 + $daysInMonth * 2 + 5 }}" class="header-title" style="border: none;">Rekapitulasi Kehadiran
                 Peserta Magang</td>
         </tr>
         {{-- <tr>
@@ -57,7 +86,7 @@
                 Pegawai</td>
         </tr> --}}
         <tr>
-            <td colspan="{{ 2 + $daysInMonth * 2 + 3 }}" class="header-subtitle" style="border: none;">Periode:
+            <td colspan="{{ 2 + $daysInMonth * 2 + 5 }}" class="header-subtitle" style="border: none;">Periode:
                 {{ $monthName }} {{ $year }}</td>
         </tr>
         {{-- <tr>
@@ -70,14 +99,13 @@
                 <th rowspan="3" class="bg-gray" style="width: 40px;">No</th>
                 <th rowspan="3" class="bg-gray" style="width: 250px;">Nama</th>
                 <th colspan="{{ $daysInMonth * 2 }}" class="bg-gray">Tanggal</th>
-                <th colspan="3" rowspan="2" class="bg-gray">Total</th>
+                <th colspan="5" rowspan="2" class="bg-gray">Total</th>
             </tr>
             <tr>
                 @for ($day = 1; $day <= $daysInMonth; $day++)
                     @php
                         $date = $startDate->copy()->day($day);
-                        $isWeekend = $date->isWeekend();
-                        $bgClass = $isWeekend ? 'bg-red' : 'bg-gray';
+                        $bgClass = 'bg-gray';
                     @endphp
                     <th colspan="2" class="{{ $bgClass }}">{{ $day }}</th>
                 @endfor
@@ -87,14 +115,16 @@
                     @php
                         $date = $startDate->copy()->day($day);
                         $isWeekend = $date->isWeekend();
-                        $bgClass = $isWeekend ? 'bg-red' : 'bg-gray';
+                        $bgClass = 'bg-gray';
                     @endphp
                     <th class="{{ $bgClass }}" style="width: 60px;">In</th>
                     <th class="{{ $bgClass }}" style="width: 60px;">Out</th>
                 @endfor
-                <th class="bg-gray" style="width: 80px;">Hadir</th>
-                <th class="bg-gray" style="width: 80px;">Terlambat</th>
-                <th class="bg-gray" style="width: 80px;">Alpa</th>
+                <th style="width: 80px; background-color: #d1e7dd;">Hadir</th>
+                <th style="width: 80px; background-color: #fff3cd;">Izin</th>
+                <th style="width: 80px; background-color: #cfe2ff;">Sakit</th>
+                <th style="width: 80px; background-color: #ffd6d6;">Terlambat</th>
+                <th style="width: 80px; background-color: #f8d7da;">Alpa</th>
             </tr>
         </thead>
 
@@ -105,6 +135,8 @@
                     $totalHadir = 0;
                     $totalTerlambat = 0;
                     $totalAlpa = 0;
+                    $totalIzin = 0;
+                    $totalSakit = 0;
                 @endphp
                 <tr>
                     <td>{{ $index + 1 }}</td>
@@ -117,37 +149,90 @@
                             $isWeekend = $dateObj->isWeekend();
                             $bgClass = $isWeekend ? 'bg-red' : '';
 
-                            $absence = $user->absences->first(function ($a) use ($dateStr) {
+                            $attendance = $user->absences->first(function ($a) use ($dateStr) {
                                 return $a->tanggal->format('Y-m-d') === $dateStr;
                             });
 
-                            $jamMasuk = $absence && $absence->jam_masuk ? $absence->jam_masuk->format('H:i') : '';
-                            $jamPulang = $absence && $absence->jam_pulang ? $absence->jam_pulang->format('H:i') : '';
+                            $permission = null;
 
-                            $isLate = false;
+                            if (!$attendance || !$attendance->jam_masuk) {
+                                $permission = $user->permissions->first(function ($permission) use ($dateObj) {
+                                    return $permission->start_date->lte($dateObj) &&
+                                        $permission->end_date->gte($dateObj);
+                                });
+                            }
 
-                            // Hitung Total
-                            if ($jamMasuk) {
+                            $inDisplay = '';
+                            $outDisplay = '';
+                            $inStyles = [];
+                            $mergeCell = false;
+
+                            if ($attendance && $attendance->jam_masuk) {
+                                $inDisplay = $attendance->jam_masuk->format('H:i');
+                                $outDisplay = $attendance->jam_pulang ? $attendance->jam_pulang->format('H:i') : '';
                                 $totalHadir++;
-                                // Cek Terlambat (Asumsi jam masuk kantor 07:30)
-                                if ($jamMasuk > ($jamMasukKantor ?? '07:30')) {
+
+                                if ($inDisplay > $officeEntryTime) {
                                     $totalTerlambat++;
-                                    $isLate = true;
+                                    $inStyles[] = 'color: red';
+                                    $inStyles[] = 'font-weight: bold';
+                                }
+                            } elseif ($permission) {
+                                switch ($permission->type) {
+                                    case 'sakit':
+                                        $inDisplay = 'S';
+                                        $inStyles[] = 'background-color: #cfe2ff';
+                                        $inStyles[] = 'color: #084298';
+                                        $inStyles[] = 'font-weight: bold';
+                                        $totalSakit++;
+                                        $mergeCell = true;
+                                        break;
+                                    case 'izin':
+                                        $inDisplay = 'I';
+                                        $inStyles[] = 'background-color: #fff3cd';
+                                        $inStyles[] = 'color: #664d03';
+                                        $inStyles[] = 'font-weight: bold';
+                                        $totalIzin++;
+                                        $mergeCell = true;
+                                        break;
+                                    case 'dinas_luar':
+                                        $inDisplay = 'DL';
+                                        $inStyles[] = 'background-color: #d1e7dd';
+                                        $inStyles[] = 'color: #0f5132';
+                                        $inStyles[] = 'font-weight: bold';
+                                        $totalHadir++;
+                                        break;
+                                    default:
+                                        $inDisplay = '-';
+                                        break;
                                 }
                             } else {
-                                // Hitung Alpa jika hari kerja dan belum ada absen (dan tanggal sudah lewat/hari ini)
                                 if (!$isWeekend && $dateObj->lte(now())) {
+                                    $inDisplay = 'A';
                                     $totalAlpa++;
+                                    $inStyles[] = 'color: #d32f2f';
+                                    $inStyles[] = 'font-weight: bold';
+                                    $mergeCell = true;
+                                } else {
+                                    $inDisplay = '-';
                                 }
                             }
+
+                            $inStyle = $inStyles ? implode('; ', $inStyles) : '';
                         @endphp
 
-                        <td class="{{ $bgClass }}" style="{{ $isLate ? 'color: red; font-weight: bold;' : '' }}">
-                            {{ $jamMasuk }}</td>
-                        <td class="{{ $bgClass }}">{{ $jamPulang }}</td>
+                        @if ($mergeCell)
+                            <td class="{{ $bgClass }}" colspan="2" style="{{ $inStyle }}">
+                                {{ $inDisplay }}</td>
+                        @else
+                            <td class="{{ $bgClass }}" style="{{ $inStyle }}">{{ $inDisplay }}</td>
+                            <td class="{{ $bgClass }}">{{ $outDisplay }}</td>
+                        @endif
                     @endfor
 
                     <td>{{ $totalHadir }}</td>
+                    <td>{{ $totalIzin }}</td>
+                    <td>{{ $totalSakit }}</td>
                     <td>{{ $totalTerlambat }}</td>
                     <td>{{ $totalAlpa }}</td>
                 </tr>

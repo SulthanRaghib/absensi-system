@@ -32,6 +32,24 @@ class AttendanceExport implements FromView, WithEvents
 
     public function view(): View
     {
+        $start = $this->startDate->copy();
+        $end = $this->startDate->copy()->addDays($this->daysInMonth - 1);
+
+        $this->users->loadMissing([
+            'permissions' => function ($query) use ($start, $end) {
+                $query->where('status', 'approved')
+                    ->where(function ($permissionQuery) use ($start, $end) {
+                        $permissionQuery
+                            ->whereBetween('start_date', [$start, $end])
+                            ->orWhereBetween('end_date', [$start, $end])
+                            ->orWhere(function ($query) use ($start, $end) {
+                                $query->where('start_date', '<=', $start)
+                                    ->where('end_date', '>=', $end);
+                            });
+                    });
+            },
+        ]);
+
         return view('exports.attendance', [
             'users' => $this->users,
             'daysInMonth' => $this->daysInMonth,
