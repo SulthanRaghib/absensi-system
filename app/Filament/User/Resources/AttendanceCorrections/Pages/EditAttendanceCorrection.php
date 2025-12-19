@@ -1,0 +1,24 @@
+<?php
+
+namespace App\Filament\User\Resources\AttendanceCorrections\Pages;
+
+use App\Filament\User\Resources\AttendanceCorrections\AttendanceCorrectionResource;
+use Filament\Actions\DeleteAction;
+use Filament\Resources\Pages\EditRecord;
+
+class EditAttendanceCorrection extends EditRecord
+{
+    protected static string $resource = AttendanceCorrectionResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            DeleteAction::make(),
+        ];
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+}
