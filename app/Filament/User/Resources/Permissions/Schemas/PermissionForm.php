@@ -8,6 +8,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Schema;
 use App\Models\Permission;
+use Filament\Forms\Components\Hidden;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +21,9 @@ class PermissionForm
             ->components([
                 Section::make('Form Pengajuan Perizinan')
                     ->schema([
+                        Hidden::make('status')
+                            ->dehydrated(false),
+
                         Select::make('type')
                             ->label('Tipe Perizinan')
                             ->options([
@@ -28,6 +32,7 @@ class PermissionForm
                                 'dinas_luar' => 'Dinas Luar',
                             ])
                             ->required()
+                            ->disabled(fn(Get $get) => $get('status') !== 'pending')
                             ->columnSpan(4),
                         DatePicker::make('start_date')
                             ->label('Tanggal Mulai')
@@ -60,15 +65,18 @@ class PermissionForm
                                     }
                                 };
                             })
+                            ->disabled(fn(Get $get) => $get('status') !== 'pending')
                             ->columnSpan(2),
                         DatePicker::make('end_date')
                             ->label('Tanggal Selesai')
                             ->required()
                             ->afterOrEqual('start_date')
+                            ->disabled(fn(Get $get) => $get('status') !== 'pending')
                             ->columnSpan(2),
                         Textarea::make('reason')
                             ->label('Alasan Perizinan')
                             ->required()
+                            ->disabled(fn(Get $get) => $get('status') !== 'pending')
                             ->columnSpan(4),
 
                     ])
@@ -83,7 +91,8 @@ class PermissionForm
                             ->columnSpanFull()
                             ->openable()
                             ->downloadable()
-                            ->previewable(true),
+                            ->previewable(true)
+                            ->disabled(fn(Get $get) => $get('status') !== 'pending'),
                     ])
                     ->columns(1)
             ]);
