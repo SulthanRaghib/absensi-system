@@ -105,6 +105,7 @@ class Profile extends Page implements HasForms
     public function save(): void
     {
         $data = $this->form->getState();
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         // Handle Avatar Upload
@@ -142,6 +143,7 @@ class Profile extends Page implements HasForms
 
     public function deleteAvatar(): void
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         if ($user->avatar_url && Storage::disk('public')->exists($user->avatar_url)) {
