@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\AttendanceCorrection;
 use App\Models\Permission;
+use App\Observers\AttendanceCorrectionObserver;
 use App\Observers\PermissionObserver;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Illuminate\Support\Facades\URL;
@@ -32,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Permission::observe(PermissionObserver::class);
+        AttendanceCorrection::observe(AttendanceCorrectionObserver::class);
 
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
