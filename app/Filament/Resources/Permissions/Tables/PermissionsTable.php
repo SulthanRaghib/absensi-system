@@ -62,6 +62,26 @@ class PermissionsTable
                         'approved' => 'Approved',
                         'rejected' => 'Rejected',
                     ]),
+                SelectFilter::make('created_at')
+                    ->label('Tanggal Pengajuan')
+                    ->options([
+                        'today' => 'Hari Ini',
+                        'this_week' => 'Minggu Ini',
+                        'this_month' => 'Bulan Ini',
+                        'this_year' => 'Tahun Ini',
+                    ])
+                    ->query(function ($query, $value) {
+                        switch ($value) {
+                            case 'today':
+                                return $query->whereDate('created_at', now());
+                            case 'this_week':
+                                return $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                            case 'this_month':
+                                return $query->whereMonth('created_at', now()->month);
+                            case 'this_year':
+                                return $query->whereYear('created_at', now()->year);
+                        }
+                    }),
             ])
             ->actions([
                 EditAction::make(),
