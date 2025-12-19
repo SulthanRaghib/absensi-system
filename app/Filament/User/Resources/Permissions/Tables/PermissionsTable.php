@@ -4,6 +4,7 @@ namespace App\Filament\User\Resources\Permissions\Tables;
 
 use App\Filament\User\Resources\Permissions\Pages\EditPermission;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -56,7 +57,6 @@ class PermissionsTable
                         'approved' => 'Approved',
                         'rejected' => 'Rejected',
                     ]),
-                // filter tanggal searching by created_at
                 SelectFilter::make('created_at')
                     ->label('Tanggal Pengajuan')
                     ->options([
@@ -82,7 +82,9 @@ class PermissionsTable
                 EditAction::make()
                     ->hidden(fn($record) => $record->status !== 'pending'),
                 ViewAction::make()
-                    ->hidden(fn($record) => $record->status === 'pending')
+                    ->hidden(fn($record) => $record->status === 'pending'),
+                DeleteAction::make()
+                    ->hidden(fn($record) => $record->status !== 'pending'),
             ])
             ->recordUrl(
                 fn($record) => $record->status === 'pending'
@@ -91,7 +93,7 @@ class PermissionsTable
             )
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    // DeleteBulkAction::make(),
                 ]),
             ]);
     }
