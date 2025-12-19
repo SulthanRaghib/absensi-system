@@ -125,7 +125,7 @@ class MyAbsenceResource extends Resource
                     ->time('H:i:s')
                     ->placeholder('-')
                     ->badge()
-                    ->color('success'),
+                    ->color(fn($state) => \Carbon\Carbon::parse($state)->format('H:i') > '07:30' ? 'danger' : 'success'),
 
                 Tables\Columns\TextColumn::make('jam_pulang')
                     ->label('Jam Pulang')
