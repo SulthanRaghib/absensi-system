@@ -14,6 +14,8 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 class PermissionResource extends Resource
@@ -32,17 +34,41 @@ class PermissionResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('status', 'pending')->count() ?: null;
+        $pendingCount = static::getPendingCount();
+
+        return $pendingCount > 0 ? (string) $pendingCount : null;
     }
 
     public static function getNavigationBadgeColor(): ?string
     {
-        return static::getModel()::where('status', 'pending')->count() > 0 ? 'danger' : 'primary';
+        return static::getPendingCount() > 0 ? 'danger' : 'primary';
     }
 
     public static function getNavigationBadgeTooltip(): string
     {
         return 'Permintaan Menunggu Approval';
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (Auth::user()?->is_admin) {
+            return $query;
+        }
+
+        return $query->where('user_id', Auth::id());
+    }
+
+    protected static function getPendingCount(): int
+    {
+        $query = static::getModel()::query()->where('status', 'pending');
+
+        if (! Auth::user()?->is_admin) {
+            $query->where('user_id', Auth::id());
+        }
+
+        return (int) $query->count();
     }
 
     public static function form(Schema $schema): Schema
