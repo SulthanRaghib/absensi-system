@@ -34,7 +34,7 @@
 
             // Hold-still stability
             stabilityCounter: 0,
-            stabilityTarget: 10, // e.g., 10 counts = 5 seconds (500ms interval)
+            stabilityTarget: 6, // e.g., 6 counts = 3 seconds (500ms interval)
             faceProgressPercent: 0,
             faceProgressDashArray: 0,
             faceProgressDashOffset: 0,

@@ -41,7 +41,7 @@
 
             // Hold-still stability (only for threshold 0.0)
             stabilityCounter: 0,
-            stabilityTarget: 10, // e.g., 10 counts = 5 seconds (500ms interval)
+            stabilityTarget: 6, // e.g., 6 counts = 3 seconds (500ms interval)
 
             // Progress ring state (used when faceThreshold == 0.0)
             faceProgressPercent: 0,
