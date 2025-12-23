@@ -10,6 +10,13 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Actions;
+use Filament\Actions\Action;
+use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Absence;
+use Filament\Notifications\Notification;
+use App\Filament\Resources\AttendanceCorrections\AttendanceCorrectionResource;
 
 class AttendanceCorrectionForm
 {
@@ -65,26 +72,65 @@ class AttendanceCorrectionForm
                     ->columns(2),
                 Section::make('Status Pengajuan')
                     ->schema([
-                        Select::make('status')
-                            ->label('Status')
-                            ->options([
-                                'pending' => 'Pending',
-                                'approved' => 'Disetujui',
-                                'rejected' => 'Ditolak',
-                            ])
-                            ->required(),
+                        Actions::make([
+                            Action::make('approve')
+                                ->icon(Heroicon::OutlinedCheck)
+                                ->color('success')
+                                ->requiresConfirmation()
+                                ->action(function ($record, $livewire) {
+                                    $record->update([
+                                        'status' => 'approved',
+                                        'approved_by' => Auth::id(),
+                                    ]);
 
-                        Select::make('approved_by')
-                            ->relationship('approver', 'name')
-                            ->label('Disetujui Oleh')
-                            ->nullable()
-                            ->disabled(),
+                                    $absence = Absence::firstOrCreate(
+                                        [
+                                            'user_id' => $record->user_id,
+                                            'tanggal' => $record->date,
+                                        ],
+                                        [
+                                            'jam_masuk' => null,
+                                            'jam_pulang' => null,
+                                        ]
+                                    );
 
-                        Textarea::make('rejection_note')
-                            ->label('Alasan Penolakan')
-                            ->columnSpanFull(),
+                                    if ($record->type === 'check_in' || $record->type === 'full_day') {
+                                        $absence->jam_masuk = $record->correction_time_in;
+                                    }
+
+                                    if ($record->type === 'check_out' || $record->type === 'full_day') {
+                                        $absence->jam_pulang = $record->correction_time_out;
+                                    }
+
+                                    $absence->save();
+
+                                    Notification::make()->success()->title('Pengajuan Disetujui')->send();
+
+                                    $livewire->redirect(AttendanceCorrectionResource::getUrl('index'));
+                                })
+                                ->hidden(fn($record) => $record->status !== 'pending'),
+                            Action::make('reject')
+                                ->icon(Heroicon::OutlinedXMark)
+                                ->color('danger')
+                                ->form([
+                                    Textarea::make('rejection_note')
+                                        ->required()
+                                        ->label('Alasan Penolakan'),
+                                ])
+                                ->action(function ($record, array $data, $livewire) {
+                                    $record->update([
+                                        'status' => 'rejected',
+                                        'rejection_note' => $data['rejection_note'],
+                                        'approved_by' => Auth::id(),
+                                    ]);
+
+                                    Notification::make()->danger()->title('Pengajuan Ditolak')->send();
+
+                                    $livewire->redirect(AttendanceCorrectionResource::getUrl('index'));
+                                })
+                                ->hidden(fn($record) => $record->status !== 'pending'),
+                        ])->fullWidth(),
                     ])
-                    ->columns(2),
             ]);
     }
 }

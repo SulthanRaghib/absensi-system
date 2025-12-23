@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Permissions\Schemas;
 
+use Filament\Schemas\Components\Actions;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -9,6 +11,8 @@ use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Schema;
 use App\Models\User;
 use Filament\Schemas\Components\Section;
+use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Auth;
 
 class PermissionForm
 {
@@ -66,19 +70,35 @@ class PermissionForm
 
                 Section::make('Status Perizinan')
                     ->schema([
-                        Select::make('status')
-                            ->label('Status Perizinan')
-                            ->options([
-                                'pending' => 'Pending',
-                                'approved' => 'Approved',
-                                'rejected' => 'Rejected',
-                            ])
-                            ->required()
-                            ->default('pending'),
-
-                        Textarea::make('rejection_note')
-                            ->label('Catatan Penolakan')
-                            ->columnSpanFull(),
+                        Actions::make([
+                            Action::make('approve')
+                                ->icon(Heroicon::OutlinedCheck)
+                                ->color('success')
+                                ->requiresConfirmation()
+                                ->action(function ($record) {
+                                    $record->update([
+                                        'status' => 'approved',
+                                        'approved_by' => Auth::id(),
+                                    ]);
+                                })
+                                ->hidden(fn($record) => $record->status !== 'pending'),
+                            Action::make('reject')
+                                ->icon(Heroicon::OutlinedXMark)
+                                ->color('danger')
+                                ->form([
+                                    Textarea::make('rejection_note')
+                                        ->required()
+                                        ->label('Alasan Penolakan'),
+                                ])
+                                ->action(function ($record, array $data) {
+                                    $record->update([
+                                        'status' => 'rejected',
+                                        'rejection_note' => $data['rejection_note'],
+                                        'approved_by' => Auth::id(),
+                                    ]);
+                                })
+                                ->hidden(fn($record) => $record->status !== 'pending'),
+                        ])->fullWidth(),
                     ])
             ]);
     }
