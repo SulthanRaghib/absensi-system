@@ -73,6 +73,10 @@
             box-shadow: 0 0 25px rgba(239, 68, 68, 0.3), 0 0 50px rgba(239, 68, 68, 0.15);
         }
 
+        .glow-blue {
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.5), 0 0 50px rgba(59, 130, 246, 0.25);
+        }
+
         /* Pulse animation for today */
         @keyframes pulse-ring {
 
@@ -220,6 +224,11 @@
                                 @endif
 
                                 <!-- Date Number (z-index above circle) -->
+                                @if ($d['is_today'])
+                                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                        <div class="w-20 h-20 rounded-full bg-indigo-50 glow-blue"></div>
+                                    </div>
+                                @endif
                                 <div class="relative z-10 flex flex-col items-center justify-center flex-1">
                                     <div
                                         class="text-2xl font-bold mb-0.5
@@ -245,6 +254,9 @@
                                     @elseif($d['status'] === 'alpha')
                                         <span
                                             class="text-[9px] text-gray-700 font-bold uppercase tracking-wide">Alpha</span>
+                                    @elseif($d['status'] === 'not_checked_in')
+                                        <span class="text-[9px] text-indigo-700 font-bold uppercase tracking-wide">Belum
+                                            Absen</span>
                                     @endif
                                 </div>
 

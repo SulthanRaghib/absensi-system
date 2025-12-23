@@ -148,8 +148,13 @@ class AttendanceCalendarWidget extends Widget
                             }
                         } else {
                             // if there is an absence record but no jam_masuk
-                            // treat as Alpha only if in the past
-                            if ($day->isPast()) {
+                            // for today show 'Belum Absen', otherwise mark as Alpha if in the past
+                            if ($day->isToday()) {
+                                $status = 'not_checked_in';
+                                $label = 'Belum Absen';
+                                $color = 'indigo-100';
+                                $emoji = '⏳';
+                            } elseif ($day->isPast()) {
                                 $status = 'alpha';
                                 $label = 'Alpha';
                                 $color = 'black';
@@ -157,8 +162,13 @@ class AttendanceCalendarWidget extends Widget
                             }
                         }
                     } else {
-                        // no record and past and not weekend/holiday => Alpha
-                        if ($day->isPast()) {
+                        // no record: if today -> not_checked_in; if past -> alpha
+                        if ($day->isToday()) {
+                            $status = 'not_checked_in';
+                            $label = 'Belum Absen';
+                            $color = 'indigo-100';
+                            $emoji = '⏳';
+                        } elseif ($day->isPast()) {
                             $status = 'alpha';
                             $label = 'Alpha';
                             $color = 'black';
