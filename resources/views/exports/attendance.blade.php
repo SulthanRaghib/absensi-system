@@ -157,8 +157,9 @@
 
                             if (!$attendance || !$attendance->jam_masuk) {
                                 $permission = $user->permissions->first(function ($permission) use ($dateObj) {
-                                    return $permission->start_date->lte($dateObj) &&
-                                        $permission->end_date->gte($dateObj);
+                                    $checkDate = $dateObj->format('Y-m-d');
+                                    return $checkDate >= $permission->start_date->format('Y-m-d') &&
+                                        $checkDate <= $permission->end_date->format('Y-m-d');
                                 });
                             }
 

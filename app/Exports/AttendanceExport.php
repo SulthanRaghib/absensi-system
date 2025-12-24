@@ -36,6 +36,7 @@ class AttendanceExport implements FromView, WithEvents
         $end = $this->startDate->copy()->addDays($this->daysInMonth - 1);
 
         $this->users->loadMissing([
+            'absences',
             'permissions' => function ($query) use ($start, $end) {
                 $query->where('status', 'approved')
                     ->where(function ($permissionQuery) use ($start, $end) {
