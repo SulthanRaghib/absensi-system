@@ -10,6 +10,8 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class AttendanceExport implements FromView, WithEvents
 {
@@ -51,6 +53,8 @@ class AttendanceExport implements FromView, WithEvents
             },
         ]);
 
+        $holidays = $this->getHolidays($this->startDate->month, $this->startDate->year);
+
         return view('exports.attendance', [
             'users' => $this->users,
             'daysInMonth' => $this->daysInMonth,
@@ -58,7 +62,32 @@ class AttendanceExport implements FromView, WithEvents
             'year' => $this->year,
             'startDate' => $this->startDate,
             'jamMasukKantor' => $this->jamMasukKantor,
+            'holidays' => $holidays,
         ]);
+    }
+
+    private function getHolidays($month, $year)
+    {
+        $cacheKey = "holidays_{$year}_{$month}";
+
+        return Cache::remember($cacheKey, 3600, function () use ($month, $year) {
+            try {
+                $response = Http::get("https://dayoffapi.vercel.app/api", [
+                    'month' => $month,
+                    'year' => $year,
+                ]);
+
+                if ($response->successful()) {
+                    return collect($response->json())
+                        ->pluck('tanggal')
+                        ->toArray();
+                }
+            } catch (\Exception $e) {
+                // Fallback or log error
+            }
+
+            return [];
+        });
     }
 
     public function registerEvents(): array

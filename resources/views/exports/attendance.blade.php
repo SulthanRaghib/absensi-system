@@ -207,8 +207,14 @@
                                         $inDisplay = '-';
                                         break;
                                 }
+                            } elseif (in_array($dateStr, $holidays) || $isWeekend) {
+                                $inDisplay = 'LIBUR';
+                                $inStyles[] = 'background-color: #ffcccc';
+                                $inStyles[] = 'color: #d60000';
+                                $inStyles[] = 'font-weight: bold';
+                                $mergeCell = true;
                             } else {
-                                if (!$isWeekend && $dateObj->lte(now())) {
+                                if ($dateObj->lte(now())) {
                                     $inDisplay = 'A';
                                     $totalAlpa++;
                                     $inStyles[] = 'color: #d32f2f';
