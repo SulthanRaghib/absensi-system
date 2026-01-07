@@ -14,6 +14,7 @@
 
             // Face Recognition State
             showFaceModal: false,
+            step: 'idle', // idle, checking_location, location_failed, camera_active
             showNoAvatarModal: false,
             isFaceLoading: false,
             isModelLoaded: false,
@@ -342,7 +343,32 @@
             },
 
             async openFaceModal() {
+                // 1. Check Location FIRST (Before opening modal if possible, or reset modal state)
+                
+                // If we don't have location yet, try to fetch it quickly
+                if (!this.userLocation || (Date.now() - (this.userLocation.timestamp || 0) > 60000)) {
+                   this.isLoading = true; // Show global loading if needed
+                   this.startTracking(true);
+                   await new Promise(r => setTimeout(r, 1500)); // Wait for location update
+                   this.isLoading = false;
+                }
+
+                if (!this.userLocation) {
+                    alert('Gagal mendapatkan lokasi. Pastikan GPS aktif.');
+                    return;
+                }
+
+                const dist = this.userLocation.distance;
+                
+                // 2. Validate Distance
+                if (config.isRadiusEnabled && dist > config.officeRadius) {
+                     alert('Lokasi terlalu jauh! Jarak: ' + Math.round(dist) + ' meter. Maksimal: ' + config.officeRadius + ' meter.');
+                     return;
+                }
+
+                // 3. If Valid, Proceed to Open Modal & Start Camera
                 this.showFaceModal = true;
+                this.step = 'camera_active';
                 this.showRetry = false;
                 this.isMatched = false;
                 this.faceStatus = 'scanning';
@@ -352,14 +378,15 @@
                 this.initFaceProgressRing();
                 this.updateFaceProgress();
 
-                // Start loading models in background ASAP (don’t await here).
+                // Start Camera Logic
                 this.ensureFaceModelsLoaded();
-
                 await this.startCamera();
-
-                // After camera starts, wait for prerequisites then scan.
-                // (Keeps modal responsive even if models are still downloading.)
                 this.prepareFaceVerification();
+            },
+
+            // Deprecated: checkLocationAndProceed (merged into openFaceModal)
+            async unused_checkLocationAndProceed() {
+                // ... logic moved to openFaceModal
             },
 
             async prepareFaceVerification() {

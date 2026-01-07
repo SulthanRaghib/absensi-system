@@ -6,6 +6,7 @@
             officeLat: {{ $officeLocation['latitude'] }},
             officeLng: {{ $officeLocation['longitude'] }},
             officeRadius: {{ $officeLocation['radius'] }},
+            isRadiusEnabled: {{ $isRadiusEnabled ? 'true' : 'false' }},
             checkInRoute: '{{ route('absensi.check-in') }}',
             checkOutRoute: '{{ route('absensi.check-out') }}',
             csrfToken: '{{ csrf_token() }}',

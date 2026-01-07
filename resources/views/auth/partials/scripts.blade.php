@@ -20,6 +20,13 @@
             deviceToken: null,
             userAvatar: null,
 
+            // Location Logic
+            officeLat: {{ $officeLocation['latitude'] }},
+            officeLng: {{ $officeLocation['longitude'] }},
+            officeRadius: {{ $officeLocation['radius'] }},
+            radiusEnabled: {{ $radiusEnabled ? 'true' : 'false' }},
+            currentDistance: null,
+
             // Face Recognition State
             faceRecognitionEnabled: {{ $faceRecognitionEnabled ? 'true' : 'false' }},
             faceThreshold: {{ (float) ($faceThreshold ?? 0.5) }},
@@ -394,6 +401,14 @@
 
             async checkAttendance() {
                 this.isLoading = true;
+
+                // Validate Location Sequence
+                if (this.radiusEnabled && this.currentDistance > this.officeRadius) {
+                    alert('Lokasi terlalu jauh! Jarak: ' + Math.round(this.currentDistance) + ' meter. Maksimal: ' + this.officeRadius + ' meter.');
+                    this.isLoading = false;
+                    return;
+                }
+
                 try {
                     const response = await fetch("{{ route('attendance.check-status') }}", {
                         method: 'POST',
@@ -583,8 +598,8 @@
 
                 this.map.setView([lat, lng], 16);
 
-                const dist = this.calculateDistance(lat, lng, {{ $officeLocation['latitude'] }},
-                    {{ $officeLocation['longitude'] }});
+                const dist = this.calculateDistance(lat, lng, this.officeLat, this.officeLng);
+                this.currentDistance = dist;
 
                 const distEl = document.getElementById('distance-display');
                 const accEl = document.getElementById('accuracy-display');

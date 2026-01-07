@@ -19,6 +19,7 @@ class AuthController extends Controller
 
         // Fetch office location for the map in the login/choice view
         $officeLocation = Setting::getOfficeLocation();
+        $radiusEnabled = Setting::isRadiusEnabled();
 
         $faceSetting = Setting::where('key', 'face_recognition_enabled')->first();
         $faceRecognitionEnabled = $faceSetting ? filter_var($faceSetting->value, FILTER_VALIDATE_BOOLEAN) : false;
@@ -26,7 +27,7 @@ class AuthController extends Controller
         $thresholdSetting = Setting::where('key', 'face_threshold')->first();
         $faceThreshold = $thresholdSetting ? (float) $thresholdSetting->value : 0.5;
 
-        return view('auth.choice', compact('officeLocation', 'faceRecognitionEnabled', 'faceThreshold'));
+        return view('auth.choice', compact('officeLocation', 'faceRecognitionEnabled', 'faceThreshold', 'radiusEnabled'));
     }
 
     /**

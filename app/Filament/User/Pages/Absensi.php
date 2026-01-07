@@ -27,6 +27,7 @@ class Absensi extends Page
         $user = Auth::user();
         $todayAbsence = Absence::getTodayAbsence($user->id);
         $officeLocation = Setting::getOfficeLocation();
+        $isRadiusEnabled = Setting::isRadiusEnabled();
 
         $faceSetting = Setting::where('key', 'face_recognition_enabled')->first();
         $faceRecognitionEnabled = $faceSetting ? filter_var($faceSetting->value, FILTER_VALIDATE_BOOLEAN) : false;
@@ -38,6 +39,7 @@ class Absensi extends Page
             'user' => $user,
             'todayAbsence' => $todayAbsence,
             'officeLocation' => $officeLocation,
+            'isRadiusEnabled' => $isRadiusEnabled,
             'faceRecognitionEnabled' => $faceRecognitionEnabled,
             'faceThreshold' => $faceThreshold,
         ];
