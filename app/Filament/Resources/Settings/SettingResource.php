@@ -130,7 +130,8 @@ class SettingResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->copyable()
-                    ->weight('bold'),
+                    ->weight('bold')
+                    ->formatStateUsing(fn (string $state): string => ucwords(str_replace('_', ' ', $state))),
 
                 Tables\Columns\TextColumn::make('value')
                     ->label('Nilai')
@@ -176,8 +177,6 @@ class SettingResource extends Resource
                     ]),
             ])
             ->actions([
-                EditAction::make(),
-                DeleteAction::make(),
                 Action::make('toggle')
                     ->label(fn(Setting $record) => filter_var($record->value, FILTER_VALIDATE_BOOLEAN) ? 'Non-Aktifkan' : 'Aktifkan')
                     ->icon(fn(Setting $record) => filter_var($record->value, FILTER_VALIDATE_BOOLEAN) ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
@@ -187,6 +186,8 @@ class SettingResource extends Resource
                         $newValue = filter_var($record->value, FILTER_VALIDATE_BOOLEAN) ? '0' : '1';
                         $record->update(['value' => $newValue]);
                     }),
+                EditAction::make(),
+                DeleteAction::make(),
             ])
             ->bulkActions([
                 Actions\BulkActionGroup::make([
