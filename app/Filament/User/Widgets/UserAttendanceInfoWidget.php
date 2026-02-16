@@ -60,13 +60,13 @@ class UserAttendanceInfoWidget extends BaseWidget
 
         $percentComplete = $workDaysCount > 0 ? round(($monthlyComplete / $workDaysCount) * 100) : 0;
 
-        // Today's status
-        $todayStatus = 'Belum Absen';
-        $todayColor = 'danger';
-        $todayIcon = 'heroicon-m-x-circle';
-        $todayDesc = 'Silakan lakukan absensi masuk';
+        // Check for holidays
+        $holidayService = new \App\Services\HolidayService();
+        $holidays = $holidayService->getHolidays($today->year, $today->month);
+        $todayHoliday = $holidays[$today->toDateString()] ?? null;
 
         if ($todayAbsence) {
+            // Priority: Show attendance if checked in
             if ($todayAbsence->jam_pulang) {
                 $todayStatus = 'Sudah Lengkap';
                 $todayColor = 'success';
@@ -75,13 +75,24 @@ class UserAttendanceInfoWidget extends BaseWidget
             } elseif ($todayAbsence->jam_masuk) {
                 // Check punctuality
                 $arrivedAt = Carbon::parse($todayAbsence->jam_masuk->format('H:i:s'));
-                // For today's status, do NOT apply grace minutes — arriving at 07:30 is considered late
                 $isLate = $arrivedAt->gte($workStart);
                 $todayStatus = $isLate ? 'Telat' : 'Sudah Check In';
                 $todayColor = $isLate ? 'warning' : 'success';
                 $todayIcon = $isLate ? 'heroicon-m-clock' : 'heroicon-m-check-circle';
                 $todayDesc = 'Masuk: ' . $arrivedAt->format('H:i') . ($isLate ? ' (Telat)' : '');
             }
+        } elseif ($todayHoliday) {
+            // Holiday Status (only if no attendance record)
+            $todayStatus = 'Libur Nasional';
+            $todayColor = 'primary';
+            $todayIcon = 'heroicon-m-sparkles'; // Or calendar icon
+            $todayDesc = $todayHoliday;
+        } else {
+            // Not holiday, not absent
+            $todayStatus = 'Belum Absen';
+            $todayColor = 'danger';
+            $todayIcon = 'heroicon-m-x-circle';
+            $todayDesc = 'Silakan lakukan absensi masuk';
         }
 
         // Small sparkline: [present, complete, late]

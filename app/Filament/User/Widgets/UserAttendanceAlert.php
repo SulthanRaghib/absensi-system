@@ -23,7 +23,14 @@ class UserAttendanceAlert extends Widget
             return false;
         }
 
-        // 2. Check if user has NO Absence record for today
+        // 2. Check if today is a holiday
+        $holidayService = new \App\Services\HolidayService();
+        $holidays = $holidayService->getHolidays(now()->year, now()->month);
+        if (isset($holidays[now()->toDateString()])) {
+            return false;
+        }
+
+        // 3. Check if user has NO Absence record for today
         $hasAbsenceToday = Absence::where('user_id', Auth::id())
             ->whereDate('tanggal', now()->toDateString())
             ->exists();
