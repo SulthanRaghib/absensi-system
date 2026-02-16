@@ -49,45 +49,10 @@ class AttendanceCalendarWidget extends Widget
         // Holidays from external API (cached 24 hours)
         $month = $startOfMonth->month;
         $year = $startOfMonth->year;
-        $cacheKey = "holidays:{$year}:{$month}";
 
-        $holidays = Cache::remember($cacheKey, 60 * 24, function () use ($month, $year) {
-            try {
-                $url = "https://dayoffapi.vercel.app/api?month={$month}&year={$year}";
-                $res = Http::timeout(5)->get($url);
-                if ($res->successful()) {
-                    $data = $res->json();
-                    return is_array($data) ? $data : [];
-                }
-            } catch (\Throwable $e) {
-                // ignore
-            }
-            return [];
-        });
-
-        // normalize holiday dates -> array of Y-m-d => name
-        $holidayMap = [];
-        foreach ($holidays as $h) {
-            // handle if API returns strings or objects with different keys
-            if (is_string($h)) {
-                try {
-                    $d = Carbon::parse($h)->toDateString();
-                    $holidayMap[$d] = '';
-                } catch (\Throwable $e) {
-                }
-            } elseif (is_array($h)) {
-                // try multiple known keys from different APIs (including the example with 'tanggal')
-                $date = $h['tanggal'] ?? $h['date'] ?? ($h['day'] ?? ($h['holidayDate'] ?? null));
-                $name = $h['keterangan'] ?? $h['tanggal_display'] ?? $h['localName'] ?? ($h['name'] ?? ($h['description'] ?? ''));
-                if ($date) {
-                    try {
-                        $d = Carbon::parse($date)->toDateString();
-                        $holidayMap[$d] = $name ?: '';
-                    } catch (\Throwable $e) {
-                    }
-                }
-            }
-        }
+        // Fetch holiday data from centralized service
+        // Returns associative array ['YYYY-MM-DD' => 'Holiday Name']
+        $holidayMap = (new \App\Services\HolidayService)->getHolidays($year, $month);
 
         // Build day map for current month
         $period = CarbonPeriod::create($startOfMonth, $endOfMonth);

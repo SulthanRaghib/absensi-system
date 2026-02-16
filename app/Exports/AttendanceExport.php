@@ -53,7 +53,9 @@ class AttendanceExport implements FromView, WithEvents
             },
         ]);
 
-        $holidays = $this->getHolidays($this->startDate->month, $this->startDate->year);
+        $holidayMap = (new \App\Services\HolidayService)->getHolidays($this->startDate->year, $this->startDate->month);
+        // The view expects standard array of date strings
+        $holidays = array_keys($holidayMap);
 
         return view('exports.attendance', [
             'users' => $this->users,
@@ -66,29 +68,6 @@ class AttendanceExport implements FromView, WithEvents
         ]);
     }
 
-    private function getHolidays($month, $year)
-    {
-        $cacheKey = "holidays_{$year}_{$month}";
-
-        return Cache::remember($cacheKey, 3600, function () use ($month, $year) {
-            try {
-                $response = Http::get("https://dayoffapi.vercel.app/api", [
-                    'month' => $month,
-                    'year' => $year,
-                ]);
-
-                if ($response->successful()) {
-                    return collect($response->json())
-                        ->pluck('tanggal')
-                        ->toArray();
-                }
-            } catch (\Exception $e) {
-                // Fallback or log error
-            }
-
-            return [];
-        });
-    }
 
     public function registerEvents(): array
     {
