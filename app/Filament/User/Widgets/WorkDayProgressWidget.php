@@ -22,6 +22,11 @@ class WorkDayProgressWidget extends Widget
         $today = Carbon::today();
         $user = Auth::user();
 
+        // Check for holidays
+        $holidayService = new \App\Services\HolidayService();
+        $holidays = $holidayService->getHolidays($today->year, $today->month);
+        $todayHoliday = $holidays[$today->toDateString()] ?? null;
+
         // Get today's attendance
         $attendance = \App\Models\Absence::where('user_id', $user->id)
             ->whereDate('tanggal', $today)
@@ -44,6 +49,7 @@ class WorkDayProgressWidget extends Widget
             'clockOutIso' => $clockOut?->toIso8601String(),
             'isCheckedIn' => $clockIn !== null,
             'isCheckedOut' => $clockOut !== null,
+            'holiday' => $todayHoliday,
         ];
     }
 }
