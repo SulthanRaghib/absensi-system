@@ -21,11 +21,32 @@ class AttendanceCalendarWidget extends Widget
 
     protected static ?int $sort = 10;
 
+    public $selectedMonth;
+    public $selectedYear;
+
+    public function mount()
+    {
+        $this->selectedMonth = now()->month;
+        $this->selectedYear = now()->year;
+    }
+
+    public function updatedSelectedMonth()
+    {
+        $this->dispatch('calendar-updated');
+    }
+
+    public function updatedSelectedYear()
+    {
+        $this->dispatch('calendar-updated');
+    }
+
     protected function getViewData(): array
     {
         $user = Auth::user();
-        $startOfMonth = Carbon::now()->startOfMonth();
-        $endOfMonth = Carbon::now()->endOfMonth();
+
+        $selectedDate = Carbon::createFromDate($this->selectedYear, $this->selectedMonth, 1);
+        $startOfMonth = $selectedDate->copy()->startOfMonth();
+        $endOfMonth = $selectedDate->copy()->endOfMonth();
 
         // Fetch Absences for the month
         $absences = Absence::where('user_id', $user->id)

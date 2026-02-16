@@ -98,11 +98,22 @@
                     <p class="text-indigo-100 text-sm">Rekap Kehadiran Bulanan</p>
                 </div>
 
-                <!-- Quick Stats -->
-                <div class="flex gap-2">
-                    <div class="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5 text-white text-xs font-medium">
-                        <span class="opacity-80">Bulan Ini</span>
-                    </div>
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-2">
+                    <select wire:model.live="selectedMonth"
+                        class="bg-white/20 backdrop-blur-sm text-white border-transparent rounded-lg text-sm font-medium focus:border-white focus:ring-0 cursor-pointer hover:bg-white/30 transition-colors [&>option]:text-gray-900 py-1.5 pl-3 pr-8">
+                        @foreach (range(1, 12) as $m)
+                            <option value="{{ $m }}">
+                                {{ Carbon\Carbon::create()->month($m)->locale('id')->isoFormat('MMMM') }}</option>
+                        @endforeach
+                    </select>
+
+                    <select wire:model.live="selectedYear"
+                        class="bg-white/20 backdrop-blur-sm text-white border-transparent rounded-lg text-sm font-medium focus:border-white focus:ring-0 cursor-pointer hover:bg-white/30 transition-colors [&>option]:text-gray-900 py-1.5 pl-3 pr-8">
+                        @foreach (range(now()->year - 5, now()->year + 1) as $y)
+                            <option value="{{ $y }}">{{ $y }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
         </div>
