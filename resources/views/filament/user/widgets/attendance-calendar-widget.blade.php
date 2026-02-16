@@ -15,16 +15,7 @@
             scrollbar-width: none;
         }
 
-        /* Calendar tooltip */
-        .calendar-tooltip {
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            margin-bottom: 8px;
-            z-index: 9999;
-            pointer-events: none;
-        }
+        /* Calendar tooltip styles removed in favor of inline logic */
 
         /* Custom animations */
         @keyframes fade-in-up {
@@ -45,11 +36,14 @@
 
         /* Hover scale effect */
         .calendar-cell:hover {
-            transform: scale(1.05);
+            z-index: 50;
+            /* Ensure hovered cell is above others */
         }
 
         .calendar-cell {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            /* Create stacking context */
         }
 
         /* Glow effects for status */
@@ -155,7 +149,8 @@
 
         <!-- Calendar Section -->
         <div class="p-6">
-            <div class="overflow-x-auto no-scrollbar">
+            <div class="overflow-x-auto xl:overflow-visible no-scrollbar pb-4"
+                style="padding-top: 2rem; margin-top: -2rem;">
                 <div class="min-w-[640px]">
                     <!-- Day Headers -->
                     <div class="grid grid-cols-7 gap-2 mb-3">
@@ -185,6 +180,23 @@
                         @endphp
 
                         @foreach ($days as $d)
+                            @php
+                                $colIndex = ($firstDow + $loop->index) % 7;
+                                // Tooltip positioning class based on column
+                                $tooltipClass = 'left-1/2 -translate-x-1/2'; // Default: center
+                                $arrowClass = 'left-1/2 -translate-x-1/2'; // Default arrow: center
+
+                                if ($colIndex === 0) {
+                                    // Leftmost column: align left edge
+                                    $tooltipClass = 'left-0 translate-x-0';
+                                    $arrowClass = 'left-4 translate-x-0'; // Arrow near left
+                                } elseif ($colIndex === 6) {
+                                    // Rightmost column: align right edge
+                                    $tooltipClass = 'right-0 translate-x-0 left-auto';
+                                    $arrowClass = 'right-4 translate-x-0 left-auto'; // Arrow near right
+                                }
+                            @endphp
+
                             <div x-data="{ show: false }" @mouseenter="show = true" @mouseleave="show = false"
                                 class="relative calendar-cell rounded-xl border-2 {{ $d['is_today'] ? 'border-indigo-400 ring-today' : 'border-gray-100' }} hover:border-indigo-200 hover:shadow-md aspect-square flex flex-col items-center justify-center p-2 group cursor-pointer">
 
@@ -268,11 +280,12 @@
                                         x-transition:leave="transition ease-in duration-100"
                                         x-transition:leave-start="opacity-100 scale-100"
                                         x-transition:leave-end="opacity-0 scale-95"
-                                        class="calendar-tooltip bg-gray-900 text-white text-xs py-2 px-3 rounded-lg shadow-xl whitespace-nowrap backdrop-blur-sm"
+                                        class="absolute z-[100] bottom-[calc(100%+8px)] w-max max-w-[150px] sm:max-w-[200px] bg-gray-900 text-white text-[10px] sm:text-xs py-2 px-3 rounded-lg shadow-xl backdrop-blur-sm whitespace-normal text-center break-words leading-tight {{ $tooltipClass }}"
                                         style="display: none;">
                                         <div class="font-medium">{{ $d['label'] }}</div>
-                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
-                                            <div class="border-4 border-transparent border-t-gray-900"></div>
+                                        <!-- Arrow -->
+                                        <div
+                                            class="absolute top-full border-[6px] border-transparent border-t-gray-900 {{ $arrowClass }}">
                                         </div>
                                     </div>
                                 @endif
