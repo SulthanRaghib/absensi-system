@@ -82,16 +82,17 @@
         </div>
     @endif
 
-    .bg-size-200 {
-    background-size: 200% 100%;
-    }
+    <style>
+        .bg-size-200 {
+            background-size: 200% 100%;
+        }
 
-    .bg-pos-0 {
-    background-position: 0% 0%;
-    }
+        .bg-pos-0 {
+            background-position: 0% 0%;
+        }
 
-    .bg-pos-100 {
-    background-position: 100% 0%;
-    }
+        .bg-pos-100 {
+            background-position: 100% 0%;
+        }
     </style>
 </x-filament-widgets::widget>
