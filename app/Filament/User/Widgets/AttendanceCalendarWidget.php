@@ -75,9 +75,24 @@ class AttendanceCalendarWidget extends Widget
         // Returns associative array ['YYYY-MM-DD' => 'Holiday Name']
         $holidayMap = (new \App\Services\HolidayService)->getHolidays($year, $month);
 
+        // Pre-calculate Permissions Map (Optimized O(1) Lookup)
+        $permissionDays = [];
+        foreach ($permissions as $perm) {
+            $pStart = Carbon::parse($perm->start_date);
+            $pEnd = Carbon::parse($perm->end_date);
+
+            // Generate all dates in the range
+            $period = CarbonPeriod::create($pStart, $pEnd);
+            foreach ($period as $date) {
+                // Key by Y-m-d for instant lookup
+                $permissionDays[$date->toDateString()] = $perm;
+            }
+        }
+
         // Build day map for current month
         $period = CarbonPeriod::create($startOfMonth, $endOfMonth);
         $days = [];
+
         foreach ($period as $day) {
             $key = $day->toDateString();
             $isHoliday = array_key_exists($key, $holidayMap);
@@ -99,15 +114,8 @@ class AttendanceCalendarWidget extends Widget
                 $color = 'gray-100';
                 $emoji = '⛱️';
             } else {
-                // permissions
-                $permFound = null;
-                foreach ($permissions as $perm) {
-                    // Carbon::between includes endpoints by default
-                    if ($day->between($perm->start_date, $perm->end_date)) {
-                        $permFound = $perm;
-                        break;
-                    }
-                }
+                // Check Permission via Lookup (O(1))
+                $permFound = $permissionDays[$key] ?? null;
 
                 if ($permFound) {
                     $status = 'permission';
@@ -119,8 +127,11 @@ class AttendanceCalendarWidget extends Widget
                     $absence = $absences[$key] ?? null;
                     if ($absence) {
                         if ($absence->jam_masuk) {
-                            $jamMasuk = Carbon::parse($absence->jam_masuk->format('H:i:s'));
-                            $threshold = Carbon::createFromTimeString('07:30:59');
+                            // Already cast to Carbon via Model $casts
+                            $jamMasuk = $absence->jam_masuk;
+                            // 07:30:59 Threshold
+                            $threshold = $jamMasuk->copy()->setTime(7, 30, 59);
+
                             if ($jamMasuk->gt($threshold)) {
                                 $status = 'late';
                                 $label = 'Telat ' . $jamMasuk->format('H:i');

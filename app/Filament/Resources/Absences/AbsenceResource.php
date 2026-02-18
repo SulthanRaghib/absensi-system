@@ -122,6 +122,10 @@ class AbsenceResource extends Resource
                 Tables\Columns\ImageColumn::make('capture_image')
                     ->label('Foto')
                     ->disk('public')
+                    // Show only existence check first, or use a smaller conversion if available
+                    // For now, limiting height prevents layout shifts
+                    ->height(40)
+                    ->checkFileExistence(false) // Saves I/O on shared hosting
                     ->circular(),
 
                 Tables\Columns\TextColumn::make('tanggal')
@@ -135,7 +139,9 @@ class AbsenceResource extends Resource
                     ->time('H:i')
                     ->placeholder('-')
                     ->badge()
-                    ->color(fn($state) => \Carbon\Carbon::parse($state)->format('H:i') > '07:30' ? 'danger' : 'success'),
+                    // Optimized: Use the model attribute directly (already cast to Carbon)
+                    // If it is null, color won't be called or we default.
+                    ->color(fn(Absence $record) => $record->jam_masuk && $record->jam_masuk->format('H:i:s') > '07:30:59' ? 'danger' : 'success'),
 
                 Tables\Columns\TextColumn::make('jam_pulang')
                     ->label('Jam Pulang')
