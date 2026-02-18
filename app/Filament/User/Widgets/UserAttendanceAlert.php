@@ -18,23 +18,37 @@ class UserAttendanceAlert extends Widget
 
     public static function canView(): bool
     {
+        // Only simple checks here to prevent blocking.
+        // Holiday logic moved to view/render.
+
         // 1. Check if it is a weekday (Monday=1 to Friday=5)
         if (now()->isWeekend()) {
             return false;
         }
 
-        // 2. Check if today is a holiday
-        $holidayService = new \App\Services\HolidayService();
-        $holidays = $holidayService->getHolidays(now()->year, now()->month);
-        if (isset($holidays[now()->toDateString()])) {
-            return false;
-        }
-
-        // 3. Check if user has NO Absence record for today
+        // 2. Check if user has NO Absence record for today
+        // This is a fast DB query on indexed column, acceptable.
         $hasAbsenceToday = Absence::where('user_id', Auth::id())
             ->whereDate('tanggal', now()->toDateString())
             ->exists();
 
         return ! $hasAbsenceToday;
+    }
+
+    public function render(): \Illuminate\Contracts\View\View
+    {
+        // Use default render logic but ensure data is fetched safely
+        return view($this->view, $this->getViewData());
+    }
+
+    protected function getViewData(): array
+    {
+        // Safe fetched holiday data
+        $holidayService = new \App\Services\HolidayService();
+        $holidays = $holidayService->getHolidays(now()->year, now()->month);
+
+        return [
+            'isHoliday' => isset($holidays[now()->toDateString()]),
+        ];
     }
 }

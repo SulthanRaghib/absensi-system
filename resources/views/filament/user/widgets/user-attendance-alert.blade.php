@@ -1,81 +1,97 @@
 <x-filament-widgets::widget>
-    <div
-        class="relative overflow-hidden bg-gradient-to-br from-red-50 via-orange-50 to-amber-50
+    @if (!($isHoliday ?? false))
+        <div
+            class="relative overflow-hidden bg-gradient-to-br from-red-50 via-orange-50 to-amber-50
                border border-red-200 rounded-2xl shadow-xl p-6 backdrop-blur-sm
                flex flex-col md:flex-row items-center justify-between gap-6">
 
-        <!-- Decorative Elements -->
-        <div
-            class="absolute top-0 right-0 w-32 h-32 bg-red-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2">
-        </div>
-        <div
-            class="absolute bottom-0 left-0 w-24 h-24 bg-orange-200/30 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2">
-        </div>
-
-        <!-- Left Section -->
-        <div class="relative flex items-start gap-4 w-full md:w-auto">
-            <!-- Icon -->
+            <!-- Decorative Elements -->
             <div
-                class="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500
+                class="absolute top-0 right-0 w-32 h-32 bg-red-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2">
+            </div>
+            <div
+                class="absolute bottom-0 left-0 w-24 h-24 bg-orange-200/30 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2">
+            </div>
+
+            <!-- Left Section -->
+            <div class="relative flex items-start gap-4 w-full md:w-auto">
+                <!-- Icon -->
+                <div
+                    class="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500
                         rounded-xl flex items-center justify-center shadow-lg
                         transform hover:scale-110 transition-transform duration-300">
-                @svg('heroicon-o-exclamation-triangle', 'w-7 h-7 text-white')
+                    @svg('heroicon-o-exclamation-triangle', 'w-7 h-7 text-white')
+                </div>
+
+                <div>
+                    <h3
+                        class="text-xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-1">
+                        Peringatan Absensi
+                    </h3>
+                    <div class="h-1 w-16 bg-gradient-to-r from-red-500 to-orange-500 rounded-full mb-2"></div>
+
+                    <p class="text-gray-700 leading-relaxed text-sm">
+                        Anda belum melakukan absensi hari ini. Harap segera Check-In!
+                    </p>
+                </div>
             </div>
 
-            <div>
-                <h3
-                    class="text-xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-1">
-                    Peringatan Absensi
-                </h3>
-                <div class="h-1 w-16 bg-gradient-to-r from-red-500 to-orange-500 rounded-full mb-2"></div>
-
-                <p class="text-gray-700 leading-relaxed text-sm">
-                    Anda belum melakukan absensi hari ini. Harap segera Check-In!
-                </p>
-            </div>
-        </div>
-
-        <!-- Button -->
-        <div class="relative w-full md:w-auto flex justify-end">
-            <x-filament::button tag="a" href="{{ route('filament.user.pages.absensi') }}" color="warning"
-                class="group relative px-6 py-3 bg-gradient-to-r from-red-500 via-orange-500 to-red-500
+            <!-- Button -->
+            <div class="relative w-full md:w-auto flex justify-end">
+                <x-filament::button tag="a" href="{{ route('filament.user.pages.absensi') }}" color="warning"
+                    class="group relative px-6 py-3 bg-gradient-to-r from-red-500 via-orange-500 to-red-500
                        bg-size-200 bg-pos-0 hover:bg-pos-100 text-white font-semibold rounded-xl
                        shadow-lg hover:shadow-xl transform hover:-translate-y-0.5
                        transition-all duration-300 overflow-hidden w-full md:w-auto">
 
-                <span class="relative z-10 flex items-center gap-2">
-                    Absen Sekarang
-                    <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                            d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                </span>
+                    <span class="relative z-10 flex items-center gap-2">
+                        Absen Sekarang
+                        <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                    </span>
 
-                <!-- inner highlight -->
-                <div
-                    class="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100
+                    <!-- inner highlight -->
+                    <div
+                        class="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100
                             transition-transform duration-300 origin-left">
-                </div>
-            </x-filament::button>
+                    </div>
+                </x-filament::button>
+            </div>
+
+            <!-- Bottom Gradient Line -->
+            <div class="absolute bottom-0 inset-x-0 h-1.5 bg-gradient-to-r from-red-500 via-orange-500 to-red-500">
+            </div>
+
         </div>
+    @else
+        <div class="mt-4">
+            <!-- Happy Holiday Message -->
+            <div
+                class="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl shadow-sm text-center">
+                <div class="mb-3 flex justify-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span class="text-2xl">🎉</span>
+                    </div>
+                </div>
+                <h3 class="text-lg font-semibold text-blue-900 mb-1">Selamat Libur!</h3>
+                <p class="text-blue-700 text-sm">Hari ini adalah hari libur. Nikmati waktu istirahat Anda.</p>
+            </div>
+        </div>
+    @endif
 
-        <!-- Bottom Gradient Line -->
-        <div class="absolute bottom-0 inset-x-0 h-1.5 bg-gradient-to-r from-red-500 via-orange-500 to-red-500"></div>
+    .bg-size-200 {
+    background-size: 200% 100%;
+    }
 
-    </div>
+    .bg-pos-0 {
+    background-position: 0% 0%;
+    }
 
-    <style>
-        .bg-size-200 {
-            background-size: 200% 100%;
-        }
-
-        .bg-pos-0 {
-            background-position: 0% 0%;
-        }
-
-        .bg-pos-100 {
-            background-position: 100% 0%;
-        }
+    .bg-pos-100 {
+    background-position: 100% 0%;
+    }
     </style>
 </x-filament-widgets::widget>
