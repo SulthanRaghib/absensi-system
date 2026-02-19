@@ -15,6 +15,8 @@ use Filament\Actions\Action;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Absence;
+use App\Services\AttendanceService;
+use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use App\Filament\Resources\AttendanceCorrections\AttendanceCorrectionResource;
 
@@ -79,9 +81,15 @@ class AttendanceCorrectionForm
                                 ->requiresConfirmation()
                                 ->action(function ($record, $livewire) {
                                     $record->update([
-                                        'status' => 'approved',
+                                        'status'      => 'approved',
                                         'approved_by' => Auth::id(),
                                     ]);
+
+                                    // Resolve the schedule that was active on the correction date.
+                                    // This correctly picks Ramadan schedule when applicable.
+                                    $service     = new AttendanceService();
+                                    $dateCarbon  = Carbon::parse($record->date);
+                                    $daySchedule = $service->getScheduleForDate($dateCarbon);
 
                                     $absence = Absence::firstOrCreate(
                                         [
@@ -89,11 +97,14 @@ class AttendanceCorrectionForm
                                             'tanggal' => $record->date,
                                         ],
                                         [
-                                            'jam_masuk' => null,
-                                            'jam_pulang' => null,
+                                            'jam_masuk'          => null,
+                                            'jam_pulang'         => null,
+                                            'schedule_jam_masuk' => $daySchedule['jam_masuk'],
+                                            'is_ramadan'         => $daySchedule['is_ramadan'],
                                         ]
                                     );
 
+                                    // Apply corrected times based on request type.
                                     if ($record->type === 'check_in' || $record->type === 'full_day') {
                                         $absence->jam_masuk = $record->correction_time_in;
                                     }
@@ -101,6 +112,11 @@ class AttendanceCorrectionForm
                                     if ($record->type === 'check_out' || $record->type === 'full_day') {
                                         $absence->jam_pulang = $record->correction_time_out;
                                     }
+
+                                    // Always stamp the correct schedule snapshot so lateness
+                                    // is evaluated against the right threshold (Ramadan or normal).
+                                    $absence->schedule_jam_masuk = $daySchedule['jam_masuk'];
+                                    $absence->is_ramadan         = $daySchedule['is_ramadan'];
 
                                     $absence->save();
 
@@ -119,9 +135,9 @@ class AttendanceCorrectionForm
                                 ])
                                 ->action(function ($record, array $data, $livewire) {
                                     $record->update([
-                                        'status' => 'rejected',
+                                        'status'         => 'rejected',
                                         'rejection_note' => $data['rejection_note'],
-                                        'approved_by' => Auth::id(),
+                                        'approved_by'    => Auth::id(),
                                     ]);
 
                                     Notification::make()->danger()->title('Pengajuan Ditolak')->send();

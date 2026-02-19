@@ -11,7 +11,7 @@ use App\Services\AttendanceService;
 use Carbon\CarbonPeriod;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Schema;
+
 
 class PermissionObserver
 {
@@ -50,10 +50,6 @@ class PermissionObserver
                     ->sendToDatabase($permission->user);
 
                 if ($permission->type === 'dinas_luar' && $permission->start_date && $permission->end_date) {
-                    $hasStatusColumn = Schema::hasColumn('absences', 'status');
-                    $hasRemarksColumn = Schema::hasColumn('absences', 'remarks');
-                    $hasIsLateColumn = Schema::hasColumn('absences', 'is_late');
-
                     $attendanceService = new AttendanceService();
                     $period = CarbonPeriod::create($permission->start_date, $permission->end_date);
 
@@ -63,8 +59,8 @@ class PermissionObserver
                         }
 
                         $daySchedule  = $attendanceService->getScheduleForDate($date);
-                        $checkInTime  = $daySchedule['jam_masuk'] . ':00';
-                        $checkOutTime = $daySchedule['jam_pulang'] . ':00';
+                        $checkInTime  = $date->format('Y-m-d') . ' ' . $daySchedule['jam_masuk'] . ':00';
+                        $checkOutTime = $date->format('Y-m-d') . ' ' . $daySchedule['jam_pulang'] . ':00';
 
                         $values = [
                             'jam_masuk'          => $checkInTime,
@@ -72,18 +68,6 @@ class PermissionObserver
                             'schedule_jam_masuk' => $daySchedule['jam_masuk'],
                             'is_ramadan'         => $daySchedule['is_ramadan'],
                         ];
-
-                        if ($hasStatusColumn) {
-                            $values['status'] = 'Hadir';
-                        }
-
-                        if ($hasRemarksColumn) {
-                            $values['remarks'] = 'Otomatis dari Izin Dinas Luar';
-                        }
-
-                        if ($hasIsLateColumn) {
-                            $values['is_late'] = false;
-                        }
 
                         Absence::unguarded(function () use ($permission, $date, $values) {
                             Absence::updateOrCreate(
