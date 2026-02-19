@@ -97,7 +97,7 @@
                     <span
                         class="rbw-badge inline-flex items-center gap-2 bg-yellow-400/20 border border-yellow-400/40
                              text-yellow-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">
-                        🌙 Ramadan Mubarak 1446 H
+                        🌙 Ramadan Mubarak {{ $hijriYear }} H
                     </span>
                     <div class="hidden sm:flex items-center gap-3 text-2xl opacity-50 select-none">
                         <span class="animate-pulse">🪔</span>

@@ -94,6 +94,10 @@ class RamadanBannerWidget extends Widget
         $hoursLeft   = intdiv($minutesLeft, 60);
         $minsLeft    = $minutesLeft % 60;
 
+        // Hijri year via PHP intl extension (Islamic Civil calendar)
+        $hijriCal  = \IntlCalendar::fromDateTime(now()->toDateTime(), 'en@calendar=islamic-civil');
+        $hijriYear = $hijriCal->get(\IntlCalendar::FIELD_YEAR);
+
         return [
             'schedule'      => $schedule,
             'quoteOfDay'    => $quoteOfDay,
@@ -102,6 +106,7 @@ class RamadanBannerWidget extends Widget
             'hoursLeft'     => $hoursLeft,
             'minsLeft'      => $minsLeft,
             'isBeforeIftar' => $minutesLeft > 0,
+            'hijriYear'     => $hijriYear,
         ];
     }
 }
