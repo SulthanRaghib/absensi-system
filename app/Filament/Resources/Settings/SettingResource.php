@@ -26,7 +26,7 @@ class SettingResource extends Resource
 
     protected static string | UnitEnum | null $navigationGroup = 'Data Master';
 
-    protected static ?string $navigationLabel = 'Pengaturan Lokasi';
+    protected static ?string $navigationLabel = 'Pengaturan';
 
     protected static ?int $navigationSort = 3;
 
