@@ -53,11 +53,13 @@
             clockOut: '{{ $clockOutIso }}' ? new Date('{{ $clockOutIso }}') : null,
             isCheckedIn: {{ $isCheckedIn ? 'true' : 'false' }},
             isCheckedOut: {{ $isCheckedOut ? 'true' : 'false' }},
+            isRamadan: {{ $isRamadan ? 'true' : 'false' }},
             now: new Date(),
             timeString: '',
             percentage: 0,
             status: 'before',
             timeRemainingText: '',
+            ramadanHint: '',
         
             init() {
                 this.update();
@@ -84,6 +86,7 @@
                     this.percentage = 100;
                     const diff = this.clockOut - this.clockIn;
                     this.timeRemainingText = 'Total jam kerja: ' + this.niceDuration(diff);
+                    this.ramadanHint = 'Alhamdulillah, waktunya berbuka! 🌙';
                 } else if (this.isCheckedIn) {
                     this.status = 'in_progress';
                     const total = this.end - this.start;
@@ -92,8 +95,10 @@
         
                     if (this.now >= this.end) {
                         this.timeRemainingText = 'Waktu kerja telah usai';
+                        this.ramadanHint = 'Waktunya buka puasa! 🥤';
                     } else {
                         this.timeRemainingText = this.niceDuration(this.end - this.now) + ' lagi';
+                        this.ramadanHint = 'Tahan dulu, buka puasa sebentar lagi 💪';
                     }
                 } else {
                     if (this.now < this.start) {
@@ -101,25 +106,45 @@
                         this.timeRemainingText = 'Mulai dalam ' + this.niceDuration(diff);
                         this.status = 'before';
                         this.percentage = 0;
+                        this.ramadanHint = 'Ngantuk? Itu efek sahur, bukan malas! 😴';
                     } else {
                         this.status = 'not_checked_in';
                         this.timeRemainingText = 'Belum Absen Masuk';
                         this.percentage = 0;
+                        this.ramadanHint = 'Lapar bukan alasan skip absen ya! 😅';
                     }
                 }
             }
         }" x-init="init()"
-            class="relative overflow-hidden bg-white rounded-2xl shadow-lg border border-gray-200/60 hover:shadow-xl transition-shadow duration-300">
+            class="relative overflow-hidden rounded-2xl shadow-lg border transition-shadow duration-300 hover:shadow-xl"
+            :class="isRamadan
+                ?
+                'bg-gradient-to-br from-amber-50 via-white to-teal-50 border-amber-200/60' :
+                'bg-white border-gray-200/60'">
 
             <!-- Gradient Accent Border (Top) -->
-            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r"
-                :class="{
-                    'from-blue-400 via-blue-500 to-cyan-400': status === 'before',
-                    'from-amber-400 via-orange-500 to-amber-400': status === 'not_checked_in',
-                    'from-emerald-400 via-green-500 to-teal-400': status === 'in_progress',
-                    'from-violet-400 via-purple-500 to-fuchsia-400': status === 'finished_work'
-                }">
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r transition-all duration-700"
+                :class="isRamadan
+                    ?
+                    'from-amber-300 via-yellow-400 to-amber-300' :
+                    {
+                        'from-blue-400 via-blue-500 to-cyan-400': status === 'before',
+                        'from-amber-400 via-orange-500 to-amber-400': status === 'not_checked_in',
+                        'from-emerald-400 via-green-500 to-teal-400': status === 'in_progress',
+                        'from-violet-400 via-purple-500 to-fuchsia-400': status === 'finished_work'
+                    }">
             </div>
+
+            <!-- Ramadan: subtle star/crescent SVG watermark (decorative, far right) -->
+            @if ($isRamadan)
+                <div class="absolute top-3 right-3 sm:top-4 sm:right-5 opacity-[0.07] pointer-events-none select-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"
+                        class="w-20 h-20 sm:w-28 sm:h-28 text-amber-600 fill-current">
+                        <path
+                            d="M32 4C16.536 4 4 16.536 4 32s12.536 28 28 28 28-12.536 28-28S47.464 4 32 4zm8 38c-7.732 0-14-6.268-14-14 0-4.418 2.05-8.358 5.264-11A16 16 0 1040 42z" />
+                    </svg>
+                </div>
+            @endif
 
             <div class="p-4 sm:p-6 lg:p-8">
                 <!-- Header Section -->
@@ -128,29 +153,48 @@
                     <div class="flex items-center gap-2 sm:gap-3">
                         <!-- Dynamic Icon -->
                         <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md transition-all duration-300"
-                            :class="{
-                                'bg-gradient-to-br from-blue-100 to-cyan-50 text-blue-600': status === 'before',
-                                'bg-gradient-to-br from-amber-100 to-orange-50 text-amber-600': status === 'not_checked_in',
-                                'bg-gradient-to-br from-emerald-100 to-teal-50 text-emerald-600': status === 'in_progress',
-                                'bg-gradient-to-br from-violet-100 to-purple-50 text-violet-600': status === 'finished_work'
-                            }">
-                            <svg x-show="status === 'before'" class="w-5 h-5 sm:w-6 sm:h-6" fill="none"
+                            :class="isRamadan
+                                ?
+                                {
+                                    'bg-gradient-to-br from-amber-100 to-yellow-50 text-amber-600': status === 'before',
+                                    'bg-gradient-to-br from-orange-100 to-amber-50 text-orange-600': status === 'not_checked_in',
+                                    'bg-gradient-to-br from-teal-100 to-cyan-50 text-teal-600': status === 'in_progress',
+                                    'bg-gradient-to-br from-emerald-100 to-green-50 text-emerald-600': status === 'finished_work'
+                                } :
+                                {
+                                    'bg-gradient-to-br from-blue-100 to-cyan-50 text-blue-600': status === 'before',
+                                    'bg-gradient-to-br from-amber-100 to-orange-50 text-amber-600': status === 'not_checked_in',
+                                    'bg-gradient-to-br from-emerald-100 to-teal-50 text-emerald-600': status === 'in_progress',
+                                    'bg-gradient-to-br from-violet-100 to-purple-50 text-violet-600': status === 'finished_work'
+                                }">
+                            <!-- Ramadan: crescent moon icon for 'before' and 'in_progress' -->
+                            <template x-if="isRamadan && (status === 'before' || status === 'in_progress')">
+                                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M21.752 15.002A9.72 9.72 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+                                </svg>
+                            </template>
+                            <!-- Normal: clock icon for 'before' -->
+                            <svg x-show="!isRamadan && status === 'before'" class="w-5 h-5 sm:w-6 sm:h-6" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
+                            <!-- Warning icon for 'not_checked_in' -->
                             <svg x-show="status === 'not_checked_in'" class="w-5 h-5 sm:w-6 sm:h-6 animate-pulse"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
-                            <svg x-show="status === 'in_progress'" class="w-5 h-5 sm:w-6 sm:h-6" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24">
+                            <!-- Play icon for 'in_progress' (normal) -->
+                            <svg x-show="!isRamadan && status === 'in_progress'" class="w-5 h-5 sm:w-6 sm:h-6"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
+                            <!-- Check icon for 'finished_work' -->
                             <svg x-show="status === 'finished_work'" class="w-5 h-5 sm:w-6 sm:h-6" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -161,90 +205,162 @@
                         <!-- Status Text -->
                         <div class="min-w-0 flex-1">
                             <div class="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold tracking-wide transition-all duration-300"
-                                :class="{
-                                    'bg-blue-50 text-blue-700 ring-1 ring-blue-200': status === 'before',
-                                    'bg-amber-50 text-amber-700 ring-1 ring-amber-200 animate-pulse': status === 'not_checked_in',
-                                    'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200': status === 'in_progress',
-                                    'bg-violet-50 text-violet-700 ring-1 ring-violet-200': status === 'finished_work'
-                                }">
-                                <span x-show="status === 'before'">Belum Dimulai</span>
-                                <span x-show="status === 'not_checked_in'"><span class="hidden xs:inline">⚠️
-                                    </span>Belum
-                                    Absen</span>
-                                <span x-show="status === 'in_progress'"><span class="hidden xs:inline">● </span>Sedang
-                                    Bekerja</span>
-                                <span x-show="status === 'finished_work'"><span class="hidden xs:inline">✓
-                                    </span>Selesai
-                                    Bekerja</span>
+                                :class="isRamadan
+                                    ?
+                                    {
+                                        'bg-amber-50 text-amber-700 ring-1 ring-amber-300': status === 'before',
+                                        'bg-orange-50 text-orange-700 ring-1 ring-orange-300 animate-pulse': status === 'not_checked_in',
+                                        'bg-teal-50 text-teal-700 ring-1 ring-teal-300': status === 'in_progress',
+                                        'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-300': status === 'finished_work'
+                                    } :
+                                    {
+                                        'bg-blue-50 text-blue-700 ring-1 ring-blue-200': status === 'before',
+                                        'bg-amber-50 text-amber-700 ring-1 ring-amber-200 animate-pulse': status === 'not_checked_in',
+                                        'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200': status === 'in_progress',
+                                        'bg-violet-50 text-violet-700 ring-1 ring-violet-200': status === 'finished_work'
+                                    }">
+                                <span x-show="status === 'before'">
+                                    <span x-show="isRamadan">🌙 </span>Belum Dimulai
+                                </span>
+                                <span x-show="status === 'not_checked_in'">
+                                    <span x-show="isRamadan">🕌 </span><span x-show="!isRamadan">⚠️ </span>Belum Absen
+                                </span>
+                                <span x-show="status === 'in_progress'">
+                                    <span x-show="isRamadan">🌙 </span><span x-show="!isRamadan">● </span>Sedang
+                                    Bekerja
+                                </span>
+                                <span x-show="status === 'finished_work'">
+                                    <span x-show="isRamadan">🌙 </span><span x-show="!isRamadan">✓ </span>Selesai
+                                    Bekerja
+                                </span>
                             </div>
-                            <p class="text-[10px] sm:text-xs text-gray-500 mt-1 sm:mt-1.5 font-medium hidden sm:block">
-                                Progres Hari Kerja</p>
+
+                            <!-- Subtitle: Progres label + Ramadan badge -->
+                            <div class="flex items-center gap-2 mt-1 sm:mt-1.5">
+                                <p class="text-[10px] sm:text-xs font-medium hidden sm:block"
+                                    :class="isRamadan ? 'text-amber-600' : 'text-gray-500'">
+                                    <span x-show="!isRamadan">Progres Hari Kerja</span>
+                                    <span x-show="isRamadan">Progres Hari Kerja</span>
+                                </p>
+                                @if ($isRamadan)
+                                    <span
+                                        class="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold tracking-wider bg-amber-100 text-amber-700 ring-1 ring-amber-300 uppercase">
+                                        🌙 Ramadan
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                     </div>
 
                     <!-- Right: Time + Percentage -->
                     <div class="text-right flex-shrink-0 sm:ml-auto">
-                        <div class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-br from-gray-800 to-gray-600 bg-clip-text text-transparent tabular-nums"
+                        <div class="text-2xl sm:text-3xl lg:text-4xl font-bold tabular-nums bg-clip-text text-transparent"
+                            :class="isRamadan
+                                ?
+                                'bg-gradient-to-br from-amber-700 via-orange-600 to-amber-500' :
+                                'bg-gradient-to-br from-gray-800 to-gray-600'"
                             x-text="timeString">
                             --:--:--
                         </div>
-                        <div class="text-xs sm:text-sm font-semibold text-gray-500 mt-0.5 sm:mt-1"
-                            x-text="percentage + '%'">0%</div>
+                        <div class="text-xs sm:text-sm font-semibold mt-0.5 sm:mt-1 transition-colors duration-300"
+                            :class="isRamadan ? 'text-amber-600' : 'text-gray-500'" x-text="percentage + '%'">0%</div>
                     </div>
                 </div>
 
                 <!-- Progress Bar Section -->
                 <div class="space-y-2 sm:space-y-3">
-                    <!-- Progress Container -->
-                    <div class="relative w-full h-6 sm:h-8 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                    <!-- Progress Track -->
+                    <div class="relative w-full h-6 sm:h-8 rounded-full overflow-hidden shadow-inner transition-colors duration-500"
+                        :class="isRamadan ? 'bg-amber-100/70' : 'bg-gray-100'">
                         <!-- Progress Fill -->
                         <div class="absolute top-0 left-0 h-full transition-all duration-1000 ease-out rounded-full"
                             :style="`width: ${percentage}%`"
-                            :class="{
-                                'bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-500': status === 'before',
-                                'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500': status === 'not_checked_in',
-                                'bg-gradient-to-r from-emerald-400 via-green-500 to-teal-500': status === 'in_progress',
-                                'bg-gradient-to-r from-violet-400 via-purple-500 to-fuchsia-500': status === 'finished_work'
-                            }">
-                            <!-- Shimmer Effect -->
+                            :class="isRamadan
+                                ?
+                                {
+                                    'bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-400': status === 'before',
+                                    'bg-gradient-to-r from-orange-400 via-red-400 to-orange-500': status === 'not_checked_in',
+                                    'bg-gradient-to-r from-teal-400 via-teal-500 to-cyan-400': status === 'in_progress',
+                                    'bg-gradient-to-r from-emerald-400 via-green-500 to-teal-400': status === 'finished_work'
+                                } :
+                                {
+                                    'bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-500': status === 'before',
+                                    'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500': status === 'not_checked_in',
+                                    'bg-gradient-to-r from-emerald-400 via-green-500 to-teal-500': status === 'in_progress',
+                                    'bg-gradient-to-r from-violet-400 via-purple-500 to-fuchsia-500': status === 'finished_work'
+                                }">
+                            <!-- Shimmer -->
                             <div
                                 class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer">
                             </div>
                         </div>
 
-                        <!-- Percentage Text Inside Bar (when > 30%) -->
+                        <!-- Percentage Label Inside Bar -->
                         <div x-show="percentage > 30" class="absolute inset-0 flex items-center px-2 sm:px-4">
                             <span class="text-[10px] sm:text-xs font-bold text-white drop-shadow-md"
                                 x-text="percentage + '%'"></span>
                         </div>
                     </div>
 
-                    <!-- Time Remaining Info -->
+                    <!-- Time Range + Remaining Info -->
                     <div
                         class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 text-xs sm:text-sm">
-                        <div class="flex items-center gap-1.5 sm:gap-2 text-gray-600">
-                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span class="font-medium">{{ $start->format('H:i') }} — {{ $end->format('H:i') }}</span>
+                        <!-- Left: schedule range -->
+                        <div class="flex items-center gap-1.5 sm:gap-2"
+                            :class="isRamadan ? 'text-amber-700' : 'text-gray-600'">
+                            @if ($isRamadan)
+                                <span class="text-base leading-none">🌙</span>
+                                <span class="font-semibold">{{ $start->format('H:i') }} —
+                                    {{ $end->format('H:i') }}</span>
+                                <span class="text-[10px] font-medium opacity-70 italic">Jadwal Ramadan</span>
+                            @else
+                                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span class="font-medium">{{ $start->format('H:i') }} —
+                                    {{ $end->format('H:i') }}</span>
+                            @endif
                         </div>
+
+                        <!-- Right: time remaining -->
                         <div class="font-semibold transition-colors duration-300 pl-5 sm:pl-0"
-                            :class="{
-                                'text-blue-600': status === 'before',
-                                'text-amber-600': status === 'not_checked_in',
-                                'text-emerald-600': status === 'in_progress',
-                                'text-violet-600': status === 'finished_work'
-                            }">
+                            :class="isRamadan
+                                ?
+                                {
+                                    'text-amber-600': status === 'before',
+                                    'text-orange-600': status === 'not_checked_in',
+                                    'text-teal-600': status === 'in_progress',
+                                    'text-emerald-600': status === 'finished_work'
+                                } :
+                                {
+                                    'text-blue-600': status === 'before',
+                                    'text-amber-600': status === 'not_checked_in',
+                                    'text-emerald-600': status === 'in_progress',
+                                    'text-violet-600': status === 'finished_work'
+                                }">
                             <span x-text="timeRemainingText"></span>
                         </div>
                     </div>
+
+                    <!-- Ramadan hint row (humor/motivation) -->
+                    @if ($isRamadan)
+                        <div x-show="ramadanHint"
+                            class="mt-1 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200/70 text-[10px] sm:text-xs text-amber-700 italic">
+                            <span x-text="ramadanHint"></span>
+                        </div>
+                    @endif
                 </div>
             </div>
 
-            <!-- Bottom Accent (subtle) -->
-            <div class="h-0.5 bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
+            <!-- Bottom Accent -->
+            <div class="h-0.5 bg-gradient-to-r transition-colors duration-500"
+                :class="isRamadan
+                    ?
+                    'from-transparent via-amber-300 to-transparent' :
+                    'from-transparent via-gray-200 to-transparent'">
+            </div>
         </div>
 
         <style>
