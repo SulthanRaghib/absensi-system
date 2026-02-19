@@ -7,6 +7,7 @@ use App\Filament\User\Resources\Permissions\PermissionResource as UserPermission
 use App\Models\Absence;
 use App\Models\Permission;
 use App\Models\User;
+use App\Services\AttendanceService;
 use Carbon\CarbonPeriod;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -53,6 +54,7 @@ class PermissionObserver
                     $hasRemarksColumn = Schema::hasColumn('absences', 'remarks');
                     $hasIsLateColumn = Schema::hasColumn('absences', 'is_late');
 
+                    $attendanceService = new AttendanceService();
                     $period = CarbonPeriod::create($permission->start_date, $permission->end_date);
 
                     foreach ($period as $date) {
@@ -60,11 +62,15 @@ class PermissionObserver
                             continue;
                         }
 
-                        $checkOutTime = $date->isFriday() ? '16:30:00' : '16:00:00';
+                        $daySchedule  = $attendanceService->getScheduleForDate($date);
+                        $checkInTime  = $daySchedule['jam_masuk'] . ':00';
+                        $checkOutTime = $daySchedule['jam_pulang'] . ':00';
 
                         $values = [
-                            'jam_masuk' => '07:30:00',
-                            'jam_pulang' => $checkOutTime,
+                            'jam_masuk'          => $checkInTime,
+                            'jam_pulang'         => $checkOutTime,
+                            'schedule_jam_masuk' => $daySchedule['jam_masuk'],
+                            'is_ramadan'         => $daySchedule['is_ramadan'],
                         ];
 
                         if ($hasStatusColumn) {
