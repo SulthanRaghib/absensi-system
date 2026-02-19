@@ -123,7 +123,12 @@
             </div>
 
             {{-- ===== SCHEDULE PILLS GRID ===== --}}
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-{{ $isRamadan ? '4' : '4' }} gap-3">
+            @php
+                // Pills: Jam Masuk  +  Pulang (Sen–Kam | Jum'at)  +  Periode Ramadan (if active)
+                // Grid: 3 cols when Ramadan (period pill added), 2 cols otherwise
+                $lgCols = $isRamadan ? 3 : 2;
+            @endphp
+            <div class="grid grid-cols-2 lg:grid-cols-{{ $lgCols }} gap-3">
 
                 {{-- Jam Masuk --}}
                 <div class="rounded-xl p-3.5 flex flex-col gap-1 shadow-sm"
@@ -143,66 +148,53 @@
                     </div>
                 </div>
 
-                {{-- Jam Pulang (Senin–Kamis) --}}
-                <div class="rounded-xl p-3.5 flex flex-col gap-1 shadow-sm"
-                    @if ($isRamadan) style="background:rgba(255,255,255,0.6); border:1px solid rgba(245,158,11,0.4);"
-                 @else style="background:rgba(255,255,255,0.6); border:1px solid rgba(96,165,250,0.4);" @endif>
-                    <div class="text-xs font-medium uppercase tracking-wider"
-                        @if ($isRamadan) style="color:#92400e;" @else style="color:#1d4ed8;" @endif>
-                        🏠 Pulang (Sen–Kam)
-                    </div>
-                    <div class="text-2xl font-bold tabular-nums"
-                        @if ($isRamadan) style="color:#78350f;" @else style="color:#1e3a8a;" @endif>
-                        @if ($isRamadan)
-                            {{ $schedule['jam_pulang'] }}
-                        @else
-                            {{ $default['jam_pulang'] }}
-                        @endif
-                    </div>
-                    <div class="text-xs"
-                        @if ($isRamadan) style="color:#b45309;" @else style="color:#3b82f6;" @endif>
-                        Jam kerja berakhir
-                    </div>
-                </div>
-
-                {{-- Jam Pulang Jumat --}}
-                @if (!$isRamadan)
+                {{-- Pulang (Sen–Kam) — ditampilkan hanya saat BUKAN hari Jumat --}}
+                @if (!$isFriday)
                     <div class="rounded-xl p-3.5 flex flex-col gap-1 shadow-sm"
-                        style="background:rgba(255,255,255,0.6); border:1px solid rgba(96,165,250,0.4);">
-                        <div class="text-xs font-medium uppercase tracking-wider" style="color:#1d4ed8;">
-                            🕌 Pulang (Jum'at)
+                        @if ($isRamadan) style="background:rgba(255,255,255,0.6); border:1px solid rgba(245,158,11,0.4);"
+                     @else style="background:rgba(255,255,255,0.6); border:1px solid rgba(96,165,250,0.4);" @endif>
+                        <div class="text-xs font-medium uppercase tracking-wider"
+                            @if ($isRamadan) style="color:#92400e;" @else style="color:#1d4ed8;" @endif>
+                            🏠 Pulang (Sen–Kam)
                         </div>
-                        <div class="text-2xl font-bold tabular-nums" style="color:#1e3a8a;">
-                            {{ $default['jam_pulang_jumat'] }}
+                        <div class="text-2xl font-bold tabular-nums"
+                            @if ($isRamadan) style="color:#78350f;" @else style="color:#1e3a8a;" @endif>
+                            {{ $isRamadan ? $ramadan['jam_pulang'] ?? '-' : $default['jam_pulang'] }}
                         </div>
-                        <div class="text-xs" style="color:#3b82f6;">Jam pulang hari Jum'at</div>
+                        <div class="text-xs"
+                            @if ($isRamadan) style="color:#b45309;" @else style="color:#3b82f6;" @endif>
+                            Jam kerja berakhir
+                        </div>
                     </div>
                 @endif
 
-                {{-- Today's effective pulang --}}
-                <div class="rounded-xl p-3.5 flex flex-col gap-1 shadow-sm"
-                    @if ($isRamadan) style="background:rgba(255,255,255,0.7); border:2px solid rgba(217,119,6,0.5);"
-                 @else style="background:rgba(255,255,255,0.7); border:2px solid rgba(37,99,235,0.4);" @endif>
-                    <div class="text-xs font-medium uppercase tracking-wider"
-                        @if ($isRamadan) style="color:#92400e;" @else style="color:#1d4ed8;" @endif>
-                        📌 Pulang Hari Ini
-                        @if ($isFriday)
-                            <span class="ml-1 text-xs normal-case font-normal">(Jum'at)</span>
-                        @endif
+                {{-- Pulang (Jum'at) — ditampilkan HANYA saat hari Jumat --}}
+                @if ($isFriday)
+                    <div class="rounded-xl p-3.5 flex flex-col gap-1 shadow-sm"
+                        @if ($isRamadan) style="background:rgba(255,255,255,0.6); border:1px solid rgba(245,158,11,0.4);"
+                     @else style="background:rgba(255,255,255,0.6); border:1px solid rgba(96,165,250,0.4);" @endif>
+                        <div class="text-xs font-medium uppercase tracking-wider"
+                            @if ($isRamadan) style="color:#92400e;" @else style="color:#1d4ed8;" @endif>
+                            🕌 Pulang (Jum'at)
+                        </div>
+                        <div class="text-2xl font-bold tabular-nums"
+                            @if ($isRamadan) style="color:#78350f;" @else style="color:#1e3a8a;" @endif>
+                            @if ($isRamadan)
+                                {{ $ramadanJamPulangJumat ?? ($ramadan['jam_pulang'] ?? '-') }}
+                            @else
+                                {{ $default['jam_pulang_jumat'] }}
+                            @endif
+                        </div>
+                        <div class="text-xs"
+                            @if ($isRamadan) style="color:#b45309;" @else style="color:#3b82f6;" @endif>
+                            Jam pulang hari Jum'at
+                        </div>
                     </div>
-                    <div class="text-2xl font-bold tabular-nums"
-                        @if ($isRamadan) style="color:#78350f;" @else style="color:#1e3a8a;" @endif>
-                        {{ $jamPulangDisplay }}
-                    </div>
-                    <div class="text-xs"
-                        @if ($isRamadan) style="color:#b45309;" @else style="color:#3b82f6;" @endif>
-                        Berlaku untuk hari ini
-                    </div>
-                </div>
+                @endif
 
                 {{-- Ramadan: period info pill --}}
                 @if ($isRamadan && $ramadan['start_date'] && $ramadan['end_date'])
-                    <div class="rounded-xl p-3.5 flex flex-col gap-1 shadow-sm sm:col-span-3 lg:col-span-1"
+                    <div class="rounded-xl p-3.5 flex flex-col gap-1 shadow-sm col-span-2 lg:col-span-1"
                         style="background:rgba(255,255,255,0.6); border:1px solid rgba(245,158,11,0.5);">
                         <div class="text-xs font-medium uppercase tracking-wider" style="color:#92400e;">
                             📅 Periode Ramadan
