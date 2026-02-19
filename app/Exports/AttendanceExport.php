@@ -20,16 +20,28 @@ class AttendanceExport implements FromView, WithEvents
     protected $monthName;
     protected $year;
     protected $startDate;
-    protected $jamMasukKantor;
+    /**
+     * Per-day threshold map: [ dayNumber => 'HH:MM' ]
+     * Replaces the single $jamMasukKantor so Ramadan dates use the correct threshold.
+     * Also accepts a plain string for backward compatibility (converted to a flat map).
+     */
+    protected $thresholdMap;
 
-    public function __construct($users, $daysInMonth, $monthName, $year, $startDate, $jamMasukKantor)
+    public function __construct($users, $daysInMonth, $monthName, $year, $startDate, $thresholdMapOrLegacyString)
     {
-        $this->users = $users;
+        $this->users       = $users;
         $this->daysInMonth = $daysInMonth;
-        $this->monthName = $monthName;
-        $this->year = $year;
-        $this->startDate = $startDate;
-        $this->jamMasukKantor = $jamMasukKantor;
+        $this->monthName   = $monthName;
+        $this->year        = $year;
+        $this->startDate   = $startDate;
+
+        // Backward compat: if old code passes a plain string, wrap it.
+        if (is_array($thresholdMapOrLegacyString)) {
+            $this->thresholdMap = $thresholdMapOrLegacyString;
+        } else {
+            $time = $thresholdMapOrLegacyString ? substr((string) $thresholdMapOrLegacyString, 0, 5) : '07:30';
+            $this->thresholdMap = array_fill(1, $daysInMonth, $time);
+        }
     }
 
     public function view(): View
@@ -58,13 +70,13 @@ class AttendanceExport implements FromView, WithEvents
         $holidays = array_keys($holidayMap);
 
         return view('exports.attendance', [
-            'users' => $this->users,
-            'daysInMonth' => $this->daysInMonth,
-            'monthName' => $this->monthName,
-            'year' => $this->year,
-            'startDate' => $this->startDate,
-            'jamMasukKantor' => $this->jamMasukKantor,
-            'holidays' => $holidays,
+            'users'        => $this->users,
+            'daysInMonth'  => $this->daysInMonth,
+            'monthName'    => $this->monthName,
+            'year'         => $this->year,
+            'startDate'    => $this->startDate,
+            'thresholdMap' => $this->thresholdMap, // [ day => 'HH:MM' ]
+            'holidays'     => $holidays,
         ]);
     }
 
