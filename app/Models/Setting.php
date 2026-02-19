@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Setting extends Model
@@ -33,10 +34,12 @@ class Setting extends Model
         }
 
         return match ($setting->type) {
-            'number' => (float) $setting->value,
-            'json' => json_decode($setting->value, true),
+            'number'  => (float) $setting->value,
+            'json'    => json_decode($setting->value, true),
             'boolean' => filter_var($setting->value, FILTER_VALIDATE_BOOLEAN),
-            default => $setting->value,
+            'date'    => $setting->value ? Carbon::parse($setting->value) : null,
+            'time'    => $setting->value ? substr((string) $setting->value, 0, 5) : null,
+            default   => $setting->value,
         };
     }
 
@@ -66,5 +69,34 @@ class Setting extends Model
             'longitude' => static::get('office_longitude', 106.8189579),
             'radius' => static::get('office_radius', 100),
         ];
+    }
+
+    /**
+     * Get all Ramadan schedule settings.
+     * Returns an array with start_date, end_date, jam_masuk, jam_pulang (all nullable).
+     */
+    public static function getRamadanSettings(): array
+    {
+        return [
+            'start_date'  => static::get('ramadan_start_date'),
+            'end_date'    => static::get('ramadan_end_date'),
+            'jam_masuk'   => static::get('ramadan_jam_masuk'),
+            'jam_pulang'  => static::get('ramadan_jam_pulang'),
+        ];
+    }
+
+    /**
+     * Persist all Ramadan schedule settings at once.
+     */
+    public static function saveRamadanSettings(
+        ?string $startDate,
+        ?string $endDate,
+        ?string $jamMasuk,
+        ?string $jamPulang
+    ): void {
+        static::set('ramadan_start_date', $startDate, 'date');
+        static::set('ramadan_end_date',   $endDate,   'date');
+        static::set('ramadan_jam_masuk',  $jamMasuk,  'time');
+        static::set('ramadan_jam_pulang', $jamPulang, 'time');
     }
 }
