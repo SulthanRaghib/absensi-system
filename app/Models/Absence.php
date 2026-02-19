@@ -12,6 +12,7 @@ class Absence extends Model
         'tanggal',
         'jam_masuk',
         'jam_pulang',
+        'schedule_jam_masuk',   // HH:MM threshold active at the time of check-in (immutable)
         'lat_masuk',
         'lng_masuk',
         'lat_pulang',
