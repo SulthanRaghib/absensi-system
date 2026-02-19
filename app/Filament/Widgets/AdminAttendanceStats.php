@@ -21,30 +21,34 @@ class AdminAttendanceStats extends BaseWidget
     protected function getStats(): array
     {
         return Cache::remember('admin_attendance_stats', 60, function () {
-            $schedule   = (new AttendanceService)->getTodaySchedule();
-            $threshold  = $schedule['jam_masuk']; // 'HH:MM' — Ramadan-aware
+            $schedule     = (new AttendanceService)->getTodaySchedule();
+            $threshold    = $schedule['jam_masuk']; // Ramadan-aware
 
             $totalUsers   = User::count();
             $today        = now()->toDateString();
             $presentToday = Absence::whereDate('tanggal', $today)->whereNotNull('jam_masuk')->count();
-            $absent       = max(0, $totalUsers - $presentToday);
 
-            // Late: use per-record threshold if available (immune to setting changes)
-            $lateRecords = Absence::with('user')
-                ->whereDate('tanggal', $today)
+            // On-time: present AND not late
+            $onTimeToday = Absence::whereDate('tanggal', $today)
                 ->whereNotNull('jam_masuk')
                 ->get()
                 ->filter(function (Absence $r) use ($threshold) {
-                    if (! $r->jam_masuk) return false;
-                    $recordThreshold = $r->schedule_jam_masuk ?? $threshold;
-                    return $r->jam_masuk->format('H:i') > $recordThreshold;
-                });
+                    $t = $r->schedule_jam_masuk ?? $threshold;
+                    return optional($r->jam_masuk)->format('H:i') <= $t;
+                })
+                ->count();
 
-            $lateCount   = $lateRecords->count();
-            $lateNames   = $lateRecords->pluck('user.name')->filter()->unique()->values()->all();
-            $latePreview = $lateNames
-                ? implode(', ', array_slice($lateNames, 0, 3)) . (count($lateNames) > 3 ? '...' : '')
-                : '-';
+            // On-time chart: last 7 days
+            $onTimeChart = [];
+            for ($i = 6; $i >= 0; $i--) {
+                $d = now()->subDays($i);
+                $dayKey  = $d->toDateString();
+                // Use today's threshold as a best-effort approximation for chart history
+                $onTimeChart[$d->format('d M')] = Absence::whereDate('tanggal', $dayKey)
+                    ->whereNotNull('jam_masuk')
+                    ->whereRaw("TIME(jam_masuk) <= ?", [$threshold . ':00'])
+                    ->count();
+            }
 
             // chart data: last 7 days present counts
             $chart = [];
@@ -86,11 +90,14 @@ class AdminAttendanceStats extends BaseWidget
                     ->icon('heroicon-o-x-circle')
                     ->color('danger'),
 
-                Stat::make('Terlambat Hari Ini', $lateCount)
-                    ->description($lateCount > 0 ? $latePreview : 'Semua tepat waktu')
-                    ->descriptionIcon($lateCount > 0 ? 'heroicon-m-clock' : 'heroicon-m-check-badge')
-                    ->icon('heroicon-o-clock')
-                    ->color($lateCount > 0 ? 'warning' : 'success'),
+                Stat::make('Tepat Waktu Hari Ini', $onTimeToday)
+                    ->description($presentToday
+                        ? round(($onTimeToday / $presentToday) * 100) . '% dari yang hadir'
+                        : 'Belum ada kehadiran')
+                    ->descriptionIcon($onTimeToday > 0 ? 'heroicon-m-check-badge' : 'heroicon-m-minus-circle')
+                    ->icon('heroicon-o-bolt')
+                    ->color($presentToday && ($onTimeToday / $presentToday) >= 0.8 ? 'success' : 'warning')
+                    ->chart($onTimeChart),
             ];
         });
     }

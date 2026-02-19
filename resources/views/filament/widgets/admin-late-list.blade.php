@@ -1,81 +1,228 @@
 @php
     $late = $this->getLateRecords();
     $schedule = $this->getScheduleInfo();
+    $count = $late->count();
+
+    /* Avatar palette — pick background by first letter charcode */
+    $avatarPalette = [
+        'bg' => [
+            '#fde68a',
+            '#a7f3d0',
+            '#bfdbfe',
+            '#ddd6fe',
+            '#fbcfe8',
+            '#fed7aa',
+            '#ccfbf1',
+            '#e0e7ff',
+            '#fce7f3',
+            '#d1fae5',
+        ],
+        'fg' => [
+            '#92400e',
+            '#065f46',
+            '#1e40af',
+            '#5b21b6',
+            '#9d174d',
+            '#9a3412',
+            '#134e4a',
+            '#312e81',
+            '#831843',
+            '#064e3b',
+        ],
+    ];
+    $avatarIdx = fn(string $name) => ord(strtoupper($name)[0] ?? 'A') % count($avatarPalette['bg']);
+
+    /* Severity config */
+    $sConfig = [
+        'low' => ['bg' => '#fef9c3', 'fg' => '#854d0e', 'border' => '#fef08a'],
+        'medium' => ['bg' => '#ffedd5', 'fg' => '#9a3412', 'border' => '#fed7aa'],
+        'high' => ['bg' => '#fee2e2', 'fg' => '#991b1b', 'border' => '#fca5a5'],
+        'critical' => ['bg' => '#ffe4e6', 'fg' => '#881337', 'border' => '#fda4af'],
+    ];
+
+    $isRamadan = $schedule['is_ramadan'];
+    $accentFg = $isRamadan ? '#d97706' : '#dc2626';
+    $accentBg = $isRamadan ? '#fffbeb' : '#fff1f2';
+    $accentBorder = $isRamadan ? '#fde68a' : '#fecaca';
 @endphp
 
 <x-filament-widgets::widget>
-    <div class="p-4 bg-white/80 dark:bg-gray-800 rounded-lg shadow-sm">
-        <div class="flex items-center justify-between mb-3">
+    <style>
+        .late-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .late-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .late-scroll::-webkit-scrollbar-thumb {
+            background: #e5e7eb;
+            border-radius: 99px;
+        }
+
+        .late-scroll::-webkit-scrollbar-thumb:hover {
+            background: #d1d5db;
+        }
+
+        .dark .late-scroll::-webkit-scrollbar-thumb {
+            background: #374151;
+        }
+
+        .dark .late-scroll::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+
+        .late-row {
+            transition: background 0.14s;
+        }
+
+        .late-row:hover {
+            background: rgba(0, 0, 0, .025);
+        }
+    </style>
+
+    <div class="rounded-2xl border dark:border-gray-700 overflow-hidden"
+        style="background:#fff; border-color:#f1f5f9; box-shadow:0 1px 3px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.03);">
+
+        {{-- ── Header ── --}}
+        <div class="px-5 pt-4 pb-3 flex items-start justify-between gap-4" style="border-bottom:1px solid #f1f5f9;">
             <div class="flex items-center gap-3">
-                <div class="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style="background:{{ $accentBg }}; border:1.5px solid {{ $accentBorder }};">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                        stroke-width="1.8" stroke="{{ $accentFg }}">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
                 </div>
                 <div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm font-medium">Pegawai Telat</span>
-                        @if ($schedule['is_ramadan'])
-                            <span
-                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="font-semibold text-gray-800 dark:text-gray-100 text-[15px] leading-snug">
+                            Pegawai Terlambat
+                        </span>
+                        @if ($isRamadan)
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold"
+                                style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;">
                                 🌙 Ramadan
                             </span>
                         @endif
                     </div>
-                    <div class="text-xs text-gray-400">
-                        Batas: <span class="font-semibold">{{ $schedule['jam_masuk'] }}</span>
-                        &nbsp;·&nbsp;
-                        Jumlah: <span class="font-semibold">{{ $late->count() }}</span>
-                    </div>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                        Batas masuk:
+                        <span class="font-bold" style="color:{{ $accentFg }};">{{ $schedule['jam_masuk'] }}</span>
+                        &nbsp;·&nbsp;{{ now()->translatedFormat('l, d M Y') }}
+                    </p>
                 </div>
             </div>
-            <div class="text-xs text-gray-400">Hari ini</div>
+            {{-- big count --}}
+            <div class="flex-shrink-0 flex flex-col items-end">
+                <span class="text-2xl font-extrabold leading-none"
+                    style="color:{{ $accentFg }};">{{ $count }}</span>
+                <span class="text-[11px] text-gray-400 mt-0.5">orang</span>
+            </div>
         </div>
 
+        {{-- ── Empty state ── --}}
         @if ($late->isEmpty())
-            <div class="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clip-rule="evenodd" />
-                </svg>
-                Semua pegawai hadir tepat waktu hari ini.
+            <div class="py-10 flex flex-col items-center gap-3 text-center px-5">
+                <div
+                    class="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-emerald-500" fill="none"
+                        viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                </div>
+                <p class="text-sm font-semibold text-gray-700 dark:text-gray-200">Tepat Waktu Semua! 🎉</p>
+                <p class="text-xs text-gray-400">Tidak ada pegawai terlambat hari ini.</p>
             </div>
         @else
-            <ol class="list-decimal pl-6 space-y-2">
-                @foreach ($late as $r)
-                    <li class="flex items-center justify-between p-2 bg-white/60 dark:bg-gray-900/30 rounded">
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                {{ strtoupper(substr($r->name, 0, 1)) }}
-                            </div>
-                            <div>
-                                <div class="text-sm font-medium">{{ $r->name }}</div>
-                                @if ($r->is_ramadan)
-                                    <span class="text-xs text-amber-600 dark:text-amber-400">🌙 Ramadan · batas
-                                        {{ $r->threshold }}</span>
-                                @else
-                                    <span class="text-xs text-gray-400">Batas {{ $r->threshold }}</span>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-sm font-semibold text-red-600 dark:text-red-400">{{ $r->time }}</div>
-                            @php
-                                [$th_h, $th_m] = explode(':', $r->threshold);
-                                [$jm_h, $jm_m] = explode(':', $r->time);
-                                $diffMin = $jm_h * 60 + $jm_m - ($th_h * 60 + $th_m);
-                            @endphp
-                            @if ($diffMin > 0)
-                                <div class="text-xs text-gray-400">+{{ $diffMin }} mnt</div>
-                            @endif
-                        </div>
-                    </li>
+            {{-- ── Severity legend ── --}}
+            <div class="px-5 py-2 flex items-center gap-4 flex-wrap"
+                style="background:#fafafa; border-bottom:1px solid #f8fafc;">
+                @foreach (['low' => '≤5 mnt', 'medium' => '6–15 mnt', 'high' => '16–30 mnt', 'critical' => '>30 mnt'] as $s => $lbl)
+                    @php $sc = $sConfig[$s]; @endphp
+                    <span class="inline-flex items-center gap-1.5 text-[11px] font-medium"
+                        style="color:{{ $sc['fg'] }};">
+                        <span class="w-2 h-2 rounded-full"
+                            style="background:{{ $sc['fg'] }};"></span>{{ $lbl }}
+                    </span>
                 @endforeach
-            </ol>
+            </div>
+
+            {{-- ── Scrollable list ── --}}
+            <div class="late-scroll overflow-y-auto divide-y dark:divide-gray-700/40"
+                style="max-height:390px; divide-color:#f9fafb;">
+                @foreach ($late as $idx => $r)
+                    @php
+                        $ai = $avatarIdx($r->name);
+                        $sc = $sConfig[$r->severity];
+                        $ini = strtoupper(mb_substr($r->name, 0, 1));
+                    @endphp
+                    <div class="late-row px-5 py-3 flex items-center gap-3">
+                        {{-- rank --}}
+                        <span
+                            class="w-4 flex-shrink-0 text-center text-[11px] font-bold text-gray-300 dark:text-gray-600 tabular-nums">
+                            {{ $idx + 1 }}
+                        </span>
+
+                        {{-- avatar --}}
+                        <div class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
+                            style="background:{{ $avatarPalette['bg'][$ai] }}; color:{{ $avatarPalette['fg'][$ai] }};">
+                            {{ $ini }}
+                        </div>
+
+                        {{-- name & threshold --}}
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate leading-snug">
+                                {{ $r->name }}
+                            </p>
+                            <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 leading-none">
+                                @if ($r->is_ramadan)
+                                    <span class="text-amber-400">🌙</span>
+                                @endif
+                                Batas {{ $r->threshold }}
+                            </p>
+                        </div>
+
+                        {{-- time + severity pill --}}
+                        <div class="flex-shrink-0 flex flex-col items-end gap-1">
+                            <span class="text-sm font-bold tabular-nums leading-none"
+                                style="color:{{ $sc['fg'] }};">
+                                {{ $r->time }}
+                            </span>
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold"
+                                style="background:{{ $sc['bg'] }}; color:{{ $sc['fg'] }}; border:1px solid {{ $sc['border'] }};">
+                                +{{ $r->diff_min }}&thinsp;mnt
+                            </span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            {{-- ── Footer summary ── --}}
+            @php
+                $crit = $late->where('severity', 'critical')->count();
+                $maxLate = $late->max('diff_min');
+                $avgLate = $late->count() ? round($late->avg('diff_min')) : 0;
+            @endphp
+            <div class="px-5 py-2.5 flex items-center justify-between text-[11px]"
+                style="border-top:1px solid #f1f5f9; background:#fafafa;">
+                <div class="flex items-center gap-4 text-gray-400">
+                    <span>
+                        Rata-rata: <strong class="text-gray-600 dark:text-gray-300">{{ $avgLate }} mnt</strong>
+                    </span>
+                    @if ($crit > 0)
+                        <span class="font-semibold" style="color:#881337;">
+                            ⚠ {{ $crit }} parah
+                        </span>
+                    @endif
+                </div>
+                <span class="text-gray-400">
+                    Maks: <strong class="text-gray-600 dark:text-gray-300">{{ $maxLate }} mnt</strong>
+                </span>
+            </div>
         @endif
     </div>
 </x-filament-widgets::widget>

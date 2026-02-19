@@ -37,12 +37,30 @@ class AdminLateListWidget extends Widget
                 $recordThreshold = $r->schedule_jam_masuk ?? $threshold;
                 return $r->jam_masuk->format('H:i') > $recordThreshold;
             })
-            ->map(fn($r) => (object) [
-                'name'       => optional($r->user)->name ?? '—',
-                'time'       => optional($r->jam_masuk)?->format('H:i') ?? '-',
-                'is_ramadan' => $r->is_ramadan,
-                'threshold'  => $r->schedule_jam_masuk ?? $threshold,
-            ]);
+            ->map(function (Absence $r) use ($threshold) {
+                $recordThreshold = $r->schedule_jam_masuk ?? $threshold;
+                [$th_h, $th_m] = explode(':', $recordThreshold);
+                $timeStr = optional($r->jam_masuk)?->format('H:i') ?? '-';
+                $diffMin = 0;
+                if ($timeStr !== '-') {
+                    [$jm_h, $jm_m] = explode(':', $timeStr);
+                    $diffMin = (int)$jm_h * 60 + (int)$jm_m - ((int)$th_h * 60 + (int)$th_m);
+                }
+                if ($diffMin <= 5)        $severity = 'low';
+                elseif ($diffMin <= 15)   $severity = 'medium';
+                elseif ($diffMin <= 30)   $severity = 'high';
+                else                      $severity = 'critical';
+
+                return (object) [
+                    'name'       => optional($r->user)->name ?? '—',
+                    'time'       => $timeStr,
+                    'is_ramadan' => (bool) $r->is_ramadan,
+                    'threshold'  => $recordThreshold,
+                    'diff_min'   => max(0, $diffMin),
+                    'severity'   => $severity,
+                ];
+            })
+            ->sortByDesc('diff_min');
 
         return $records->values();
     }
