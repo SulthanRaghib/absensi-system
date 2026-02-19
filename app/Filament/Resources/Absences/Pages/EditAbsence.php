@@ -19,10 +19,10 @@ class EditAbsence extends EditRecord
     protected function mutateFormDataBeforeFill(array $data): array
     {
         if (! empty($data['jam_masuk'])) {
-            $data['jam_masuk'] = Carbon::parse($data['jam_masuk'])->format('H:i:s');
+            $data['jam_masuk'] = Carbon::parse($data['jam_masuk'])->setTimezone(config('app.timezone'))->format('H:i:s');
         }
         if (! empty($data['jam_pulang'])) {
-            $data['jam_pulang'] = Carbon::parse($data['jam_pulang'])->format('H:i:s');
+            $data['jam_pulang'] = Carbon::parse($data['jam_pulang'])->setTimezone(config('app.timezone'))->format('H:i:s');
         }
         // schedule_jam_masuk is stored as HH:MM string — no cast needed, just ensure correct length
         if (! empty($data['schedule_jam_masuk'])) {

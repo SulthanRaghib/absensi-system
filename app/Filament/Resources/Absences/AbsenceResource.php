@@ -73,8 +73,8 @@ class AbsenceResource extends Resource
                     ->schema([
                         // Full-width toggle at the top
                         Forms\Toggle::make('is_ramadan')
-                            ->label('Jadwal Ramadan 🌙')
-                            ->helperText('Sistem mengisi ini otomatis. Ubah hanya jika perlu koreksi manual (misalnya mengedit absen di hari Ramadan lalu).')
+                            ->label('Tandai sebagai Hari Ramadan 🌙')
+                            ->helperText('Sistem mendeteksi otomatis berdasarkan tanggal. Aktifkan manual jika Anda menginput/koreksi data untuk hari Ramadan yang tidak terdeteksi.')
                             ->live()
                             ->afterStateUpdated(function (bool $state, callable $set, callable $get): void {
                                 if ($state) {
@@ -93,15 +93,11 @@ class AbsenceResource extends Resource
                             ->default(false)
                             ->columnSpanFull(),
 
-                        // Left: editable threshold field
-                        Forms\TimePicker::make('schedule_jam_masuk')
-                            ->label('Batas Jam Masuk (threshold)')
-                            ->helperText('Diisi otomatis berdasarkan tanggal & jadwal Ramadan. Dapat diubah untuk koreksi.')
-                            ->seconds(false)
-                            ->default('07:30')
-                            ->columnSpan(1),
+                        // Hidden field to store the threshold
+                        Forms\Hidden::make('schedule_jam_masuk')
+                            ->default('07:30'),
 
-                        // Right: live info banner
+                        // Live info banner
                         Forms\Placeholder::make('schedule_info_card')
                             ->label('Status Jadwal')
                             ->content(function (callable $get): \Illuminate\Support\HtmlString {
@@ -130,11 +126,9 @@ class AbsenceResource extends Resource
                                         . '</div></div>'
                                 );
                             })
-                            ->columnSpan(1),
+                            ->columnSpanFull(),
                     ])
-                    ->columns(2),
-
-                // ── 3. WAKTU ABSENSI ──────────────────────────────────────
+                    ->columns(1),
                 Schemas\Section::make('Waktu Absensi')
                     ->description('Isi jam masuk dan jam pulang karyawan.')
                     ->icon('heroicon-o-clock')
@@ -252,6 +246,13 @@ class AbsenceResource extends Resource
                         return ($onTime ? 'Tepat Waktu' : 'Terlambat') . ' | Batas: ' . $record->schedule_jam_masuk;
                     }),
 
+                Tables\Columns\TextColumn::make('jam_pulang')
+                    ->label('Jam Pulang')
+                    ->time('H:i')
+                    ->placeholder('-')
+                    ->badge()
+                    ->color('info'),
+
                 Tables\Columns\TextColumn::make('is_ramadan_label')
                     ->label('Jadwal')
                     ->badge()
@@ -260,13 +261,6 @@ class AbsenceResource extends Resource
                     ->tooltip(fn(Absence $record): string => $record->is_ramadan
                         ? 'Absen dicatat saat jadwal Ramadan aktif (batas: ' . ($record->schedule_jam_masuk ?? '-') . ')'
                         : 'Absen dicatat saat jadwal hari biasa (batas: ' . ($record->schedule_jam_masuk ?? '07:30') . ')'),
-
-                Tables\Columns\TextColumn::make('jam_pulang')
-                    ->label('Jam Pulang')
-                    ->time('H:i')
-                    ->placeholder('-')
-                    ->badge()
-                    ->color('info'),
 
                 Tables\Columns\TextColumn::make('distance_masuk')
                     ->label('Jarak Masuk')

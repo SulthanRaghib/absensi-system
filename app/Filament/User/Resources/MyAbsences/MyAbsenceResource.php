@@ -138,6 +138,13 @@ class MyAbsenceResource extends Resource
                         return ($onTime ? '✅ Tepat Waktu' : '⚠️ Terlambat') . ' | Batas: ' . $threshold . $ramadanTag;
                     }),
 
+                Tables\Columns\TextColumn::make('jam_pulang')
+                    ->label('Jam Pulang')
+                    ->time('H:i:s')
+                    ->placeholder('-')
+                    ->badge()
+                    ->color('info'),
+
                 Tables\Columns\TextColumn::make('jadwal')
                     ->label('Jadwal')
                     ->badge()
@@ -146,13 +153,6 @@ class MyAbsenceResource extends Resource
                     ->tooltip(fn(Absence $record): string => $record->is_ramadan
                         ? 'Dicatat saat jadwal Ramadan aktif. Batas masuk: ' . ($record->schedule_jam_masuk ?? '-')
                         : 'Dicatat saat jadwal hari biasa. Batas masuk: ' . ($record->schedule_jam_masuk ?? '07:30')),
-
-                Tables\Columns\TextColumn::make('jam_pulang')
-                    ->label('Jam Pulang')
-                    ->time('H:i:s')
-                    ->placeholder('-')
-                    ->badge()
-                    ->color('info'),
 
                 Tables\Columns\TextColumn::make('distance_masuk')
                     ->label('Jarak Masuk')
