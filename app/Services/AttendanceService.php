@@ -63,7 +63,12 @@ class AttendanceService
 
         if ($isRamadan) {
             $jamMasukStr = $ramadan['jam_masuk'];
-            $jamPulangStr = $ramadan['jam_pulang'];
+            // On Fridays during Ramadan use the dedicated friday closing time if set,
+            // otherwise fall back to the regular Ramadan closing time.
+            $isFriday     = now()->isFriday();
+            $jamPulangStr = ($isFriday && !empty($ramadan['jam_pulang_jumat']))
+                ? $ramadan['jam_pulang_jumat']
+                : $ramadan['jam_pulang'];
         } else {
             $normal       = $this->getDefaultSchedule(now());
             $jamMasukStr  = $normal['jam_masuk'];
@@ -122,8 +127,11 @@ class AttendanceService
         }
 
         if ($isRamadan) {
-            $jamMasukStr  = $ramadan['jam_masuk'];
-            $jamPulangStr = $ramadan['jam_pulang'];
+            $jamMasukStr = $ramadan['jam_masuk'];
+            // On Fridays during Ramadan use the dedicated friday closing time if set.
+            $jamPulangStr = ($date->isFriday() && !empty($ramadan['jam_pulang_jumat']))
+                ? $ramadan['jam_pulang_jumat']
+                : $ramadan['jam_pulang'];
         } else {
             $normal       = $this->getDefaultSchedule($date);
             $jamMasukStr  = $normal['jam_masuk'];

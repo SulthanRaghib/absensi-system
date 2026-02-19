@@ -68,16 +68,18 @@ class AdminScheduleInfoWidget extends Widget
             : $schedule['jam_pulang'];
 
         return [
-            'schedule'          => $schedule,
-            'default'           => $default,
-            'ramadan'           => $ramadan,
-            'ramadanActive'     => $ramadanActive,
-            'now'               => $now,
-            'isFriday'          => $isFriday,
-            'jamPulangDisplay'  => $jamPulangDisplay,
-            'daysRemaining'     => $daysRemaining,
-            'daysTotal'         => $daysTotal,
-            'statusKey'         => $statusKey,
+            'schedule'                 => $schedule,
+            'default'                  => $default,
+            'ramadan'                  => $ramadan,
+            'ramadanActive'            => $ramadanActive,
+            'now'                      => $now,
+            'isFriday'                 => $isFriday,
+            'jamPulangDisplay'         => $jamPulangDisplay,
+            // Raw Ramadan jam_pulang_jumat – used by blade to show the dedicated Jumat pill
+            'ramadanJamPulangJumat'    => $ramadan['jam_pulang_jumat'] ?? null,
+            'daysRemaining'            => $daysRemaining,
+            'daysTotal'                => $daysTotal,
+            'statusKey'                => $statusKey,
             'statusLabel'       => $statusLabel,
             'statusColor'       => $statusColor,
             'hariBulan'         => $now->translatedFormat('l, d F Y'),

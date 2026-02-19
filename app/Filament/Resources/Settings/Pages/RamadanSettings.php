@@ -34,10 +34,11 @@ class RamadanSettings extends Page implements HasForms
         // start_date/end_date are Carbon instances (or null) — DatePicker needs Y-m-d string
         // jam_masuk/jam_pulang are already H:i strings (or null)
         $this->form->fill([
-            'ramadan_start_date' => $ramadan['start_date']?->toDateString(),
-            'ramadan_end_date'   => $ramadan['end_date']?->toDateString(),
-            'ramadan_jam_masuk'  => $ramadan['jam_masuk'],
-            'ramadan_jam_pulang' => $ramadan['jam_pulang'],
+            'ramadan_start_date'       => $ramadan['start_date']?->toDateString(),
+            'ramadan_end_date'         => $ramadan['end_date']?->toDateString(),
+            'ramadan_jam_masuk'        => $ramadan['jam_masuk'],
+            'ramadan_jam_pulang'       => $ramadan['jam_pulang'],
+            'ramadan_jam_pulang_jumat' => $ramadan['jam_pulang_jumat'],
         ]);
     }
 
@@ -66,7 +67,7 @@ class RamadanSettings extends Page implements HasForms
                                 ->afterOrEqual('ramadan_start_date'),
                         ]),
 
-                        Grid::make(2)->schema([
+                        Grid::make(3)->schema([
                             TimePicker::make('ramadan_jam_masuk')
                                 ->label('Jam Masuk Ramadan')
                                 ->placeholder('Contoh: 08:00')
@@ -75,11 +76,19 @@ class RamadanSettings extends Page implements HasForms
                                 ->nullable(),
 
                             TimePicker::make('ramadan_jam_pulang')
-                                ->label('Jam Pulang Ramadan')
+                                ->label('Jam Pulang Ramadan (Sen–Kam)')
                                 ->placeholder('Contoh: 16:30')
                                 ->seconds(false)
                                 ->displayFormat('H:i')
                                 ->nullable(),
+
+                            TimePicker::make('ramadan_jam_pulang_jumat')
+                                ->label('Jam Pulang Ramadan (Jumat)')
+                                ->placeholder('Contoh: 15:30')
+                                ->seconds(false)
+                                ->displayFormat('H:i')
+                                ->nullable()
+                                ->helperText('Kosongkan jika sama dengan Sen–Kam'),
                         ]),
                     ]),
             ])
@@ -99,6 +108,7 @@ class RamadanSettings extends Page implements HasForms
             $data['ramadan_end_date']   ?: null,
             $normalizeTime($data['ramadan_jam_masuk']),
             $normalizeTime($data['ramadan_jam_pulang']),
+            $normalizeTime($data['ramadan_jam_pulang_jumat']),
         );
 
         Notification::make()
