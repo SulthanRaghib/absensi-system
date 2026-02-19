@@ -104,6 +104,12 @@ class ListSettings extends ListRecords
                 ->icon('heroicon-o-moon')
                 ->url(fn() => SettingResource::getUrl('ramadan-settings')),
 
+            Action::make('jadwalBiasa')
+                ->label('Jam Kerja Normal')
+                ->color('primary')
+                ->icon('heroicon-o-clock')
+                ->url(fn() => SettingResource::getUrl('jadwal-biasa')),
+
             CreateAction::make(),
         ];
     }

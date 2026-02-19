@@ -232,10 +232,11 @@ class SettingResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'            => Pages\ListSettings::route('/'),
-            'create'           => Pages\CreateSetting::route('/create'),
-            'edit'             => Pages\EditSetting::route('/{record}/edit'),
-            'ramadan-settings' => Pages\RamadanSettings::route('/ramadan-settings'),
+            'index'             => Pages\ListSettings::route('/'),
+            'create'            => Pages\CreateSetting::route('/create'),
+            'edit'              => Pages\EditSetting::route('/{record}/edit'),
+            'ramadan-settings'  => Pages\RamadanSettings::route('/ramadan-settings'),
+            'jadwal-biasa'      => Pages\JadwalBiasaSettings::route('/jadwal-biasa'),
         ];
     }
 }
