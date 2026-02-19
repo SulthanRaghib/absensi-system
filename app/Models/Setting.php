@@ -86,6 +86,34 @@ class Setting extends Model
     }
 
     /**
+     * Get the configurable default (non-Ramadan) work schedule.
+     *
+     * Values come from the settings table so admin can change them from the UI.
+     * Falls back to hardcoded defaults if the rows are missing (fresh install).
+     */
+    public static function getDefaultSchedule(): array
+    {
+        return [
+            'jam_masuk'         => static::get('default_jam_masuk')         ?? '07:30',
+            'jam_pulang'        => static::get('default_jam_pulang')         ?? '16:00',
+            'jam_pulang_jumat'  => static::get('default_jam_pulang_jumat')  ?? '16:30',
+        ];
+    }
+
+    /**
+     * Persist the default (non-Ramadan) schedule settings at once.
+     */
+    public static function saveDefaultSchedule(
+        string $jamMasuk,
+        string $jamPulang,
+        string $jamPulangJumat
+    ): void {
+        static::set('default_jam_masuk',        $jamMasuk,       'time');
+        static::set('default_jam_pulang',        $jamPulang,      'time');
+        static::set('default_jam_pulang_jumat',  $jamPulangJumat, 'time');
+    }
+
+    /**
      * Persist all Ramadan schedule settings at once.
      */
     public static function saveRamadanSettings(

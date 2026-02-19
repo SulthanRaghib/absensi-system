@@ -13,6 +13,7 @@ class Absence extends Model
         'jam_masuk',
         'jam_pulang',
         'schedule_jam_masuk',   // HH:MM threshold active at the time of check-in (immutable)
+        'is_ramadan',           // Whether Ramadan schedule was active at check-in (immutable)
         'lat_masuk',
         'lng_masuk',
         'lat_pulang',
@@ -25,15 +26,16 @@ class Absence extends Model
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
-        'jam_masuk' => 'datetime',
-        'jam_pulang' => 'datetime',
-        'lat_masuk' => 'decimal:8',
-        'lng_masuk' => 'decimal:8',
-        'lat_pulang' => 'decimal:8',
-        'lng_pulang' => 'decimal:8',
-        'distance_masuk' => 'decimal:2',
-        'distance_pulang' => 'decimal:2',
+        'tanggal'          => 'date',
+        'jam_masuk'        => 'datetime',
+        'jam_pulang'       => 'datetime',
+        'is_ramadan'       => 'boolean',
+        'lat_masuk'        => 'decimal:8',
+        'lng_masuk'        => 'decimal:8',
+        'lat_pulang'       => 'decimal:8',
+        'lng_pulang'       => 'decimal:8',
+        'distance_masuk'   => 'decimal:2',
+        'distance_pulang'  => 'decimal:2',
     ];
 
     public function user(): BelongsTo
