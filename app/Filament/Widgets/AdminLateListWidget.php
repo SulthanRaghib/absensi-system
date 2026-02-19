@@ -7,6 +7,7 @@ use App\Services\AttendanceService;
 use Carbon\Carbon;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 
 class AdminLateListWidget extends Widget
 {
@@ -51,8 +52,13 @@ class AdminLateListWidget extends Widget
                 elseif ($diffMin <= 30)   $severity = 'high';
                 else                      $severity = 'critical';
 
+                $avatarUrl = optional($r->user)->avatar_url
+                    ? Storage::url($r->user->avatar_url)
+                    : null;
+
                 return (object) [
                     'name'       => optional($r->user)->name ?? '—',
+                    'avatar'     => $avatarUrl,
                     'time'       => $timeStr,
                     'is_ramadan' => (bool) $r->is_ramadan,
                     'threshold'  => $recordThreshold,

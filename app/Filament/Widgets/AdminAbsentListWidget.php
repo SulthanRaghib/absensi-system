@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Models\User;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 
 class AdminAbsentListWidget extends Widget
 {
@@ -28,8 +29,9 @@ class AdminAbsentListWidget extends Widget
             })
             ->get()
             ->map(fn($u) => (object) [
-                'name' => $u->name,
-                'email' => $u->email,
+                'name'   => $u->name,
+                'email'  => $u->email,
+                'avatar' => $u->avatar_url ? Storage::url($u->avatar_url) : null,
             ]);
 
         return $records->values();

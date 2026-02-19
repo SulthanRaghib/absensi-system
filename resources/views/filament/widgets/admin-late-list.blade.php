@@ -167,11 +167,17 @@
                             {{ $idx + 1 }}
                         </span>
 
-                        {{-- avatar --}}
-                        <div class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
-                            style="background:{{ $avatarPalette['bg'][$ai] }}; color:{{ $avatarPalette['fg'][$ai] }};">
-                            {{ $ini }}
-                        </div>
+                        {{-- avatar: photo if exists, else colored initials --}}
+                        @if ($r->avatar)
+                            <img src="{{ $r->avatar }}" alt="{{ $ini }}"
+                                class="flex-shrink-0 w-9 h-9 rounded-full object-cover"
+                                style="border:1.5px solid #e5e7eb;">
+                        @else
+                            <div class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
+                                style="background:{{ $avatarPalette['bg'][$ai] }}; color:{{ $avatarPalette['fg'][$ai] }};">
+                                {{ $ini }}
+                            </div>
+                        @endif
 
                         {{-- name & threshold --}}
                         <div class="flex-1 min-w-0">
