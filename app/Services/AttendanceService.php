@@ -7,11 +7,30 @@ use Carbon\Carbon;
 
 class AttendanceService
 {
-    // Normal (non-Ramadan) schedule constants
-    // These can later be moved to the `settings` table if dynamic control is needed.
-    const DEFAULT_JAM_MASUK  = '07:30';
-    const DEFAULT_JAM_PULANG = '16:00'; // Friday uses 16:30
-    const DEFAULT_JAM_PULANG_JUMAT = '16:30';
+    // Hardcoded fallbacks – used only when DB settings are missing (e.g. fresh install).
+    // The real defaults live in the `settings` table (keys: default_jam_masuk, etc.)
+    // and are managed by the admin via the "Jadwal Jam Kerja Biasa" settings page.
+    const DEFAULT_JAM_MASUK          = '07:30';
+    const DEFAULT_JAM_PULANG         = '16:00';
+    const DEFAULT_JAM_PULANG_JUMAT   = '16:30';
+
+    /**
+     * Read the normal schedule from DB (admin-configurable).
+     * Caches the result for the request lifetime to avoid repeated DB hits.
+     */
+    protected function getDefaultSchedule(Carbon $forDate): array
+    {
+        static $cache = null;
+        if ($cache === null) {
+            $cache = Setting::getDefaultSchedule();
+        }
+        return [
+            'jam_masuk'  => $cache['jam_masuk'],
+            'jam_pulang' => $forDate->isFriday()
+                ? $cache['jam_pulang_jumat']
+                : $cache['jam_pulang'],
+        ];
+    }
 
     /**
      * Get the active schedule for today.
@@ -46,10 +65,9 @@ class AttendanceService
             $jamMasukStr = $ramadan['jam_masuk'];
             $jamPulangStr = $ramadan['jam_pulang'];
         } else {
-            $jamMasukStr  = self::DEFAULT_JAM_MASUK;
-            $jamPulangStr = now()->isFriday()
-                ? self::DEFAULT_JAM_PULANG_JUMAT
-                : self::DEFAULT_JAM_PULANG;
+            $normal       = $this->getDefaultSchedule(now());
+            $jamMasukStr  = $normal['jam_masuk'];
+            $jamPulangStr = $normal['jam_pulang'];
         }
 
         return [
@@ -107,10 +125,9 @@ class AttendanceService
             $jamMasukStr  = $ramadan['jam_masuk'];
             $jamPulangStr = $ramadan['jam_pulang'];
         } else {
-            $jamMasukStr  = self::DEFAULT_JAM_MASUK;
-            $jamPulangStr = $date->isFriday()
-                ? self::DEFAULT_JAM_PULANG_JUMAT
-                : self::DEFAULT_JAM_PULANG;
+            $normal       = $this->getDefaultSchedule($date);
+            $jamMasukStr  = $normal['jam_masuk'];
+            $jamPulangStr = $normal['jam_pulang'];
         }
 
         return [
