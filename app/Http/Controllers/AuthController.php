@@ -27,7 +27,19 @@ class AuthController extends Controller
         $thresholdSetting = Setting::where('key', 'face_threshold')->first();
         $faceThreshold = $thresholdSetting ? (float) $thresholdSetting->value : 0.5;
 
-        return view('auth.choice', compact('officeLocation', 'faceRecognitionEnabled', 'faceThreshold', 'radiusEnabled'));
+        // Detect if today falls within the configured Ramadan period (for UI theming only).
+        $ramadanSettings = Setting::getRamadanSettings();
+        $today           = \Carbon\Carbon::now()->startOfDay();
+        $isRamadan       = false;
+        if (
+            $ramadanSettings['start_date'] !== null &&
+            $ramadanSettings['end_date']   !== null &&
+            $ramadanSettings['jam_masuk']  !== null
+        ) {
+            $isRamadan = $today->between($ramadanSettings['start_date'], $ramadanSettings['end_date']);
+        }
+
+        return view('auth.choice', compact('officeLocation', 'faceRecognitionEnabled', 'faceThreshold', 'radiusEnabled', 'isRamadan'));
     }
 
     /**

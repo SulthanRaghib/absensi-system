@@ -17,11 +17,165 @@
         <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
 
         @include('auth.partials.styles')
+
+        @if ($isRamadan)
+            <style>
+                /* ═══ RAMADAN THEME ═══════════════════════════════════════════ */
+                .app-wrapper.ramadan-bg {
+                    background: linear-gradient(160deg, #0f2027 0%, #1a3a2a 40%, #0d2b20 70%, #0a1628 100%);
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                #ramadan-canvas {
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 0;
+                }
+
+                .login-card {
+                    position: relative;
+                    z-index: 1;
+                    border-top: 3px solid #d97706;
+                }
+
+                .ramadan-banner {
+                    text-align: center;
+                    margin-bottom: 1.25rem;
+                    padding: 0.75rem 1rem;
+                    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+                    border: 1px solid #fcd34d;
+                    border-radius: 14px;
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .ramadan-banner::before {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(90deg, transparent 0%, rgba(252, 211, 77, 0.18) 50%, transparent 100%);
+                    animation: rimadan-shimmer 2.5s infinite;
+                }
+
+                @keyframes rimadan-shimmer {
+                    0% {
+                        transform: translateX(-100%);
+                    }
+
+                    100% {
+                        transform: translateX(100%);
+                    }
+                }
+
+                .ramadan-banner .rbanner-greeting {
+                    font-size: 1rem;
+                    font-weight: 700;
+                    color: #92400e;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.4rem;
+                    margin-bottom: 0.2rem;
+                }
+
+                .ramadan-banner .rbanner-sub {
+                    font-size: 0.775rem;
+                    color: #b45309;
+                    font-style: italic;
+                    line-height: 1.4;
+                }
+
+                .ramadan-bg .form-input:focus {
+                    border-color: #d97706;
+                    box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.15);
+                }
+
+                .ramadan-bg .input-wrapper:focus-within .input-icon {
+                    fill: #d97706;
+                }
+
+                .ramadan-bg .primary-button {
+                    background: linear-gradient(135deg, #d97706 0%, #92400e 100%);
+                    box-shadow: 0 4px 14px rgba(217, 119, 6, 0.45);
+                }
+
+                .ramadan-bg .primary-button:hover {
+                    box-shadow: 0 8px 22px rgba(217, 119, 6, 0.55);
+                }
+
+                .ramadan-bg .secondary-button {
+                    color: #d97706;
+                    border-color: #d97706;
+                }
+
+                .ramadan-bg .secondary-button:hover {
+                    background: #d97706;
+                    color: white;
+                    box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35);
+                }
+
+                .ramadan-bg .custom-checkbox:checked {
+                    background: #d97706;
+                    border-color: #d97706;
+                }
+
+                .ramadan-deco {
+                    position: absolute;
+                    pointer-events: none;
+                    z-index: 0;
+                    opacity: 0.055;
+                    font-size: 8rem;
+                    top: -1.5rem;
+                    right: -0.75rem;
+                    transform: rotate(20deg);
+                    line-height: 1;
+                    user-select: none;
+                }
+
+                .ramadan-title {
+                    font-size: 1.5rem;
+                    font-weight: 800;
+                    background: linear-gradient(135deg, #d97706, #92400e);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                    margin-bottom: 0.2rem;
+                }
+
+                .ramadan-subtitle {
+                    font-size: 0.875rem;
+                    color: #6b7280;
+                    font-weight: 400;
+                    margin-bottom: 0.2rem;
+                }
+
+                .ramadan-joke {
+                    font-size: 0.8rem;
+                    color: #d97706;
+                    font-weight: 500;
+                }
+
+                .ramadan-footer {
+                    font-size: 0.8rem;
+                    color: #9ca3af;
+                    text-align: center;
+                }
+
+                .ramadan-footer strong {
+                    color: #d97706;
+                }
+            </style>
+        @endif
     </x-head>
 </head>
 
 <body x-data="attendance">
-    <div class="app-wrapper">
+    @if ($isRamadan)
+        <canvas id="ramadan-canvas"></canvas>
+    @endif
+    <div class="app-wrapper{{ $isRamadan ? ' ramadan-bg' : '' }}">
         <!-- Cheat Alert Modal -->
         @if (session('fraud_alert'))
             <div x-data="{ show: true }" x-show="show" style="display: none;"
@@ -91,12 +245,156 @@
             </div>
 
             <!-- Title Section -->
-            <div style="text-align: center; margin-bottom: 2rem;">
-                <h1 style="font-size: 1.875rem; font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">Sistem Absensi
-                </h1>
-                <p style="font-size: 0.9375rem; color: #6b7280; font-weight: 400;">Selamat datang! Silakan login untuk
-                    melanjutkan</p>
-            </div>
+            @if ($isRamadan)
+                <div class="ramadan-deco" aria-hidden="true">🌙</div>
+                <div style="text-align:center;margin-bottom:1rem;">
+                    <h1 class="ramadan-title">🌙 Ramadan Kareem</h1>
+                    <p class="ramadan-subtitle">Sistem Absensi — Selamat menunaikan ibadah puasa!</p>
+                    <p class="ramadan-joke">☕ Puasa boleh, absen jangan sampai ikut puasa juga ya!</p>
+                </div>
+                @php
+                    $quotes = [
+                        [
+                            'text' => 'Semangat kerja di bulan Ramadan = pahala double! 💪',
+                            'sub' => 'Sahur tadi semoga cukup energi ya...',
+                        ],
+                        [
+                            'text' => 'Perut kosong, tapi produktivitas penuh! 🚀',
+                            'sub' => 'Bismillah, kita pasti bisa!',
+                        ],
+                        [
+                            'text' => 'Ramadan ngajarin sabar — termasuk sabar nunggu buka di kantor 😄',
+                            'sub' => 'Keep up the great work!',
+                        ],
+                        [
+                            'text' => 'Ikhlas puasa, ikhlas kerja, insyaAllah berkah! ✨',
+                            'sub' => 'Ayo semangat hari ini!',
+                        ],
+                        [
+                            'text' => 'Ngantuk? Itulah ujian sejati pegawai Ramadan 😴',
+                            'sub' => 'Tapi absen dulu baru merem!',
+                        ],
+                        [
+                            'text' => 'Lapar itu sunnah, telat absen itu dosa kantor 😂',
+                            'sub' => 'Masuk tepat waktu ya!',
+                        ],
+                        [
+                            'text' => 'Puasa bikin fokus naik, gosip di kantor turun 🤫',
+                            'sub' => 'Alhamdulillah, Ramadan menjaga lisan kita!',
+                        ],
+                        [
+                            'text' => 'Sahur tadi? Semoga sumbernya kuat sampai sore 🍚',
+                            'sub' => 'Nasi + doa = bahan bakar terbaik!',
+                        ],
+                        [
+                            'text' => 'Rapat sambil puasa itu ujian kesabaran level dewa 🙏',
+                            'sub' => 'Tapi pasti bisa, bismillah!',
+                        ],
+                        [
+                            'text' => 'Kopi pagi? Hari ini diganti dengan niat yang kuat ☕➡️💡',
+                            'sub' => 'Semangat kerja tanpa kafein!',
+                        ],
+                        [
+                            'text' => 'Absen tepat waktu = investasi pahala gratis 📋',
+                            'sub' => 'Jangan sampai telat, ya!',
+                        ],
+                        [
+                            'text' => 'Ramadan: bulan di mana meeting pagi terasa lebih panjang 🕐',
+                            'sub' => 'Sabar, buka tinggal beberapa jam lagi!',
+                        ],
+                        [
+                            'text' => 'Puasa itu gratis, telat masuk kena teguran — pilih yang mana? 😏',
+                            'sub' => 'Datang tepat waktu yuk!',
+                        ],
+                        [
+                            'text' => 'Mood naik turun saat Ramadan itu wajar, asal absennya stabil 📈',
+                            'sub' => 'Tetap profesional, tetap semangat!',
+                        ],
+                        [
+                            'text' => 'Jam 11 siang adalah saat paling syarat kesabaran pegawai 😅',
+                            'sub' => 'Bentar lagi Dzuhur, kuat ya!',
+                        ],
+                        [
+                            'text' => 'Produktif di Ramadan = sedekah waktu untuk negara 🇮🇩',
+                            'sub' => 'Ayo kerja keras hari ini!',
+                        ],
+                        [
+                            'text' => 'Buka puasa bareng rekan kerja itu bonusnya Ramadan 🍜',
+                            'sub' => 'Tapi kerjain dulu tugasnya!',
+                        ],
+                        [
+                            'text' => 'Perut keroncongan tapi laporan harus selesai duluan 📄',
+                            'sub' => 'Deadline tidak kenal puasa!',
+                        ],
+                        [
+                            'text' => 'Godaan terberat Ramadan di kantor: makan siang rekan sebelah 🙈',
+                            'sub' => 'Tutup mata, fokus kerja!',
+                        ],
+                        [
+                            'text' => 'Tarawih semalam bikin ngantuk, tapi niat ke kantor bikin semangat! 🌙',
+                            'sub' => 'MasyaAllah, hebat sekali kamu!',
+                        ],
+                        [
+                            'text' => 'Ramadan mengajarkan: prioritas itu penting, bukan sekadar sibuk 🎯',
+                            'sub' => 'Kerja smart, bukan cuma kerja keras!',
+                        ],
+                        [
+                            'text' => 'Laper boleh, tapi senyumnya jangan sampai ikut puasa 😊',
+                            'sub' => 'Tetap ramah dan baik hati ya!',
+                        ],
+                        [
+                            'text' => 'Setiap klik dan ketikan hari ini bisa jadi ladang pahala lho 💻',
+                            'sub' => 'Niatkan kerja sebagai ibadah!',
+                        ],
+                        [
+                            'text' => 'Ngantuk setelah sahur itu manusiawi, absen ontime itu mulia 🏅',
+                            'sub' => 'Kamu sudah memilih yang benar!',
+                        ],
+                        [
+                            'text' => 'Ramadan: waktu terbaik untuk reset kebiasaan kerja yang kurang baik 🔄',
+                            'sub' => 'Jadikan bulan ini titik balik!',
+                        ],
+                        [
+                            'text' => 'Puasa bukan alasan malas, justru bukti kita bisa lebih disiplin! 🔥',
+                            'sub' => 'Tunjukkan terbaik kamu hari ini!',
+                        ],
+                        [
+                            'text' => 'Cek email sambil puasa terasa lebih khusyuk entah kenapa 📧',
+                            'sub' => 'Alhamdulillah, tetap produktif!',
+                        ],
+                        [
+                            'text' => 'Setiap tetes keringat kerja di Ramadan = pahala yang mengalir 💦',
+                            'sub' => 'Kerja keras hari ini, berkah forever!',
+                        ],
+                        [
+                            'text' => 'Meja kerja bersih = pikiran jernih = puasa berkualitas ✨',
+                            'sub' => 'Rapikan meja sebelum mulai kerja!',
+                        ],
+                        [
+                            'text' => 'Ramadan bukan bulan slow down, tapi bulan level up! ⬆️',
+                            'sub' => 'Ayo buktikan produktivitasmu!',
+                        ],
+                        [
+                            'text' => 'Buka nanti sama teman kantor itu salah satu nikmat Ramadan 🌅',
+                            'sub' => 'Sebentar lagi, tetap semangat!',
+                        ],
+                    ];
+                    // Random per hari: konsisten dalam satu hari, berbeda tiap tanggal
+                    $seed = abs(crc32(date('Y-m-d')));
+                    $q = $quotes[$seed % count($quotes)];
+                @endphp
+                <div class="ramadan-banner">
+                    <div class="rbanner-greeting">{{ $q['text'] }}</div>
+                    <div class="rbanner-sub">{{ $q['sub'] }}</div>
+                </div>
+            @else
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <h1 style="font-size: 1.875rem; font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">Sistem
+                        Absensi</h1>
+                    <p style="font-size: 0.9375rem; color: #6b7280; font-weight: 400;">Selamat datang! Silakan login
+                        untuk melanjutkan</p>
+                </div>
+            @endif
 
             <!-- Session Messages -->
             @if (session('success'))
@@ -190,13 +488,118 @@
             <button @click="openDirect=true; getLocation()" class="secondary-button">Absen Langsung</button>
 
             <!-- Footer -->
-            <div style="text-align: center; margin-top: 2rem;">
-                <p style="font-size: 0.8125rem; color: #9ca3af;">Butuh bantuan? Hubungi admin@contoh.local</p>
-            </div>
+            @if ($isRamadan)
+                <div style="text-align:center;margin-top:1.5rem;">
+                    <p class="ramadan-footer">🌙 <strong>Ramadan {{ date('Y') }}</strong> — Semoga amal ibadah kita
+                        diterima</p>
+                    <p style="font-size:0.75rem;color:#d1d5db;margin-top:0.2rem;">Butuh bantuan? Hubungi admin</p>
+                </div>
+            @else
+                <div style="text-align: center; margin-top: 2rem;">
+                    <p style="font-size: 0.8125rem; color: #9ca3af;">Butuh bantuan? Hubungi admin@contoh.local</p>
+                </div>
+            @endif
         </div>
     </div>
 
     @include('auth.partials.modal')
+    @if ($isRamadan)
+        <script>
+            (function() {
+                const canvas = document.getElementById('ramadan-canvas');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+
+                const STARS = [];
+                const COUNT = 120;
+
+                function resize() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                }
+                resize();
+                window.addEventListener('resize', resize);
+
+                // Seed stars
+                for (let i = 0; i < COUNT; i++) {
+                    STARS.push({
+                        x: Math.random(),
+                        y: Math.random(),
+                        r: Math.random() * 1.4 + 0.4,
+                        a: Math.random(), // current alpha
+                        da: (Math.random() * 0.006 + 0.002) * (Math.random() < 0.5 ? 1 : -1),
+                        speed: Math.random() * 0.00008 + 0.00002,
+                    });
+                }
+
+                // A few floating crescents
+                const MOONS = Array.from({
+                    length: 5
+                }, () => ({
+                    x: Math.random(),
+                    y: Math.random(),
+                    size: Math.random() * 18 + 12,
+                    alpha: Math.random() * 0.12 + 0.04,
+                    speed: (Math.random() * 0.00006 + 0.00002) * (Math.random() < 0.5 ? 1 : -1),
+                }));
+
+                function drawCrescent(cx, cy, size, alpha) {
+                    ctx.save();
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = '#fcd34d';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#1a3a2a'; // match bg
+                    ctx.beginPath();
+                    ctx.arc(cx + size * 0.35, cy - size * 0.1, size * 0.82, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                let last = 0;
+
+                function draw(ts) {
+                    const dt = Math.min(ts - last, 50);
+                    last = ts;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    // Stars
+                    STARS.forEach(s => {
+                        s.y -= s.speed * dt;
+                        if (s.y < 0) {
+                            s.y = 1;
+                            s.x = Math.random();
+                        }
+                        s.a += s.da;
+                        if (s.a <= 0 || s.a >= 1) s.da *= -1;
+                        ctx.globalAlpha = Math.abs(s.a) * 0.8;
+                        ctx.fillStyle = '#fff';
+                        ctx.beginPath();
+                        ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+
+                    // Crescents
+                    MOONS.forEach(m => {
+                        m.y -= m.speed * dt;
+                        if (m.y < -0.05) {
+                            m.y = 1.05;
+                            m.x = Math.random();
+                        }
+                        drawCrescent(m.x * canvas.width, m.y * canvas.height, m.size, m.alpha);
+                    });
+
+                    requestAnimationFrame(draw);
+                }
+                requestAnimationFrame(t => {
+                    last = t;
+                    draw(t);
+                });
+            })();
+        </script>
+    @endif
+
     @include('auth.partials.scripts')
 </body>
 
