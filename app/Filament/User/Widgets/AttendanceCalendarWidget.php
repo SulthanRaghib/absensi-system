@@ -140,14 +140,14 @@ class AttendanceCalendarWidget extends Widget
 
                             if ($jamMasuk->gt($threshold)) {
                                 $status = 'late';
-                                $label = 'Telat ' . $jamMasuk->format('H:i');
-                                $color = 'red-200';
-                                $emoji = '🔴';
+                                $label  = ($absence->is_ramadan ? '🌙 Telat ' : 'Telat ') . $jamMasuk->format('H:i');
+                                $color  = $absence->is_ramadan ? 'orange-200' : 'red-200';
+                                $emoji  = $absence->is_ramadan ? '🌙' : '🔴';
                             } else {
                                 $status = 'on_time';
-                                $label = 'Hadir ' . $jamMasuk->format('H:i');
-                                $color = 'green-200';
-                                $emoji = '🟢';
+                                $label  = ($absence->is_ramadan ? '🌙 Hadir ' : 'Hadir ') . $jamMasuk->format('H:i');
+                                $color  = $absence->is_ramadan ? 'amber-100' : 'green-200';
+                                $emoji  = $absence->is_ramadan ? '🌙' : '🟢';
                             }
                         } else {
                             // if there is an absence record but no jam_masuk
