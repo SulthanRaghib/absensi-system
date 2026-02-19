@@ -36,37 +36,134 @@ class AbsenceResource extends Resource
     {
         return $schema
             ->components([
-                Schemas\Section::make('Detail Kehadiran')
+                // ── 1. IDENTITAS ──────────────────────────────────────────
+                Schemas\Section::make('Identitas Kehadiran')
+                    ->description('Pilih pengguna dan tanggal absensi yang akan dicatat.')
+                    ->icon('heroicon-o-user-circle')
                     ->schema([
                         Forms\Select::make('user_id')
                             ->label('Pengguna')
                             ->relationship('user', 'name')
                             ->searchable()
+                            ->preload()
                             ->required(),
 
                         Forms\DatePicker::make('tanggal')
-                            ->label('Tanggal')
+                            ->label('Tanggal Absensi')
                             ->required()
-                            ->default(today()),
-
-                        Forms\TimePicker::make('jam_masuk')
-                            ->label('Jam Masuk'),
-
-                        Forms\TimePicker::make('jam_pulang')
-                            ->label('Jam Pulang'),
+                            ->default(today())
+                            ->maxDate(today())
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (?string $state, callable $set): void {
+                                if (! $state) {
+                                    return;
+                                }
+                                $service  = new \App\Services\AttendanceService();
+                                $schedule = $service->getScheduleForDate(\Carbon\Carbon::parse($state));
+                                $set('is_ramadan',         $schedule['is_ramadan']);
+                                $set('schedule_jam_masuk', $schedule['jam_masuk']);
+                            }),
                     ])
                     ->columns(2),
 
-                // Large preview photo for modern, easy-to-review UI
+                // ── 2. JADWAL HARIAN (RAMADAN-AWARE SMART CARD) ──────────
+                Schemas\Section::make('Jadwal Harian')
+                    ->description('Jadwal yang berlaku pada tanggal absen ini. Diisi otomatis saat tanggal dipilih — dapat diubah manual bila perlu.')
+                    ->icon('heroicon-o-calendar-days')
+                    ->schema([
+                        // Full-width toggle at the top
+                        Forms\Toggle::make('is_ramadan')
+                            ->label('Jadwal Ramadan 🌙')
+                            ->helperText('Sistem mengisi ini otomatis. Ubah hanya jika perlu koreksi manual (misalnya mengedit absen di hari Ramadan lalu).')
+                            ->live()
+                            ->afterStateUpdated(function (bool $state, callable $set, callable $get): void {
+                                if ($state) {
+                                    // Toggled ON → load Ramadan jam_masuk from settings
+                                    $ramadan = \App\Models\Setting::getRamadanSettings();
+                                    if (! empty($ramadan['jam_masuk'])) {
+                                        $set('schedule_jam_masuk', $ramadan['jam_masuk']);
+                                    }
+                                } else {
+                                    // Toggled OFF → load normal default jam_masuk
+                                    $normal = \App\Models\Setting::getDefaultSchedule();
+                                    $set('schedule_jam_masuk', $normal['jam_masuk'] ?? '07:30');
+                                }
+                            })
+                            ->inline()
+                            ->default(false)
+                            ->columnSpanFull(),
+
+                        // Left: editable threshold field
+                        Forms\TimePicker::make('schedule_jam_masuk')
+                            ->label('Batas Jam Masuk (threshold)')
+                            ->helperText('Diisi otomatis berdasarkan tanggal & jadwal Ramadan. Dapat diubah untuk koreksi.')
+                            ->seconds(false)
+                            ->default('07:30')
+                            ->columnSpan(1),
+
+                        // Right: live info banner
+                        Forms\Placeholder::make('schedule_info_card')
+                            ->label('Status Jadwal')
+                            ->content(function (callable $get): \Illuminate\Support\HtmlString {
+                                $isRamadan = (bool) $get('is_ramadan');
+                                $threshold = $get('schedule_jam_masuk') ?: '07:30';
+
+                                if ($isRamadan) {
+                                    return new \Illuminate\Support\HtmlString(
+                                        '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;'
+                                            . 'background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;color:#92400e;">'
+                                            . '<span style="font-size:1.4rem;line-height:1;">🌙</span>'
+                                            . '<div style="font-size:0.875rem;line-height:1.5;">'
+                                            . '<strong>Jadwal Ramadan aktif</strong><br>'
+                                            . 'Tepat waktu jika masuk ≤ <strong>' . e($threshold) . '</strong>'
+                                            . '</div></div>'
+                                    );
+                                }
+
+                                return new \Illuminate\Support\HtmlString(
+                                    '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;'
+                                        . 'background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;color:#374151;">'
+                                        . '<span style="font-size:1.4rem;line-height:1;">📅</span>'
+                                        . '<div style="font-size:0.875rem;line-height:1.5;">'
+                                        . '<strong>Jadwal Normal</strong><br>'
+                                        . 'Tepat waktu jika masuk ≤ <strong>' . e($threshold) . '</strong>'
+                                        . '</div></div>'
+                                );
+                            })
+                            ->columnSpan(1),
+                    ])
+                    ->columns(2),
+
+                // ── 3. WAKTU ABSENSI ──────────────────────────────────────
+                Schemas\Section::make('Waktu Absensi')
+                    ->description('Isi jam masuk dan jam pulang karyawan.')
+                    ->icon('heroicon-o-clock')
+                    ->schema([
+                        Forms\TimePicker::make('jam_masuk')
+                            ->label('Jam Masuk')
+                            ->seconds(false)
+                            ->suffixIcon('heroicon-o-arrow-right-circle'),
+
+                        Forms\TimePicker::make('jam_pulang')
+                            ->label('Jam Pulang')
+                            ->seconds(false)
+                            ->suffixIcon('heroicon-o-arrow-left-circle'),
+                    ])
+                    ->columns(2),
+
+                // ── 4. FOTO ───────────────────────────────────────────────
                 Schemas\Section::make('Preview Foto')
                     ->schema([
                         Forms\Placeholder::make('capture_preview')
-                            ->label('Foto Cek')
-                            ->content(fn($get) => $get('capture_image') ? "<div class='w-full flex justify-center'><img src='" . asset('storage/' . $get('capture_image')) . "' alt='Foto Absensi' class='max-h-[360px] rounded-lg shadow-lg object-contain' /></div>" : "<div class='text-sm text-gray-500'>Tidak ada foto</div>")
+                            ->label('Foto Absensi')
+                            ->content(fn($get) => $get('capture_image')
+                                ? "<div class='w-full flex justify-center'><img src='" . asset('storage/' . $get('capture_image')) . "' alt='Foto Absensi' class='max-h-[360px] rounded-lg shadow-lg object-contain' /></div>"
+                                : "<div class='text-sm text-gray-400 italic py-4 text-center'>Tidak ada foto</div>")
                             ->html(),
                     ])
                     ->columns(1),
 
+                // ── 5. LOKASI MASUK (collapsed) ───────────────────────────
                 Schemas\Section::make('Lokasi Masuk')
                     ->schema([
                         Forms\TextInput::make('lat_masuk')
@@ -85,6 +182,7 @@ class AbsenceResource extends Resource
                     ->columns(3)
                     ->collapsed(),
 
+                // ── 6. LOKASI PULANG (collapsed) ──────────────────────────
                 Schemas\Section::make('Lokasi Pulang')
                     ->schema([
                         Forms\TextInput::make('lat_pulang')
