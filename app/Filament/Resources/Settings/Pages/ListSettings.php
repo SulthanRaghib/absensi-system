@@ -98,6 +98,12 @@ class ListSettings extends ListRecords
                     $this->redirect(request()->header('Referer'));
                 }),
 
+            Action::make('ramadanSettings')
+                ->label('Jadwal Ramadan')
+                ->color('warning')
+                ->icon('heroicon-o-moon')
+                ->url(fn() => SettingResource::getUrl('ramadan-settings')),
+
             CreateAction::make(),
         ];
     }

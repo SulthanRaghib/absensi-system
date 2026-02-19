@@ -48,15 +48,17 @@ class SettingResource extends Resource
                         Forms\Select::make('type')
                             ->label('Tipe Data')
                             ->options([
-                                'string' => 'String',
-                                'number' => 'Number',
-                                'json' => 'JSON',
+                                'string'  => 'String',
+                                'number'  => 'Number',
+                                'json'    => 'JSON',
                                 'boolean' => 'Boolean',
-                                'select' => 'Select',
+                                'select'  => 'Select',
+                                'date'    => 'Date',
+                                'time'    => 'Time',
                             ])
                             ->default('string')
                             ->required()
-                            ->live(), // Make it reactive to show/hide value input
+                            ->live(),
 
                         Forms\TextInput::make('key')
                             ->label('Kunci Pengaturan')
@@ -65,12 +67,12 @@ class SettingResource extends Resource
                             ->disabled(fn($context) => $context === 'edit')
                             ->helperText('Format: office_latitude, office_longitude, office_radius'),
 
-                        // Handle generic value input
+                        // Handle generic value input (string, number, json)
                         Forms\TextInput::make('value')
                             ->label('Nilai')
                             ->required()
-                            ->hidden(fn($get) => in_array($get('type'), ['boolean', 'select'], true))
-                            ->dehydrated(true) // Ensure it is always saved, even if hidden (for boolean sync)
+                            ->hidden(fn($get) => in_array($get('type'), ['boolean', 'select', 'date', 'time'], true))
+                            ->dehydrated(true)
                             ->helperText('Masukkan nilai sesuai tipe data'),
 
                         // Handle select options (currently used for face_threshold)
@@ -92,6 +94,33 @@ class SettingResource extends Resource
                                 ? 'Semakin kecil semakin mudah match. 0.0 hanya butuh deteksi wajah.'
                                 : 'Pilih nilai sesuai opsi')
                             ->dehydrated(true),
+
+                        // Handle date picker
+                        Forms\DatePicker::make('value')
+                            ->label('Nilai (Tanggal)')
+                            ->visible(fn($get) => $get('type') === 'date')
+                            ->displayFormat('d/m/Y')
+                            ->native(false)
+                            ->dehydrated(true)
+                            ->afterStateHydrated(function ($component, $state, $record) {
+                                if ($record && $record->type === 'date' && $state) {
+                                    // Ensure value is passed as Y-m-d string to DatePicker
+                                    $component->state($state);
+                                }
+                            }),
+
+                        // Handle time picker
+                        Forms\TimePicker::make('value')
+                            ->label('Nilai (Jam)')
+                            ->visible(fn($get) => $get('type') === 'time')
+                            ->seconds(false)
+                            ->displayFormat('H:i')
+                            ->dehydrated(true)
+                            ->afterStateHydrated(function ($component, $state, $record) {
+                                if ($record && $record->type === 'time' && $state) {
+                                    $component->state($state);
+                                }
+                            }),
 
                         // Handle boolean toggle
                         Forms\Toggle::make('value_boolean')
@@ -131,7 +160,7 @@ class SettingResource extends Resource
                     ->sortable()
                     ->copyable()
                     ->weight('bold')
-                    ->formatStateUsing(fn (string $state): string => ucwords(str_replace('_', ' ', $state))),
+                    ->formatStateUsing(fn(string $state): string => ucwords(str_replace('_', ' ', $state))),
 
                 Tables\Columns\TextColumn::make('value')
                     ->label('Nilai')
@@ -170,10 +199,13 @@ class SettingResource extends Resource
                 Tables\Filters\SelectFilter::make('type')
                     ->label('Tipe Data')
                     ->options([
-                        'string' => 'String',
-                        'number' => 'Number',
-                        'json' => 'JSON',
+                        'string'  => 'String',
+                        'number'  => 'Number',
+                        'json'    => 'JSON',
                         'boolean' => 'Boolean',
+                        'select'  => 'Select',
+                        'date'    => 'Date',
+                        'time'    => 'Time',
                     ]),
             ])
             ->actions([
@@ -200,9 +232,10 @@ class SettingResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListSettings::route('/'),
-            'create' => Pages\CreateSetting::route('/create'),
-            'edit' => Pages\EditSetting::route('/{record}/edit'),
+            'index'            => Pages\ListSettings::route('/'),
+            'create'           => Pages\CreateSetting::route('/create'),
+            'edit'             => Pages\EditSetting::route('/{record}/edit'),
+            'ramadan-settings' => Pages\RamadanSettings::route('/ramadan-settings'),
         ];
     }
 }
