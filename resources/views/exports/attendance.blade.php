@@ -73,7 +73,12 @@
 
 <body>
     @php
-        $officeEntryTime = $jamMasukKantor ? \Carbon\Carbon::parse($jamMasukKantor)->format('H:i') : '07:30';
+        // $thresholdMap is [ dayNumber => 'HH:MM' ] from AttendanceExportController.
+        // Backward compat: if old code passed $jamMasukKantor string instead, build a flat map.
+        if (!isset($thresholdMap)) {
+            $fallback = isset($jamMasukKantor) ? substr($jamMasukKantor, 0, 5) : '07:30';
+            $thresholdMap = array_fill(1, $daysInMonth, $fallback);
+        }
     @endphp
     <table>
         <!-- Header Rows -->
@@ -173,7 +178,11 @@
                                 $outDisplay = $attendance->jam_pulang ? $attendance->jam_pulang->format('H:i') : '';
                                 $totalHadir++;
 
-                                if ($inDisplay > $officeEntryTime) {
+                                // Use threshold snapshotted at check-in (immutable to future settings changes).
+                                // Fall back to the per-day map generated at export time for legacy records.
+                                $dayThreshold = $attendance->schedule_jam_masuk ?? ($thresholdMap[$day] ?? '07:30');
+
+                                if ($inDisplay > $dayThreshold) {
                                     $totalTerlambat++;
                                     $inStyles[] = 'color: red';
                                     $inStyles[] = 'font-weight: bold';
