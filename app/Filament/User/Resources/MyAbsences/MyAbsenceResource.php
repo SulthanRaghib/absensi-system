@@ -125,7 +125,27 @@ class MyAbsenceResource extends Resource
                     ->time('H:i:s')
                     ->placeholder('-')
                     ->badge()
-                    ->color(fn($state) => \Carbon\Carbon::parse($state)->format('H:i') > '07:30' ? 'danger' : 'success'),
+                    ->color(function (Absence $record): string {
+                        if (! $record->jam_masuk) return 'gray';
+                        $threshold = $record->schedule_jam_masuk ?? '07:30';
+                        return $record->jam_masuk->format('H:i') > $threshold ? 'danger' : 'success';
+                    })
+                    ->tooltip(function (Absence $record): ?string {
+                        if (! $record->jam_masuk) return null;
+                        $threshold  = $record->schedule_jam_masuk ?? '07:30';
+                        $onTime     = $record->jam_masuk->format('H:i') <= $threshold;
+                        $ramadanTag = $record->is_ramadan ? ' (Ramadan)' : '';
+                        return ($onTime ? '✅ Tepat Waktu' : '⚠️ Terlambat') . ' | Batas: ' . $threshold . $ramadanTag;
+                    }),
+
+                Tables\Columns\TextColumn::make('jadwal')
+                    ->label('Jadwal')
+                    ->badge()
+                    ->getStateUsing(fn(Absence $record): string => $record->is_ramadan ? '🌙 Ramadan' : 'Normal')
+                    ->color(fn(Absence $record): string => $record->is_ramadan ? 'warning' : 'gray')
+                    ->tooltip(fn(Absence $record): string => $record->is_ramadan
+                        ? 'Dicatat saat jadwal Ramadan aktif. Batas masuk: ' . ($record->schedule_jam_masuk ?? '-')
+                        : 'Dicatat saat jadwal hari biasa. Batas masuk: ' . ($record->schedule_jam_masuk ?? '07:30')),
 
                 Tables\Columns\TextColumn::make('jam_pulang')
                     ->label('Jam Pulang')

@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Widgets\AdminScheduleInfoWidget;
 use App\Filament\Widgets\AdminAttendanceStats;
 use App\Filament\Widgets\AdminLateListWidget;
 use App\Filament\Widgets\AdminAbsentListWidget;
@@ -56,6 +57,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 // AccountWidget::class,
+                AdminScheduleInfoWidget::class,
                 AdminAttendanceStats::class,
                 AdminLateListWidget::class,
                 AdminAbsentListWidget::class,
