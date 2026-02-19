@@ -73,15 +73,17 @@ class Setting extends Model
 
     /**
      * Get all Ramadan schedule settings.
-     * Returns an array with start_date, end_date, jam_masuk, jam_pulang (all nullable).
+     * Returns an array with start_date, end_date, jam_masuk, jam_pulang, jam_pulang_jumat (all nullable).
+     * jam_pulang_jumat: jam pulang khusus hari Jumat selama Ramadan (misal 15:30).
      */
     public static function getRamadanSettings(): array
     {
         return [
-            'start_date'  => static::get('ramadan_start_date'),
-            'end_date'    => static::get('ramadan_end_date'),
-            'jam_masuk'   => static::get('ramadan_jam_masuk'),
-            'jam_pulang'  => static::get('ramadan_jam_pulang'),
+            'start_date'       => static::get('ramadan_start_date'),
+            'end_date'         => static::get('ramadan_end_date'),
+            'jam_masuk'        => static::get('ramadan_jam_masuk'),
+            'jam_pulang'       => static::get('ramadan_jam_pulang'),
+            'jam_pulang_jumat' => static::get('ramadan_jam_pulang_jumat'),
         ];
     }
 
@@ -115,16 +117,19 @@ class Setting extends Model
 
     /**
      * Persist all Ramadan schedule settings at once.
+     * $jamPulangJumat: jam pulang khusus hari Jumat selama Ramadan (misal 15:30).
      */
     public static function saveRamadanSettings(
         ?string $startDate,
         ?string $endDate,
         ?string $jamMasuk,
-        ?string $jamPulang
+        ?string $jamPulang,
+        ?string $jamPulangJumat = null
     ): void {
-        static::set('ramadan_start_date', $startDate, 'date');
-        static::set('ramadan_end_date',   $endDate,   'date');
-        static::set('ramadan_jam_masuk',  $jamMasuk,  'time');
-        static::set('ramadan_jam_pulang', $jamPulang, 'time');
+        static::set('ramadan_start_date',       $startDate,      'date');
+        static::set('ramadan_end_date',         $endDate,        'date');
+        static::set('ramadan_jam_masuk',        $jamMasuk,       'time');
+        static::set('ramadan_jam_pulang',       $jamPulang,      'time');
+        static::set('ramadan_jam_pulang_jumat', $jamPulangJumat, 'time');
     }
 }
