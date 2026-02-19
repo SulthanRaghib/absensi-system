@@ -68,6 +68,11 @@
             background-color: #f8d7da;
             /* pinkish */
         }
+
+        .bg-ramadan {
+            background-color: #fff8e1;
+            /* soft amber / gold — marks Ramadan schedule absences */
+        }
     </style>
 </head>
 
@@ -178,6 +183,12 @@
                                 $outDisplay = $attendance->jam_pulang ? $attendance->jam_pulang->format('H:i') : '';
                                 $totalHadir++;
 
+                                // Ramadan-aware: amber background for Ramadan-schedule absences
+                                if ($attendance->is_ramadan) {
+                                    $bgClass = 'bg-ramadan';
+                                    $inStyles[] = 'color: #b45309'; // amber-700 for Ramadan tint
+                                }
+
                                 // Use threshold snapshotted at check-in (immutable to future settings changes).
                                 // Fall back to the per-day map generated at export time for legacy records.
                                 $dayThreshold = $attendance->schedule_jam_masuk ?? ($thresholdMap[$day] ?? '07:30');
@@ -254,6 +265,29 @@
                 </tr>
             @endforeach
         </tbody>
+    </table>
+
+    <!-- Legend -->
+    <table style="margin-top: 16px; font-family: Arial, sans-serif; font-size: 13px; border: none;">
+        <tr>
+            <td style="border: none; font-weight: bold; padding-right: 16px;">Keterangan:</td>
+            <td style="border: 1px solid #ccc; background-color: #d1e7dd; padding: 3px 8px;">Hadir</td>
+            <td style="border: none; width: 8px;"></td>
+            <td style="border: 1px solid #ccc; background-color: #fff8e1; color: #b45309; padding: 3px 8px;">🌙 Ramadan
+            </td>
+            <td style="border: none; width: 8px;"></td>
+            <td style="border: 1px solid #ccc; color: red; font-weight: bold; padding: 3px 8px;">Terlambat (merah)</td>
+            <td style="border: none; width: 8px;"></td>
+            <td style="border: 1px solid #ccc; background-color: #fff3cd; padding: 3px 8px;">I = Izin</td>
+            <td style="border: none; width: 8px;"></td>
+            <td style="border: 1px solid #ccc; background-color: #cfe2ff; padding: 3px 8px;">S = Sakit</td>
+            <td style="border: none; width: 8px;"></td>
+            <td style="border: 1px solid #ccc; background-color: #ffcccc; padding: 3px 8px;">LIBUR / Weekend</td>
+            <td style="border: none; width: 8px;"></td>
+            <td
+                style="border: 1px solid #ccc; background-color: #f8d7da; color: #d32f2f; font-weight: bold; padding: 3px 8px;">
+                A = Alpa</td>
+        </tr>
     </table>
 </body>
 

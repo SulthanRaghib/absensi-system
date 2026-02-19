@@ -154,6 +154,15 @@ class AbsenceResource extends Resource
                         return ($onTime ? 'Tepat Waktu' : 'Terlambat') . ' | Batas: ' . $record->schedule_jam_masuk;
                     }),
 
+                Tables\Columns\TextColumn::make('is_ramadan_label')
+                    ->label('Jadwal')
+                    ->badge()
+                    ->getStateUsing(fn(Absence $record): string => $record->is_ramadan ? '🌙 Ramadan' : 'Normal')
+                    ->color(fn(Absence $record): string => $record->is_ramadan ? 'warning' : 'gray')
+                    ->tooltip(fn(Absence $record): string => $record->is_ramadan
+                        ? 'Absen dicatat saat jadwal Ramadan aktif (batas: ' . ($record->schedule_jam_masuk ?? '-') . ')'
+                        : 'Absen dicatat saat jadwal hari biasa (batas: ' . ($record->schedule_jam_masuk ?? '07:30') . ')'),
+
                 Tables\Columns\TextColumn::make('jam_pulang')
                     ->label('Jam Pulang')
                     ->time('H:i')
