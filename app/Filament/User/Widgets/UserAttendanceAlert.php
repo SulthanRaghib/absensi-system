@@ -3,6 +3,7 @@
 namespace App\Filament\User\Widgets;
 
 use App\Models\Absence;
+use App\Services\AttendanceService;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Auth;
 
@@ -43,12 +44,15 @@ class UserAttendanceAlert extends Widget
 
     protected function getViewData(): array
     {
-        // Safe fetched holiday data
         $holidayService = new \App\Services\HolidayService();
         $holidays = $holidayService->getHolidays(now()->year, now()->month);
 
+        $schedule  = (new AttendanceService)->getTodaySchedule();
+
         return [
-            'isHoliday' => isset($holidays[now()->toDateString()]),
+            'isHoliday'  => isset($holidays[now()->toDateString()]),
+            'isRamadan'  => $schedule['is_ramadan'],
+            'jamMasuk'   => $schedule['jam_masuk'],
         ];
     }
 }

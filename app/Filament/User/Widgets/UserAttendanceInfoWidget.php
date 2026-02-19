@@ -4,6 +4,7 @@ namespace App\Filament\User\Widgets;
 
 use App\Models\Absence;
 use App\Models\Setting;
+use App\Services\AttendanceService;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -21,9 +22,13 @@ class UserAttendanceInfoWidget extends BaseWidget
         $today = Carbon::today();
         $todayAbsence = Absence::getTodayAbsence($userId);
 
-        // Define work schedule
-        $workStart = Carbon::createFromTimeString('07:30:00');
-        $workEnd = $today->isFriday() ? Carbon::createFromTimeString('16:30:00') : Carbon::createFromTimeString('16:00:00');
+        // Use AttendanceService for dynamic schedule (Ramadan-aware)
+        $attendanceService = new AttendanceService();
+        $todaySchedule = $attendanceService->getTodaySchedule();
+        $isRamadan = $todaySchedule['is_ramadan'];
+
+        $workStart = Carbon::createFromFormat('H:i', $todaySchedule['jam_masuk']);
+        $workEnd   = Carbon::createFromFormat('H:i', $todaySchedule['jam_pulang']);
 
         // Monthly window
         $startOfMonth = now()->startOfMonth();
@@ -106,9 +111,9 @@ class UserAttendanceInfoWidget extends BaseWidget
                 ->icon($todayIcon),
 
             Stat::make('Jadwal Kerja', $workStart->format('H:i') . ' — ' . $workEnd->format('H:i'))
-                ->description('Jam masuk & pulang untuk hari kerja')
-                ->descriptionIcon('heroicon-m-clock')
-                ->color('primary'),
+                ->description($isRamadan ? '🌙 Jadwal khusus Ramadan aktif' : 'Jam masuk & pulang untuk hari kerja')
+                ->descriptionIcon($isRamadan ? 'heroicon-m-moon' : 'heroicon-m-clock')
+                ->color($isRamadan ? 'warning' : 'primary'),
 
             Stat::make('Kehadiran Bulan Ini', "$monthlyAbsences / $workDaysCount hari")
                 ->description("Lengkap: $monthlyComplete — Telat: $lateCount")
