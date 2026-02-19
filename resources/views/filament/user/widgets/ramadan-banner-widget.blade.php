@@ -60,15 +60,115 @@
             border-color: rgba(255, 255, 255, 0.35) !important;
             color: #fff !important;
         }
+
+        /* ── Animated hourglass ── */
+        @keyframes rbw-hg-flip {
+            0% {
+                transform: rotate(0deg) scale(1);
+            }
+
+            40% {
+                transform: rotate(0deg) scale(1);
+            }
+
+            50% {
+                transform: rotate(180deg) scale(0.80);
+            }
+
+            90% {
+                transform: rotate(180deg) scale(1);
+            }
+
+            100% {
+                transform: rotate(360deg) scale(1);
+            }
+        }
+
+        .rbw-hourglass {
+            display: inline-block;
+            animation: rbw-hg-flip 3s ease-in-out infinite;
+            transform-origin: center;
+            filter: drop-shadow(0 0 6px rgba(251, 191, 36, .6));
+        }
+
+        /* ── Seconds digit flash ── */
+        @keyframes rbw-sec-pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .45;
+            }
+        }
+
+        .rbw-sec {
+            animation: rbw-sec-pulse 1s ease-in-out infinite;
+        }
+
+        /* ── Progress bar shimmer ── */
+        @keyframes rbw-shimmer {
+            0% {
+                background-position: -200% center;
+            }
+
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        .rbw-progress-bar {
+            background-size: 200% auto;
+            background-image: linear-gradient(90deg, #facc15 0%, #6ee7b7 40%, #facc15 100%);
+            animation: rbw-shimmer 2.5s linear infinite;
+        }
     </style>
 
     <div x-data="{
         open: false,
         page: 0,
         jokes: {{ Js::from($selectedJokes) }},
+
+        /* ── Live countdown ── */
+        iftarH: {{ (int) explode(':', $iftarTime)[0] }},
+        iftarM: {{ (int) explode(':', $iftarTime)[1] }},
+        startH: {{ (int) explode(':', $schedule['jam_masuk'])[0] }},
+        startM: {{ (int) explode(':', $schedule['jam_masuk'])[1] }},
+        endH: {{ (int) explode(':', $schedule['jam_pulang'])[0] }},
+        endM: {{ (int) explode(':', $schedule['jam_pulang'])[1] }},
+        hoursLeft: 0,
+        minsLeft: 0,
+        secsLeft: 0,
+        pct: 0,
+        done: false,
+
+        tick() {
+            const now = new Date();
+            const iftar = new Date(now.getFullYear(), now.getMonth(), now.getDate(), this.iftarH, this.iftarM, 0);
+            const diff = Math.floor((iftar - now) / 1000);
+            if (diff <= 0) { this.done = true;
+                this.hoursLeft = 0;
+                this.minsLeft = 0;
+                this.secsLeft = 0;
+                this.pct = 100; return; }
+            this.done = false;
+            this.hoursLeft = Math.floor(diff / 3600);
+            this.minsLeft = Math.floor((diff % 3600) / 60);
+            this.secsLeft = diff % 60;
+            const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), this.startH, this.startM, 0);
+            const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), this.endH, this.endM, 0);
+            const total = Math.max(1, end - start);
+            const elapsed = now - start;
+            this.pct = Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
+        },
+        init() { this.tick();
+            setInterval(() => this.tick(), 1000); },
+
         next() { this.page = (this.page + 1) % this.jokes.length; },
         prev() { this.page = (this.page - 1 + this.jokes.length) % this.jokes.length; }
-    }">
+    }" x-init="init()">
 
         {{-- ── BANNER CARD ────────────────────────────────────── --}}
         <div class="rbw-card relative overflow-hidden rounded-2xl shadow-2xl">
@@ -171,51 +271,57 @@
 
                     </div>
 
-                    {{-- Right: Countdown card --}}
+                    {{-- Right: Live Countdown card (Alpine.js, no-refresh) --}}
                     <div
                         class="rbw-countdown flex flex-col items-center justify-center text-center
                             bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-5">
 
-                        @if ($isBeforeIftar)
-                            <div class="text-3xl mb-2">⏳</div>
-                            <p class="text-[10px] text-emerald-200/70 uppercase tracking-widest font-medium mb-2">
+                        {{-- ── COUNTING DOWN ── --}}
+                        <div x-show="!done">
+                            {{-- Animated hourglass --}}
+                            <div class="rbw-hourglass text-4xl mb-1 select-none">⏳</div>
+
+                            <p class="text-[10px] text-emerald-200/70 uppercase tracking-widest font-semibold mb-3">
                                 Menuju Jam Pulang
                             </p>
 
+                            {{-- HH : MM : SS --}}
                             <div class="flex items-end justify-center gap-1 mb-1">
-                                @if ($hoursLeft > 0)
-                                    <span
-                                        class="text-4xl font-black text-yellow-300 tabular-nums leading-none">{{ $hoursLeft }}</span>
-                                    <span class="text-yellow-200/60 text-sm mb-1 mr-2">jam</span>
-                                @endif
-                                <span
-                                    class="text-4xl font-black text-white tabular-nums leading-none">{{ $minsLeft }}</span>
-                                <span class="text-white/60 text-sm mb-1">menit</span>
+                                <template x-if="hoursLeft > 0">
+                                    <span class="flex items-end gap-1 mr-1">
+                                        <span class="text-4xl font-black text-yellow-300 tabular-nums leading-none"
+                                            x-text="String(hoursLeft).padStart(2,'0')"></span>
+                                        <span class="text-yellow-200/60 text-xs mb-1">jam</span>
+                                    </span>
+                                </template>
+                                <span class="text-4xl font-black text-white tabular-nums leading-none"
+                                    x-text="String(minsLeft).padStart(2,'0')"></span>
+                                <span class="text-white/60 text-xs mb-1 mr-1">mnt</span>
+                                <span class="rbw-sec text-2xl font-bold text-emerald-300 tabular-nums leading-none"
+                                    x-text="String(secsLeft).padStart(2,'0')"></span>
+                                <span class="text-emerald-400/50 text-xs mb-1">dtk</span>
                             </div>
 
-                            <p class="text-xs text-emerald-300/80">
-                                Pulang pukul <span class="font-bold text-yellow-300">{{ $iftarTime }}</span>
+                            <p class="text-xs text-emerald-300/80 mt-1">
+                                Pulang pukul
+                                <span class="font-bold text-yellow-300">{{ $iftarTime }}</span>
                             </p>
 
-                            @php
-                                $wStart = \Carbon\Carbon::createFromFormat('H:i', $schedule['jam_masuk']);
-                                $wEnd = \Carbon\Carbon::createFromFormat('H:i', $schedule['jam_pulang']);
-                                $total = max(1, $wStart->diffInMinutes($wEnd));
-                                $elapsed = $wStart->diffInMinutes(now(), false);
-                                $pct = min(100, max(0, round(($elapsed / $total) * 100)));
-                            @endphp
-                            <div class="rbw-progress-track w-full mt-3 bg-white/10 rounded-full h-2 overflow-hidden">
-                                <div class="h-full rounded-full bg-gradient-to-r from-yellow-400 to-emerald-300"
-                                    style="width: {{ $pct }}%"></div>
+                            {{-- Animated progress bar --}}
+                            <div class="rbw-progress-track w-full mt-4 bg-white/10 rounded-full h-2.5 overflow-hidden">
+                                <div class="rbw-progress-bar h-full rounded-full transition-all duration-1000"
+                                    :style="'width:' + pct + '%'"></div>
                             </div>
-                            <p class="text-[11px] text-emerald-300/60 mt-1.5">{{ $pct }}% hari kerja dilalui
-                            </p>
-                        @else
-                            <div class="text-4xl mb-2">🎉</div>
+                            <p class="text-[11px] text-emerald-300/60 mt-1.5" x-text="pct + '% hari kerja dilalui'"></p>
+                        </div>
+
+                        {{-- ── TIME IS UP ── --}}
+                        <div x-show="done">
+                            <div class="text-5xl mb-3 animate-bounce select-none">🎉</div>
                             <p class="text-lg font-bold text-yellow-300 mb-1">Alhamdulillah!</p>
                             <p class="text-sm text-white/80">Waktu pulang sudah tiba.</p>
                             <p class="text-xs text-emerald-200 mt-2">Jangan lupa check-out! 😊</p>
-                        @endif
+                        </div>
 
                     </div>
 
