@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Absence;
 use App\Models\Setting;
+use App\Services\AttendanceService;
 use App\Services\GeoLocationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,10 +15,12 @@ use Jenssegers\Agent\Agent;
 class AbsensiController extends Controller
 {
     protected $geoService;
+    protected $attendanceService;
 
-    public function __construct(GeoLocationService $geoService)
+    public function __construct(GeoLocationService $geoService, AttendanceService $attendanceService)
     {
         $this->geoService = $geoService;
+        $this->attendanceService = $attendanceService;
     }
 
     /**
@@ -192,25 +195,34 @@ class AbsensiController extends Controller
         $ip = $request->ip();
         $info .= " | IP: {$ip}";
 
+        // Determine late/on-time status using the active schedule (normal or Ramadan)
+        $checkInTime = now();
+        $schedule    = $this->attendanceService->getTodaySchedule();
+        $isLate      = $this->attendanceService->isLate($checkInTime);
+        $statusLabel = $isLate ? 'Terlambat' : 'Tepat Waktu';
+
         // Create absence record
         $absence = Absence::create([
-            'user_id' => $user->id,
-            'tanggal' => today(),
-            'jam_masuk' => now(),
-            'lat_masuk' => $validated['latitude'],
-            'lng_masuk' => $validated['longitude'],
+            'user_id'        => $user->id,
+            'tanggal'        => today(),
+            'jam_masuk'      => $checkInTime,
+            'lat_masuk'      => $validated['latitude'],
+            'lng_masuk'      => $validated['longitude'],
             'distance_masuk' => $locationCheck['distance'],
-            'device_info' => $info,
-            'capture_image' => $imagePath,
-            'risk_level' => $riskLevel,
+            'device_info'    => $info,
+            'capture_image'  => $imagePath,
+            'risk_level'     => $riskLevel,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Absen masuk berhasil! ' . $locationCheck['message'],
             'data' => [
-                'jam_masuk' => $absence->jam_masuk->format('H:i:s'),
-                'distance' => $locationCheck['distance'],
+                'jam_masuk'   => $absence->jam_masuk->format('H:i:s'),
+                'status'      => $statusLabel,
+                'is_ramadan'  => $schedule['is_ramadan'],
+                'jam_threshold' => $schedule['jam_masuk'],
+                'distance'    => $locationCheck['distance'],
             ],
         ]);
     }

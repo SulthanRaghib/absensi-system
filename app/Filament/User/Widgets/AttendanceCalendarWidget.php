@@ -4,12 +4,11 @@ namespace App\Filament\User\Widgets;
 
 use App\Models\Absence;
 use App\Models\Permission;
+use App\Services\AttendanceService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 
 class AttendanceCalendarWidget extends Widget
 {
@@ -129,8 +128,9 @@ class AttendanceCalendarWidget extends Widget
                         if ($absence->jam_masuk) {
                             // Already cast to Carbon via Model $casts
                             $jamMasuk = $absence->jam_masuk;
-                            // 07:30:59 Threshold
-                            $threshold = $jamMasuk->copy()->setTime(7, 30, 59);
+                            // Dynamic threshold: respects Ramadan schedule for this specific date
+                            $schedule  = (new AttendanceService)->getScheduleForDate($day);
+                            $threshold = $schedule['jam_masuk_carbon']->second(59);
 
                             if ($jamMasuk->gt($threshold)) {
                                 $status = 'late';
