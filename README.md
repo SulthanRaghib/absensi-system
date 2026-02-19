@@ -664,7 +664,20 @@ php artisan db:seed
 
 **Default Admin Account**:
 - Email: `admin@bapeten.go.id`
-- Password: `password` (⚠️ GANTI SEGERA!)
+- Password: `password` 
+
+<div style="background: #FEE2E2; padding: 10px; border-left: 3px solid #EF4444;">
+
+⚠️ **PENTING - Keamanan Password**: 
+
+Password default `password` sangat lemah dan harus **SEGERA DIGANTI** setelah instalasi pertama! 
+
+**Rekomendasi**:
+1. Login segera setelah instalasi
+2. Ubah password menjadi kombinasi yang kuat (min. 12 karakter, huruf besar/kecil, angka, simbol)
+3. Atau modifikasi `database/seeders/DatabaseSeeder.php` untuk generate random password dan tampilkan di console saat seeding
+
+</div>
 
 **Default Settings**:
 - Office Latitude: `-6.163836`
@@ -1167,9 +1180,29 @@ sudo chmod -R 775 storage bootstrap/cache
 - ✅ Batasi akses hanya dari localhost
 - ✅ Backup database secara berkala
 
+**Setup Backup Otomatis dengan Cron**:
+
 ```bash
-# Automated backup dengan cron
-0 2 * * * mysqldump -u user -ppassword absensi_db > /backup/absensi_$(date +\%Y\%m\%d).sql
+# 1. Buat file konfigurasi MySQL (lebih aman daripada password di command line)
+sudo nano ~/.my.cnf
+
+# Isi dengan:
+[client]
+user=backup_user
+password=your_secure_password
+host=localhost
+
+# 2. Set permission agar hanya owner yang bisa baca
+chmod 600 ~/.my.cnf
+
+# 3. Tambahkan ke crontab
+crontab -e
+
+# 4. Tambahkan baris ini (backup setiap hari jam 2 pagi)
+0 2 * * * mysqldump --defaults-file=~/.my.cnf absensi_db | gzip > /backup/absensi_$(date +\%Y\%m\%d).sql.gz
+
+# 5. Opsional: Hapus backup lama (lebih dari 30 hari)
+0 3 * * * find /backup -name "absensi_*.sql.gz" -mtime +30 -delete
 ```
 
 ### 📧 Setup Email (Opsional)
