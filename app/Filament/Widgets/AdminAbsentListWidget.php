@@ -8,15 +8,15 @@ use Illuminate\Support\Collection;
 
 class AdminAbsentListWidget extends Widget
 {
-    protected static ?int $sort = 5;
+    protected static ?int $sort = 3;
 
     protected ?string $pollingInterval = null;
 
     /** @var view-string */
     protected string $view = 'filament.widgets.admin-absent-list';
 
-    // full width
-    protected int | string | array $columnSpan = 6;
+    // half width in 2-column dashboard grid
+    protected int | string | array $columnSpan = 1;
 
     public function getAbsentRecords(): Collection
     {

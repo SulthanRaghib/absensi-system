@@ -15,8 +15,8 @@ class AdminAttendanceStats extends BaseWidget
 
     protected ?string $pollingInterval = null;
 
-    // make it full width (12 cols)
-    protected int | string | array $columnSpan = 12;
+    // make it full width (dashboard grid is 2 columns)
+    protected int | string | array $columnSpan = 'full';
 
     protected function getStats(): array
     {

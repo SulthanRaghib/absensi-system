@@ -10,15 +10,15 @@ use Illuminate\Support\Collection;
 
 class AdminLateListWidget extends Widget
 {
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 2;
 
     protected ?string $pollingInterval = null;
 
     /** @var view-string */
     protected string $view = 'filament.widgets.admin-late-list';
 
-    // full width
-    protected int | string | array $columnSpan = 6;
+    // half width in 2-column dashboard grid
+    protected int | string | array $columnSpan = 1;
 
     public function getLateRecords(): Collection
     {

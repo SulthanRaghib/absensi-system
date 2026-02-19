@@ -11,7 +11,7 @@ class AdminScheduleInfoWidget extends Widget
 {
     protected static ?int $sort = 0; // renders first on admin dashboard
 
-    protected int | string | array $columnSpan = 12;
+    protected int | string | array $columnSpan = 'full';
 
     protected ?string $pollingInterval = null;
 
