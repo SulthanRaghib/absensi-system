@@ -287,7 +287,8 @@ settings
   office_latitude, office_longitude, office_radius,
   radius_enabled, face_recognition_enabled, device_validation_enabled,
   default_jam_masuk, default_jam_pulang, default_jam_pulang_jumat,
-  ramadan_start_date, ramadan_end_date, ramadan_jam_masuk, ramadan_jam_pulang
+  ramadan_start_date, ramadan_end_date, ramadan_jam_masuk, ramadan_jam_pulang,
+  ramadan_jam_pulang_jumat  -- Jam pulang khusus Jumat selama Ramadan (misal 15:30)
 
 -- Riwayat device fingerprint
 user_devices
@@ -526,7 +527,8 @@ Grafik **bar chart** kehadiran 7 hari terakhir (full-width).
 **Pengaturan Ramadan** (`/admin/settings/ramadan-settings`):
 
 - Tanggal mulai & selesai Ramadan
-- Jam Masuk & Jam Pulang khusus Ramadan
+- Jam Masuk & Jam Pulang khusus Ramadan (Sen–Kam)
+- **Jam Pulang Ramadan Khusus Jumat** — default `15:30` (kosongkan = sama dengan Sen–Kam)
 
 **Setting Umum** (via resource Settings):
 
@@ -655,8 +657,24 @@ Cek: ramadan_start_date ≤ today ≤ ramadan_end_date ?
 Jadwal  Jadwal Normal
 Ramadan (default_jam_masuk, dll.)
   │
+  ├── Apakah hari ini Jumat?
+  │       │
+  │     YA  ──── ramadan_jam_pulang_jumat tersedia?
+  │                 │               │
+  │               YA ✅           TIDAK
+  │                 │               │
+  │           jam_pulang =    jam_pulang =
+  │           jam_pulang_jumat  jam_pulang
+  │           (mis. 15:30)     (mis. 16:30)
+  │
   └──> Return: { jam_masuk, jam_pulang, is_ramadan: true, jam_masuk_carbon }
 ```
+
+**Widget Dashboard** menampilkan:
+
+- Pill **Pulang (Sen–Kam)** → selalu tunjukkan `ramadan_jam_pulang` (jam weekday)
+- Pill **Pulang (Jum'at)** → muncul hanya jika `ramadan_jam_pulang_jumat` dikonfigurasi
+- Pill **Pulang Hari Ini** → nilai efektif hari ini (otomatis pilih berdasarkan hari)
 
 > **Immutability** — Saat check-in, `schedule_jam_masuk` dan `is_ramadan` di-_snapshot_ ke record absensi. Perubahan setting jadwal di kemudian hari **tidak akan mengubah** data historis yang sudah tersimpan.
 
