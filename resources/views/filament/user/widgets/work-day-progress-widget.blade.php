@@ -1,15 +1,113 @@
 <x-filament-widgets::widget>
+    {{-- Dark-mode overrides for work-day-progress --}}
+    <style>
+        .dark .wdp-card {
+            background: #111827 !important;
+            background-image: none !important;
+            border-color: #374151 !important;
+        }
+
+        .dark .wdp-holiday-card {
+            background: #111827 !important;
+            border-color: #374151 !important;
+        }
+
+        .dark .wdp-holiday-title {
+            color: #fca5a5 !important;
+        }
+
+        .dark .wdp-holiday-text {
+            color: #d1d5db !important;
+        }
+
+        .dark .wdp-holiday-h2 {
+            color: #f3f4f6 !important;
+        }
+
+        .dark .wdp-holiday-illus {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .dark .wdp-subtitle {
+            color: #9ca3af !important;
+        }
+
+        .dark .wdp-ramadan-hint {
+            background: rgba(251, 191, 36, 0.1) !important;
+            border-color: rgba(251, 191, 36, 0.2) !important;
+            color: #fcd34d !important;
+        }
+
+        .dark .wdp-track {
+            background: #1f2937 !important;
+        }
+
+        .dark .wdp-schedule-text {
+            color: #9ca3af !important;
+        }
+
+        .dark .wdp-watermark {
+            opacity: 0.04 !important;
+        }
+
+        /* Status badge dark overrides */
+        .dark .wdp-status-badge[class*="bg-blue-50"],
+        .dark .wdp-status-badge[class*="bg-amber-50"],
+        .dark .wdp-status-badge[class*="bg-emerald-50"],
+        .dark .wdp-status-badge[class*="bg-violet-50"],
+        .dark .wdp-status-badge[class*="bg-teal-50"],
+        .dark .wdp-status-badge[class*="bg-orange-50"] {
+            background: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        .dark .wdp-status-badge {
+            --tw-ring-color: rgba(255, 255, 255, 0.15) !important;
+        }
+
+        /* Ramadan badge dark */
+        .dark .wdp-ramadan-badge {
+            background: rgba(251, 191, 36, 0.12) !important;
+            color: #fcd34d !important;
+            --tw-ring-color: rgba(251, 191, 36, 0.25) !important;
+        }
+
+        /* Icon box dark */
+        .dark .wdp-icon-box[class*="from-blue-100"],
+        .dark .wdp-icon-box[class*="from-amber-100"],
+        .dark .wdp-icon-box[class*="from-emerald-100"],
+        .dark .wdp-icon-box[class*="from-violet-100"],
+        .dark .wdp-icon-box[class*="from-teal-100"],
+        .dark .wdp-icon-box[class*="from-orange-100"] {
+            background: rgba(255, 255, 255, 0.08) !important;
+            background-image: none !important;
+        }
+
+        /* Time display dark */
+        .dark .wdp-time {
+            -webkit-text-fill-color: unset !important;
+            background: none !important;
+            -webkit-background-clip: unset !important;
+            background-clip: unset !important;
+            color: #f3f4f6 !important;
+        }
+
+        .dark .wdp-percentage {
+            color: #9ca3af !important;
+        }
+    </style>
+
     @if (!empty($holiday))
         <!-- Holiday Card -->
         <div
-            class="relative overflow-hidden bg-white rounded-2xl shadow-lg border border-red-100 hover:shadow-xl transition-shadow duration-300 group">
+            class="wdp-holiday-card relative overflow-hidden bg-white rounded-2xl shadow-lg border border-red-100 hover:shadow-xl transition-shadow duration-300 group">
             <!-- Background Decoration -->
             <div
                 class="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgdmlld0JveD0iMCAwIDgwIDgwIj48ZyBmaWxsPSIjZWY0NDQ0IiBmaWxsLW9wYWNpdHk9IjAuNCI+PHBhdGggZD0iTTAgMGg4MHY4MEgwVjB6bTQwIDQwaDQwdjQwSDQwVjQwem0wLTQwaDQwdjQwSDQwVjB6bjAtNDBoNDB2NDBINDBWMHoiLz48L2c+PC9zdmc+')]">
             </div>
 
             <!-- Confetti Gradient -->
-            <div class="absolute inset-0 bg-gradient-to-br from-red-50 to-orange-50 opacity-90"></div>
+            <div class="absolute inset-0 bg-gradient-to-br from-red-50 to-orange-50 opacity-90 dark:opacity-20"></div>
 
             <div class="relative p-6 sm:p-8 flex items-center justify-between gap-6">
                 <!-- Left Content -->
@@ -22,19 +120,21 @@
                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                         </span>
-                        <h3 class="text-sm font-bold tracking-wider text-red-600 uppercase">Libur Nasional</h3>
+                        <h3 class="wdp-holiday-title text-sm font-bold tracking-wider text-red-600 uppercase">Libur
+                            Nasional</h3>
                     </div>
 
-                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 leading-tight">
+                    <h2 class="wdp-holiday-h2 text-2xl sm:text-3xl font-bold text-gray-800 mb-2 leading-tight">
                         {{ $holiday }}
                     </h2>
 
-                    <p class="text-gray-600 font-medium">Selamat beristirahat dan menikmati waktu luang Anda! 🎉</p>
+                    <p class="wdp-holiday-text text-gray-600 font-medium">Selamat beristirahat dan menikmati waktu luang
+                        Anda! 🎉</p>
                 </div>
 
                 <!-- Right lustration/Icon -->
                 <div
-                    class="hidden sm:flex flex-shrink-0 items-center justify-center w-24 h-24 bg-white/50 backdrop-blur-sm rounded-2xl shadow-sm border border-white/50">
+                    class="wdp-holiday-illus hidden sm:flex flex-shrink-0 items-center justify-center w-24 h-24 bg-white/50 backdrop-blur-sm rounded-2xl shadow-sm border border-white/50">
                     <span class="text-5xl transform group-hover:scale-110 transition-transform duration-300">🍵</span>
                 </div>
             </div>
@@ -60,27 +160,27 @@
             status: 'before',
             timeRemainingText: '',
             ramadanHint: '',
-        
+
             init() {
                 this.update();
                 setInterval(() => this.update(), 1000);
             },
-        
+
             niceDuration(diffMs) {
                 const totalSeconds = Math.max(0, Math.floor(diffMs / 1000));
                 const hours = Math.floor(totalSeconds / 3600);
                 const minutes = Math.floor((totalSeconds % 3600) / 60);
                 const seconds = totalSeconds % 60;
-        
+
                 if (hours > 0) return `${hours} Jam ${minutes} Menit`;
                 if (minutes > 0) return `${minutes} Menit ${seconds} Detik`;
                 return `${seconds} Detik`;
             },
-        
+
             update() {
                 this.now = new Date();
                 this.timeString = this.now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        
+
                 if (this.isCheckedOut) {
                     this.status = 'finished_work';
                     this.percentage = 100;
@@ -92,7 +192,7 @@
                     const total = this.end - this.start;
                     const elapsed = this.now - this.start;
                     this.percentage = Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
-        
+
                     if (this.now >= this.end) {
                         this.timeRemainingText = 'Waktu kerja telah usai';
                         this.ramadanHint = 'Waktunya buka puasa! 🥤';
@@ -116,7 +216,7 @@
                 }
             }
         }" x-init="init()"
-            class="relative overflow-hidden rounded-2xl shadow-lg border transition-shadow duration-300 hover:shadow-xl"
+            class="wdp-card relative overflow-hidden rounded-2xl shadow-lg border transition-shadow duration-300 hover:shadow-xl"
             :class="isRamadan
                 ?
                 'bg-gradient-to-br from-amber-50 via-white to-teal-50 border-amber-200/60' :
@@ -126,8 +226,7 @@
             <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r transition-all duration-700"
                 :class="isRamadan
                     ?
-                    'from-amber-300 via-yellow-400 to-amber-300' :
-                    {
+                    'from-amber-300 via-yellow-400 to-amber-300' : {
                         'from-blue-400 via-blue-500 to-cyan-400': status === 'before',
                         'from-amber-400 via-orange-500 to-amber-400': status === 'not_checked_in',
                         'from-emerald-400 via-green-500 to-teal-400': status === 'in_progress',
@@ -137,7 +236,8 @@
 
             <!-- Ramadan: subtle star/crescent SVG watermark (decorative, far right) -->
             @if ($isRamadan)
-                <div class="absolute top-3 right-3 sm:top-4 sm:right-5 opacity-[0.07] pointer-events-none select-none">
+                <div
+                    class="wdp-watermark absolute top-3 right-3 sm:top-4 sm:right-5 opacity-[0.07] pointer-events-none select-none">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"
                         class="w-20 h-20 sm:w-28 sm:h-28 text-amber-600 fill-current">
                         <path
@@ -152,7 +252,7 @@
                     <!-- Left: Icon + Status -->
                     <div class="flex items-center gap-2 sm:gap-3">
                         <!-- Dynamic Icon -->
-                        <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md transition-all duration-300"
+                        <div class="wdp-icon-box flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md transition-all duration-300"
                             :class="isRamadan
                                 ?
                                 {
@@ -160,8 +260,7 @@
                                     'bg-gradient-to-br from-orange-100 to-amber-50 text-orange-600': status === 'not_checked_in',
                                     'bg-gradient-to-br from-teal-100 to-cyan-50 text-teal-600': status === 'in_progress',
                                     'bg-gradient-to-br from-emerald-100 to-green-50 text-emerald-600': status === 'finished_work'
-                                } :
-                                {
+                                } : {
                                     'bg-gradient-to-br from-blue-100 to-cyan-50 text-blue-600': status === 'before',
                                     'bg-gradient-to-br from-amber-100 to-orange-50 text-amber-600': status === 'not_checked_in',
                                     'bg-gradient-to-br from-emerald-100 to-teal-50 text-emerald-600': status === 'in_progress',
@@ -204,7 +303,7 @@
 
                         <!-- Status Text -->
                         <div class="min-w-0 flex-1">
-                            <div class="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold tracking-wide transition-all duration-300"
+                            <div class="wdp-status-badge inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold tracking-wide transition-all duration-300"
                                 :class="isRamadan
                                     ?
                                     {
@@ -212,8 +311,7 @@
                                         'bg-orange-50 text-orange-700 ring-1 ring-orange-300 animate-pulse': status === 'not_checked_in',
                                         'bg-teal-50 text-teal-700 ring-1 ring-teal-300': status === 'in_progress',
                                         'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-300': status === 'finished_work'
-                                    } :
-                                    {
+                                    } : {
                                         'bg-blue-50 text-blue-700 ring-1 ring-blue-200': status === 'before',
                                         'bg-amber-50 text-amber-700 ring-1 ring-amber-200 animate-pulse': status === 'not_checked_in',
                                         'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200': status === 'in_progress',
@@ -237,14 +335,14 @@
 
                             <!-- Subtitle: Progres label + Ramadan badge -->
                             <div class="flex items-center gap-2 mt-1 sm:mt-1.5">
-                                <p class="text-[10px] sm:text-xs font-medium hidden sm:block"
+                                <p class="wdp-subtitle text-[10px] sm:text-xs font-medium hidden sm:block"
                                     :class="isRamadan ? 'text-amber-600' : 'text-gray-500'">
                                     <span x-show="!isRamadan">Progres Hari Kerja</span>
                                     <span x-show="isRamadan">Progres Hari Kerja</span>
                                 </p>
                                 @if ($isRamadan)
                                     <span
-                                        class="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold tracking-wider bg-amber-100 text-amber-700 ring-1 ring-amber-300 uppercase">
+                                        class="wdp-ramadan-badge hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold tracking-wider bg-amber-100 text-amber-700 ring-1 ring-amber-300 uppercase">
                                         🌙 Ramadan
                                     </span>
                                 @endif
@@ -254,7 +352,7 @@
 
                     <!-- Right: Time + Percentage -->
                     <div class="text-right flex-shrink-0 sm:ml-auto">
-                        <div class="text-2xl sm:text-3xl lg:text-4xl font-bold tabular-nums bg-clip-text text-transparent"
+                        <div class="wdp-time text-2xl sm:text-3xl lg:text-4xl font-bold tabular-nums bg-clip-text text-transparent"
                             :class="isRamadan
                                 ?
                                 'bg-gradient-to-br from-amber-700 via-orange-600 to-amber-500' :
@@ -262,7 +360,7 @@
                             x-text="timeString">
                             --:--:--
                         </div>
-                        <div class="text-xs sm:text-sm font-semibold mt-0.5 sm:mt-1 transition-colors duration-300"
+                        <div class="wdp-percentage text-xs sm:text-sm font-semibold mt-0.5 sm:mt-1 transition-colors duration-300"
                             :class="isRamadan ? 'text-amber-600' : 'text-gray-500'" x-text="percentage + '%'">0%</div>
                     </div>
                 </div>
@@ -270,7 +368,7 @@
                 <!-- Progress Bar Section -->
                 <div class="space-y-2 sm:space-y-3">
                     <!-- Progress Track -->
-                    <div class="relative w-full h-6 sm:h-8 rounded-full overflow-hidden shadow-inner transition-colors duration-500"
+                    <div class="wdp-track relative w-full h-6 sm:h-8 rounded-full overflow-hidden shadow-inner transition-colors duration-500"
                         :class="isRamadan ? 'bg-amber-100/70' : 'bg-gray-100'">
                         <!-- Progress Fill -->
                         <div class="absolute top-0 left-0 h-full transition-all duration-1000 ease-out rounded-full"
@@ -282,8 +380,7 @@
                                     'bg-gradient-to-r from-orange-400 via-red-400 to-orange-500': status === 'not_checked_in',
                                     'bg-gradient-to-r from-teal-400 via-teal-500 to-cyan-400': status === 'in_progress',
                                     'bg-gradient-to-r from-emerald-400 via-green-500 to-teal-400': status === 'finished_work'
-                                } :
-                                {
+                                } : {
                                     'bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-500': status === 'before',
                                     'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500': status === 'not_checked_in',
                                     'bg-gradient-to-r from-emerald-400 via-green-500 to-teal-500': status === 'in_progress',
@@ -305,8 +402,7 @@
                     <!-- Time Range + Remaining Info -->
                     <div
                         class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 text-xs sm:text-sm">
-                        <!-- Left: schedule range -->
-                        <div class="flex items-center gap-1.5 sm:gap-2"
+                        <div class="wdp-schedule-text flex items-center gap-1.5 sm:gap-2"
                             :class="isRamadan ? 'text-amber-700' : 'text-gray-600'">
                             @if ($isRamadan)
                                 <span class="text-base leading-none">🌙</span>
@@ -333,8 +429,7 @@
                                     'text-orange-600': status === 'not_checked_in',
                                     'text-teal-600': status === 'in_progress',
                                     'text-emerald-600': status === 'finished_work'
-                                } :
-                                {
+                                } : {
                                     'text-blue-600': status === 'before',
                                     'text-amber-600': status === 'not_checked_in',
                                     'text-emerald-600': status === 'in_progress',
@@ -347,7 +442,7 @@
                     <!-- Ramadan hint row (humor/motivation) -->
                     @if ($isRamadan)
                         <div x-show="ramadanHint"
-                            class="mt-1 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200/70 text-[10px] sm:text-xs text-amber-700 italic">
+                            class="wdp-ramadan-hint mt-1 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200/70 text-[10px] sm:text-xs text-amber-700 italic">
                             <span x-text="ramadanHint"></span>
                         </div>
                     @endif

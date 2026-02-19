@@ -65,15 +65,55 @@
         .absent-row:hover {
             background: rgba(0, 0, 0, .025);
         }
+
+        /* ── Dark-mode overrides ── */
+        .dark .abl-card {
+            background: #111827 !important;
+            border-color: #374151 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .3), 0 0 0 1px rgba(255, 255, 255, .04) !important;
+        }
+
+        .dark .abl-header {
+            border-bottom-color: #1f2937 !important;
+        }
+
+        .dark .abl-icon-box {
+            background: rgba(255, 255, 255, 0.06) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .dark .abl-divider>*+* {
+            border-color: #1f2937 !important;
+        }
+
+        .dark .absent-row:hover {
+            background: rgba(255, 255, 255, .04);
+        }
+
+        .dark .abl-avatar-img {
+            border-color: #374151 !important;
+        }
+
+        .dark .abl-status-pill {
+            background: rgba(239, 68, 68, 0.12) !important;
+            color: #f87171 !important;
+            border-color: rgba(239, 68, 68, 0.25) !important;
+        }
+
+        .dark .abl-footer {
+            border-top-color: #1f2937 !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+        }
     </style>
 
-    <div class="rounded-2xl border dark:border-gray-700 overflow-hidden"
+    <div class="abl-card rounded-2xl border dark:border-gray-700 overflow-hidden"
         style="background:#fff; border-color:#f1f5f9; box-shadow:0 1px 3px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.03);">
 
         {{-- ── Header ── --}}
-        <div class="px-5 pt-4 pb-3 flex items-start justify-between gap-4" style="border-bottom:1px solid #f1f5f9;">
+        <div class="abl-header px-5 pt-4 pb-3 flex items-start justify-between gap-4"
+            style="border-bottom:1px solid #f1f5f9;">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                <div class="abl-icon-box w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                     style="background:#fff1f2; border:1.5px solid #fecaca;">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
                         stroke-width="1.8" stroke="#dc2626">
@@ -112,7 +152,7 @@
             </div>
         @else
             {{-- ── Scrollable list ── --}}
-            <div class="absent-scroll overflow-y-auto divide-y dark:divide-gray-700/40"
+            <div class="abl-divider absent-scroll overflow-y-auto divide-y dark:divide-gray-700/40"
                 style="max-height:430px; border-color:#f9fafb;">
                 @foreach ($absent as $idx => $r)
                     @php
@@ -129,7 +169,7 @@
                         {{-- avatar: photo if exists, else colored initials --}}
                         @if ($r->avatar)
                             <img src="{{ $r->avatar }}" alt="{{ $ini }}"
-                                class="flex-shrink-0 w-9 h-9 rounded-full object-cover"
+                                class="abl-avatar-img flex-shrink-0 w-9 h-9 rounded-full object-cover"
                                 style="border:1.5px solid #e5e7eb;">
                         @else
                             <div class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
@@ -150,7 +190,7 @@
                         </div>
 
                         {{-- status pill --}}
-                        <span class="flex-shrink-0 px-2 py-0.5 rounded-full text-[11px] font-semibold"
+                        <span class="abl-status-pill flex-shrink-0 px-2 py-0.5 rounded-full text-[11px] font-semibold"
                             style="background:#fff1f2; color:#dc2626; border:1px solid #fecaca;">
                             Belum
                         </span>
@@ -159,7 +199,7 @@
             </div>
 
             {{-- ── Footer ── --}}
-            <div class="px-5 py-2.5 text-[11px] text-gray-400 flex items-center justify-between"
+            <div class="abl-footer px-5 py-2.5 text-[11px] text-gray-400 flex items-center justify-between"
                 style="border-top:1px solid #f1f5f9; background:#fafafa;">
                 <span>Total tidak hadir: <strong class="text-gray-600 dark:text-gray-300">{{ $count }}
                         pegawai</strong></span>

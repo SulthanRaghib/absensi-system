@@ -80,15 +80,73 @@
         .late-row:hover {
             background: rgba(0, 0, 0, .025);
         }
+
+        /* ── Dark-mode overrides ── */
+        .dark .alw-card {
+            background: #111827 !important;
+            border-color: #374151 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .3), 0 0 0 1px rgba(255, 255, 255, .04) !important;
+        }
+
+        .dark .alw-header {
+            border-bottom-color: #1f2937 !important;
+        }
+
+        .dark .alw-icon-box {
+            background: rgba(255, 255, 255, 0.06) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .dark .alw-ramadan-badge {
+            background: rgba(251, 191, 36, 0.15) !important;
+            color: #fcd34d !important;
+            border-color: rgba(251, 191, 36, 0.3) !important;
+        }
+
+        .dark .alw-legend {
+            background: rgba(255, 255, 255, 0.03) !important;
+            border-bottom-color: #1f2937 !important;
+        }
+
+        .dark .alw-severity-label {
+            opacity: 0.85;
+        }
+
+        .dark .alw-divider {
+            --tw-divide-opacity: 1;
+            border-color: #1f2937 !important;
+        }
+
+        .dark .alw-divider>*+* {
+            border-color: #1f2937 !important;
+        }
+
+        .dark .late-row:hover {
+            background: rgba(255, 255, 255, .04);
+        }
+
+        .dark .alw-avatar-img {
+            border-color: #374151 !important;
+        }
+
+        .dark .alw-severity-pill {
+            opacity: 0.9;
+        }
+
+        .dark .alw-footer {
+            border-top-color: #1f2937 !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+        }
     </style>
 
-    <div class="rounded-2xl border dark:border-gray-700 overflow-hidden"
+    <div class="alw-card rounded-2xl border dark:border-gray-700 overflow-hidden"
         style="background:#fff; border-color:#f1f5f9; box-shadow:0 1px 3px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.03);">
 
         {{-- ── Header ── --}}
-        <div class="px-5 pt-4 pb-3 flex items-start justify-between gap-4" style="border-bottom:1px solid #f1f5f9;">
+        <div class="alw-header px-5 pt-4 pb-3 flex items-start justify-between gap-4"
+            style="border-bottom:1px solid #f1f5f9;">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                <div class="alw-icon-box w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                     style="background:{{ $accentBg }}; border:1.5px solid {{ $accentBorder }};">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
                         stroke-width="1.8" stroke="{{ $accentFg }}">
@@ -102,7 +160,7 @@
                             Pegawai Terlambat
                         </span>
                         @if ($isRamadan)
-                            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold"
+                            <span class="alw-ramadan-badge px-2 py-0.5 rounded-full text-[11px] font-semibold"
                                 style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;">
                                 🌙 Ramadan
                             </span>
@@ -139,11 +197,11 @@
             </div>
         @else
             {{-- ── Severity legend ── --}}
-            <div class="px-5 py-2 flex items-center gap-4 flex-wrap"
+            <div class="alw-legend px-5 py-2 flex items-center gap-4 flex-wrap"
                 style="background:#fafafa; border-bottom:1px solid #f8fafc;">
                 @foreach (['low' => '≤5 mnt', 'medium' => '6–15 mnt', 'high' => '16–30 mnt', 'critical' => '>30 mnt'] as $s => $lbl)
                     @php $sc = $sConfig[$s]; @endphp
-                    <span class="inline-flex items-center gap-1.5 text-[11px] font-medium"
+                    <span class="alw-severity-label inline-flex items-center gap-1.5 text-[11px] font-medium"
                         style="color:{{ $sc['fg'] }};">
                         <span class="w-2 h-2 rounded-full"
                             style="background:{{ $sc['fg'] }};"></span>{{ $lbl }}
@@ -152,7 +210,7 @@
             </div>
 
             {{-- ── Scrollable list ── --}}
-            <div class="late-scroll overflow-y-auto divide-y dark:divide-gray-700/40"
+            <div class="alw-divider late-scroll overflow-y-auto divide-y dark:divide-gray-700/40"
                 style="max-height:390px; divide-color:#f9fafb;">
                 @foreach ($late as $idx => $r)
                     @php
@@ -170,7 +228,7 @@
                         {{-- avatar: photo if exists, else colored initials --}}
                         @if ($r->avatar)
                             <img src="{{ $r->avatar }}" alt="{{ $ini }}"
-                                class="flex-shrink-0 w-9 h-9 rounded-full object-cover"
+                                class="alw-avatar-img flex-shrink-0 w-9 h-9 rounded-full object-cover"
                                 style="border:1.5px solid #e5e7eb;">
                         @else
                             <div class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
@@ -198,7 +256,7 @@
                                 style="color:{{ $sc['fg'] }};">
                                 {{ $r->time }}
                             </span>
-                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold"
+                            <span class="alw-severity-pill px-2 py-0.5 rounded-full text-[11px] font-bold"
                                 style="background:{{ $sc['bg'] }}; color:{{ $sc['fg'] }}; border:1px solid {{ $sc['border'] }};">
                                 +{{ $r->diff_min }}&thinsp;mnt
                             </span>
@@ -213,7 +271,7 @@
                 $maxLate = $late->max('diff_min');
                 $avgLate = $late->count() ? round($late->avg('diff_min')) : 0;
             @endphp
-            <div class="px-5 py-2.5 flex items-center justify-between text-[11px]"
+            <div class="alw-footer px-5 py-2.5 flex items-center justify-between text-[11px]"
                 style="border-top:1px solid #f1f5f9; background:#fafafa;">
                 <div class="flex items-center gap-4 text-gray-400">
                     <span>

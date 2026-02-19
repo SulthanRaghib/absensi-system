@@ -3,6 +3,65 @@
      Single Alpine.js scope — banner + modal in one wrapper
      ========================================================= --}}
 <x-filament-widgets::widget>
+    <style>
+        /* ── Dark-mode refinements for Ramadan banner ── */
+
+        /* Deepen the main card background so it reads as "dark-native" */
+        .dark .rbw-card>.rbw-bg {
+            background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #134e4a 100%) !important;
+        }
+
+        /* Sharper gold top/bottom accent lines */
+        .dark .rbw-card .rbw-accent-top,
+        .dark .rbw-card .rbw-accent-btm {
+            opacity: 0.9 !important;
+        }
+
+        /* Badge: more visible gold ring */
+        .dark .rbw-badge {
+            background: rgba(234, 179, 8, 0.18) !important;
+            border-color: rgba(234, 179, 8, 0.55) !important;
+            color: #fde68a !important;
+        }
+
+        /* Quote text: slightly brighter */
+        .dark .rbw-quote {
+            color: rgba(209, 250, 229, 0.9) !important;
+        }
+
+        /* Schedule pills: white glass on deep bg */
+        .dark .rbw-pill {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border-color: rgba(255, 255, 255, 0.14) !important;
+        }
+
+        /* Countdown panel: deeper tint */
+        .dark .rbw-countdown {
+            background: rgba(0, 0, 0, 0.25) !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+
+        .dark .rbw-progress-track {
+            background: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        /* Modal: richer dark bg */
+        .dark .rbw-modal-card {
+            background: linear-gradient(135deg, #022c22 0%, #064e3b 60%, #0f3460 100%) !important;
+            border-color: rgba(234, 179, 8, 0.45) !important;
+        }
+
+        .dark .rbw-modal-footer-btn {
+            border-color: rgba(255, 255, 255, 0.15) !important;
+            color: rgba(255, 255, 255, 0.55) !important;
+        }
+
+        .dark .rbw-modal-footer-btn:hover {
+            border-color: rgba(255, 255, 255, 0.35) !important;
+            color: #fff !important;
+        }
+    </style>
+
     <div x-data="{
         open: false,
         page: 0,
@@ -12,11 +71,11 @@
     }">
 
         {{-- ── BANNER CARD ────────────────────────────────────── --}}
-        <div class="relative overflow-hidden rounded-2xl shadow-2xl">
+        <div class="rbw-card relative overflow-hidden rounded-2xl shadow-2xl">
 
             {{-- Backgrounds --}}
             <div
-                class="absolute inset-0 bg-gradient-to-br from-emerald-800 via-teal-700 to-emerald-900 pointer-events-none">
+                class="rbw-bg absolute inset-0 bg-gradient-to-br from-emerald-800 via-teal-700 to-emerald-900 pointer-events-none">
             </div>
             <div class="absolute -top-16 -right-16 w-64 h-64 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none">
             </div>
@@ -24,10 +83,10 @@
                 class="absolute -bottom-16 -left-16 w-72 h-72 bg-emerald-300/10 rounded-full blur-3xl pointer-events-none">
             </div>
             <div
-                class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-yellow-400/70 to-transparent pointer-events-none">
+                class="rbw-accent-top absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-yellow-400/70 to-transparent pointer-events-none">
             </div>
             <div
-                class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-yellow-400/70 to-transparent pointer-events-none">
+                class="rbw-accent-btm absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-yellow-400/70 to-transparent pointer-events-none">
             </div>
 
             {{-- Content --}}
@@ -36,7 +95,7 @@
                 {{-- Top badge row --}}
                 <div class="flex items-center justify-between mb-5">
                     <span
-                        class="inline-flex items-center gap-2 bg-yellow-400/20 border border-yellow-400/40
+                        class="rbw-badge inline-flex items-center gap-2 bg-yellow-400/20 border border-yellow-400/40
                              text-yellow-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">
                         🌙 Ramadan Mubarak 1446 H
                     </span>
@@ -57,7 +116,8 @@
                             <h2 class="text-2xl md:text-3xl font-extrabold text-white leading-tight">
                                 Semangat Puasa, {{ Auth::user()->name }}! ✨
                             </h2>
-                            <p class="mt-2 text-emerald-100/80 text-sm md:text-[15px] leading-relaxed max-w-xl">
+                            <p
+                                class="rbw-quote mt-2 text-emerald-100/80 text-sm md:text-[15px] leading-relaxed max-w-xl">
                                 {{ $quoteOfDay }}
                             </p>
                         </div>
@@ -65,7 +125,7 @@
                         {{-- Schedule pills --}}
                         <div class="flex flex-wrap gap-2.5">
                             <div
-                                class="flex items-center gap-2.5 bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white">
+                                class="rbw-pill flex items-center gap-2.5 bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white">
                                 <span class="text-lg">🕗</span>
                                 <div>
                                     <div class="text-[10px] text-emerald-200/70 uppercase tracking-wider">Jam Masuk
@@ -74,7 +134,7 @@
                                 </div>
                             </div>
                             <div
-                                class="flex items-center gap-2.5 bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white">
+                                class="rbw-pill flex items-center gap-2.5 bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white">
                                 <span class="text-lg">🕔</span>
                                 <div>
                                     <div class="text-[10px] text-emerald-200/70 uppercase tracking-wider">Jam Pulang
@@ -113,7 +173,7 @@
 
                     {{-- Right: Countdown card --}}
                     <div
-                        class="flex flex-col items-center justify-center text-center
+                        class="rbw-countdown flex flex-col items-center justify-center text-center
                             bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-5">
 
                         @if ($isBeforeIftar)
@@ -144,7 +204,7 @@
                                 $elapsed = $wStart->diffInMinutes(now(), false);
                                 $pct = min(100, max(0, round(($elapsed / $total) * 100)));
                             @endphp
-                            <div class="w-full mt-3 bg-white/10 rounded-full h-2 overflow-hidden">
+                            <div class="rbw-progress-track w-full mt-3 bg-white/10 rounded-full h-2 overflow-hidden">
                                 <div class="h-full rounded-full bg-gradient-to-r from-yellow-400 to-emerald-300"
                                     style="width: {{ $pct }}%"></div>
                             </div>
@@ -175,7 +235,7 @@
 
             <div class="relative z-10 w-full max-w-sm mx-auto">
                 <div
-                    class="relative overflow-hidden rounded-2xl shadow-2xl
+                    class="rbw-modal-card relative overflow-hidden rounded-2xl shadow-2xl
                         bg-gradient-to-br from-emerald-800 via-emerald-900 to-teal-900
                         border border-yellow-400/30">
 
@@ -251,7 +311,7 @@
                     {{-- Footer --}}
                     <div class="px-5 pb-5">
                         <button @click="open = false"
-                            class="w-full py-2 rounded-xl border border-white/20 hover:border-white/40
+                            class="rbw-modal-footer-btn w-full py-2 rounded-xl border border-white/20 hover:border-white/40
                                text-white/60 hover:text-white text-sm transition-colors duration-150">
                             Tutup — Bismillah, semangat! 💪
                         </button>

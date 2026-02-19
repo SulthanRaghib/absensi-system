@@ -4,7 +4,7 @@
         @if ($isRamadan ?? false)
             {{-- ── RAMADAN-THEMED ALERT ─────────────────────────── --}}
             <div
-                class="relative overflow-hidden bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50
+                class="uaa-ramadan relative overflow-hidden bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50
                         border border-amber-300 rounded-2xl shadow-lg p-6
                         flex flex-col md:flex-row items-center justify-between gap-6">
 
@@ -60,7 +60,7 @@
         @else
             {{-- ── NORMAL ALERT ──────────────────────────────────── --}}
             <div
-                class="relative overflow-hidden bg-gradient-to-br from-red-50 via-orange-50 to-amber-50
+                class="uaa-normal relative overflow-hidden bg-gradient-to-br from-red-50 via-orange-50 to-amber-50
                    border border-red-200 rounded-2xl shadow-xl p-6 backdrop-blur-sm
                    flex flex-col md:flex-row items-center justify-between gap-6">
 
@@ -80,7 +80,7 @@
                     </div>
                     <div>
                         <h3
-                            class="text-xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-1">
+                            class="uaa-title text-xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-1">
                             Peringatan Absensi
                         </h3>
                         <div class="h-1 w-16 bg-gradient-to-r from-red-500 to-orange-500 rounded-full mb-2"></div>
@@ -118,7 +118,7 @@
     @else
         {{-- ── HOLIDAY MESSAGE ──────────────────────────────── --}}
         <div
-            class="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl shadow-sm text-center">
+            class="uaa-holiday p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl shadow-sm text-center">
             <div class="mb-3 flex justify-center">
                 <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                     <span class="text-2xl">🎉</span>
@@ -140,6 +140,61 @@
 
         .bg-pos-100 {
             background-position: 100% 0%;
+        }
+
+        /* ── Dark-mode overrides ── */
+        .dark .uaa-ramadan {
+            background: #111827 !important;
+            background-image: none !important;
+            border-color: rgba(251, 191, 36, 0.3) !important;
+        }
+
+        .dark .uaa-ramadan .text-amber-800 {
+            color: #fbbf24 !important;
+        }
+
+        .dark .uaa-ramadan .text-amber-700 {
+            color: #fcd34d !important;
+        }
+
+        .dark .uaa-ramadan .text-amber-900 {
+            color: #fde68a !important;
+        }
+
+        .dark .uaa-normal {
+            background: #111827 !important;
+            background-image: none !important;
+            border-color: rgba(239, 68, 68, 0.3) !important;
+        }
+
+        .dark .uaa-normal .uaa-title {
+            -webkit-text-fill-color: unset !important;
+            background: none !important;
+            background-clip: unset !important;
+            -webkit-background-clip: unset !important;
+            color: #f87171 !important;
+        }
+
+        .dark .uaa-normal .text-gray-700 {
+            color: #d1d5db !important;
+        }
+
+        .dark .uaa-holiday {
+            background: #111827 !important;
+            background-image: none !important;
+            border-color: rgba(59, 130, 246, 0.3) !important;
+        }
+
+        .dark .uaa-holiday .text-blue-900 {
+            color: #93c5fd !important;
+        }
+
+        .dark .uaa-holiday .text-blue-700 {
+            color: #93c5fd !important;
+        }
+
+        .dark .uaa-holiday [class*="bg-blue-100"] {
+            background-color: rgba(59, 130, 246, 0.15) !important;
         }
     </style>
 </x-filament-widgets::widget>

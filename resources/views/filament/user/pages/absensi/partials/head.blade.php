@@ -11,6 +11,11 @@
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
+    .dark .glass-card {
+        background: rgba(17, 24, 39, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
     .btn-action {
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }

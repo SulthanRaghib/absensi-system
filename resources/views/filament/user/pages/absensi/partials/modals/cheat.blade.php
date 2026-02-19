@@ -8,7 +8,7 @@
     <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showCheatModal = false"></div>
 
     <!-- Modal Content -->
-    <div class="relative bg-white/90 backdrop-blur-xl rounded-3xl p-10 max-w-md w-full shadow-2xl border border-white/40 transform transition-all scale-100"
+    <div class="relative bg-white/90 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl p-10 max-w-md w-full shadow-2xl border border-white/40 dark:border-gray-700/40 transform transition-all scale-100"
         style="box-shadow: 0 10px 40px rgba(31, 38, 135, 0.18);">
 
         <!-- Lock Icon -->
@@ -31,18 +31,20 @@
         </div>
 
         <!-- Title -->
-        <h1 class="text-center mb-6 text-3xl font-bold text-slate-800" style="font-family: 'Inter', sans-serif;">
+        <h1 class="text-center mb-6 text-3xl font-bold text-slate-800 dark:text-white"
+            style="font-family: 'Inter', sans-serif;">
             Mau ngapain Hayoo!!
         </h1>
 
         <!-- Warning Text -->
-        <p class="text-center mb-8 text-slate-600 leading-relaxed text-lg" style="font-family: 'Inter', sans-serif;">
+        <p class="text-center mb-8 text-slate-600 dark:text-gray-400 leading-relaxed text-lg"
+            style="font-family: 'Inter', sans-serif;">
             Sistem mendeteksi adanya aktivitas yang tidak sesuai. Mohon melakukan absensi dengan jujur dan
             sesuai prosedur.
         </p>
 
         <!-- Footer Text -->
-        <p class="text-center mb-8 text-sm text-slate-500" style="font-family: 'Inter', sans-serif;">
+        <p class="text-center mb-8 text-sm text-slate-500 dark:text-gray-500" style="font-family: 'Inter', sans-serif;">
             Ganti HP? Hubungi Admin untuk reset agar bisa absen kembali.
         </p>
 

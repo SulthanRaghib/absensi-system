@@ -21,8 +21,8 @@
                 </svg>
             </div>
             <div class="flex-1">
-                <div class="text-xs text-gray-500">Total Pegawai</div>
-                <div class="text-2xl font-semibold">{{ number_format($totalUsers) }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">Total Pegawai</div>
+                <div class="text-2xl font-semibold dark:text-white">{{ number_format($totalUsers) }}</div>
             </div>
         </div>
 
@@ -35,7 +35,7 @@
                 </svg>
             </div>
             <div class="flex-1">
-                <div class="text-xs text-gray-500">Hadir Hari Ini</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">Hadir Hari Ini</div>
                 <div class="text-2xl font-semibold text-green-600">{{ number_format($presentToday) }}</div>
                 <div class="text-xs text-gray-400">{{ $totalUsers ? round(($presentToday / $totalUsers) * 100) : 0 }}%
                     hadir</div>
@@ -51,7 +51,7 @@
                 </svg>
             </div>
             <div class="flex-1">
-                <div class="text-xs text-gray-500">Tidak Hadir</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">Tidak Hadir</div>
                 <div class="text-2xl font-semibold text-red-600">{{ number_format($absent) }}</div>
                 <div class="text-xs text-gray-400">{{ $totalUsers ? round(($absent / $totalUsers) * 100) : 0 }}% tidak
                     hadir</div>
@@ -73,7 +73,7 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="text-sm font-medium">Pegawai Telat</div>
+                        <div class="text-sm font-medium dark:text-gray-200">Pegawai Telat</div>
                         <div class="text-xs text-gray-400">Jumlah: <span
                                 class="font-semibold">{{ $lateCount }}</span></div>
                     </div>
@@ -89,19 +89,19 @@
                                 <div
                                     class="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-sm text-gray-700">
                                     {{ strtoupper(substr($name, 0, 1)) }}</div>
-                                <div class="text-sm font-medium">{{ $name }}</div>
+                                <div class="text-sm font-medium dark:text-gray-200">{{ $name }}</div>
                             </div>
                             <div class="text-sm text-gray-400">-</div>
                         </div>
                     @endforeach
                 </div>
             @else
-                <div class="text-sm text-gray-500">Semua Pegawai hadir tepat waktu hari ini.</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Semua Pegawai hadir tepat waktu hari ini.</div>
             @endif
         </div>
 
         <div class="p-4 bg-white/80 dark:bg-gray-800 rounded-lg shadow-sm">
-            <div class="text-sm text-gray-500 mb-2">Hadir 7 Hari Terakhir</div>
+            <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">Hadir 7 Hari Terakhir</div>
             {{-- Simple sparkline bars --}}
             <div class="flex items-end gap-1 h-20">
                 @php
@@ -116,7 +116,7 @@
                 @endforeach
             </div>
 
-            <div class="mt-3 text-xs text-gray-500">
+            <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
                 @foreach ($last7 as $point)
                     <div class="flex items-center justify-between">
                         <div>{{ \Carbon\Carbon::parse($point['date'])->format('d M') }}</div>

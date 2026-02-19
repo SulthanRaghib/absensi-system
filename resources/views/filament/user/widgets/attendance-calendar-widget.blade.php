@@ -87,9 +87,119 @@
         .ring-today {
             animation: pulse-ring 2s ease-in-out infinite;
         }
+
+        /* ── Dark-mode overrides ── */
+        .dark .acw-card {
+            background: #111827 !important;
+            background-image: none !important;
+            border-color: #374151 !important;
+        }
+
+        /* Legend */
+        .dark .acw-legend {
+            background: rgba(31, 41, 55, 0.5) !important;
+            border-color: #374151 !important;
+        }
+
+        .dark .acw-legend .text-gray-700 {
+            color: #d1d5db !important;
+        }
+
+        .dark .acw-legend [class*="bg-green-100"] {
+            background-color: rgba(34, 197, 94, 0.15) !important;
+        }
+
+        .dark .acw-legend [class*="bg-red-100"] {
+            background-color: rgba(239, 68, 68, 0.15) !important;
+        }
+
+        .dark .acw-legend [class*="bg-yellow-100"] {
+            background-color: rgba(234, 179, 8, 0.15) !important;
+        }
+
+        .dark .acw-legend [class*="bg-gray-200"] {
+            background-color: rgba(107, 114, 128, 0.2) !important;
+        }
+
+        /* Day headers */
+        .dark .acw-card .acw-day {
+            color: #9ca3af !important;
+        }
+
+        .dark .acw-card .acw-day-we {
+            color: #6b7280 !important;
+        }
+
+        /* Calendar cells */
+        .dark .calendar-cell {
+            border-color: #374151 !important;
+        }
+
+        .dark .calendar-cell:hover {
+            border-color: rgba(99, 102, 241, 0.5) !important;
+        }
+
+        .dark .calendar-cell.border-indigo-400 {
+            border-color: #818cf8 !important;
+        }
+
+        /* Date number text */
+        .dark .calendar-cell .text-gray-700 {
+            color: #e5e7eb !important;
+        }
+
+        .dark .calendar-cell .text-red-600 {
+            color: #f87171 !important;
+        }
+
+        /* Status label text */
+        .dark .calendar-cell .text-red-700 {
+            color: #fca5a5 !important;
+        }
+
+        .dark .calendar-cell .text-green-700 {
+            color: #86efac !important;
+        }
+
+        .dark .calendar-cell .text-yellow-700 {
+            color: #fde047 !important;
+        }
+
+        .dark .calendar-cell .text-indigo-700 {
+            color: #a5b4fc !important;
+        }
+
+        .dark .calendar-cell .text-gray-500 {
+            color: #9ca3af !important;
+        }
+
+        /* Default (empty) circle */
+        .dark .acw-default-circle {
+            background-color: rgba(55, 65, 81, 0.4) !important;
+        }
+
+        /* Footer */
+        .dark .acw-footer {
+            background: rgba(31, 41, 55, 0.5) !important;
+            border-color: #374151 !important;
+        }
+
+        .dark .acw-footer .text-gray-500 {
+            color: #9ca3af !important;
+        }
+
+        /* Today's background glow circle: white (indigo-50) in light → semi-transparent dark indigo in dark */
+        .dark .acw-today-bg {
+            background-color: rgba(99, 102, 241, 0.2) !important;
+        }
+
+        /* Date number on today circle stays readable in dark mode */
+        .dark .calendar-cell.border-indigo-400 .text-gray-700 {
+            color: #e0e7ff !important;
+        }
     </style>
 
-    <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-gray-200/50">
+    <div class="acw-card bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-gray-200/50">
         <!-- Header Section -->
         <div class="bg-gradient-to-r from-indigo-600 to-indigo-500 px-6 py-5">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -119,7 +229,7 @@
         </div>
 
         <!-- Legend Section -->
-        <div class="px-6 py-4 bg-gray-50/50 border-b border-gray-100">
+        <div class="acw-legend px-6 py-4 bg-gray-50/50 border-b border-gray-100">
             <div class="flex flex-wrap items-center gap-3 sm:gap-4 justify-center sm:justify-start">
                 <div class="flex items-center gap-2 text-sm">
                     <div class="flex items-center justify-center w-7 h-7 rounded-lg bg-green-100">
@@ -165,19 +275,33 @@
                 <div class="min-w-[640px]">
                     <!-- Day Headers -->
                     <div class="grid grid-cols-7 gap-2 mb-3">
-                        <div class="text-center text-xs font-semibold text-gray-500 uppercase tracking-wider py-2">Sen
+                        <div
+                            class="acw-day text-center text-xs font-semibold text-gray-500 uppercase tracking-wider py-2">
+                            Sen
                         </div>
-                        <div class="text-center text-xs font-semibold text-gray-500 uppercase tracking-wider py-2">Sel
+                        <div
+                            class="acw-day text-center text-xs font-semibold text-gray-500 uppercase tracking-wider py-2">
+                            Sel
                         </div>
-                        <div class="text-center text-xs font-semibold text-gray-500 uppercase tracking-wider py-2">Rab
+                        <div
+                            class="acw-day text-center text-xs font-semibold text-gray-500 uppercase tracking-wider py-2">
+                            Rab
                         </div>
-                        <div class="text-center text-xs font-semibold text-gray-500 uppercase tracking-wider py-2">Kam
+                        <div
+                            class="acw-day text-center text-xs font-semibold text-gray-500 uppercase tracking-wider py-2">
+                            Kam
                         </div>
-                        <div class="text-center text-xs font-semibold text-gray-500 uppercase tracking-wider py-2">Jum
+                        <div
+                            class="acw-day text-center text-xs font-semibold text-gray-500 uppercase tracking-wider py-2">
+                            Jum
                         </div>
-                        <div class="text-center text-xs font-semibold text-gray-400 uppercase tracking-wider py-2">Sab
+                        <div
+                            class="acw-day-we text-center text-xs font-semibold text-gray-400 uppercase tracking-wider py-2">
+                            Sab
                         </div>
-                        <div class="text-center text-xs font-semibold text-gray-400 uppercase tracking-wider py-2">Min
+                        <div
+                            class="acw-day-we text-center text-xs font-semibold text-gray-400 uppercase tracking-wider py-2">
+                            Min
                         </div>
                     </div>
 
@@ -242,14 +366,14 @@
                                     </div>
                                 @else
                                     <div class="absolute inset-0 flex items-center justify-center">
-                                        <div class="w-16 h-16 rounded-full bg-gray-100"></div>
+                                        <div class="acw-default-circle w-16 h-16 rounded-full bg-gray-100"></div>
                                     </div>
                                 @endif
 
                                 <!-- Date Number (z-index above circle) -->
                                 @if ($d['is_today'])
                                     <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                        <div class="w-20 h-20 rounded-full bg-indigo-50 glow-blue"></div>
+                                        <div class="acw-today-bg w-20 h-20 rounded-full bg-indigo-50 glow-blue"></div>
                                     </div>
                                 @endif
                                 <div class="relative z-10 flex flex-col items-center justify-center flex-1">
@@ -320,7 +444,7 @@
         </div>
 
         <!-- Footer Info -->
-        <div class="px-6 py-3 bg-gray-50/50 border-t border-gray-100">
+        <div class="acw-footer px-6 py-3 bg-gray-50/50 border-t border-gray-100">
             <p class="text-xs text-gray-500 text-center">
                 Arahkan kursor ke tanggal untuk melihat detail kehadiran
             </p>
