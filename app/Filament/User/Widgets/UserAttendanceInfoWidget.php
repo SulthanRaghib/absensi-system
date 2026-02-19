@@ -42,14 +42,18 @@ class UserAttendanceInfoWidget extends BaseWidget
         $monthlyAbsences = $monthlyRecords->whereNotNull('jam_masuk')->count();
         $monthlyComplete = $monthlyRecords->filter(fn($r) => $r->jam_masuk && $r->jam_pulang)->count();
 
-        // Count late arrivals (jam_masuk later than workStart + grace)
+        // Count late arrivals using per-record threshold (Ramadan-safe)
         $graceMinutes = Setting::get('attendance_grace_minutes', 10);
         $lateCount = 0;
         foreach ($monthlyRecords as $rec) {
             if ($rec->jam_masuk) {
-                // jam_masuk cast may be datetime — normalize to time
                 $jm = Carbon::parse($rec->jam_masuk->format('H:i:s'));
-                if ($jm->gt($workStart->copy()->addMinutes($graceMinutes))) {
+                // Prefer the threshold that was active at check-in (immune to future setting changes).
+                // Fall back to today's schedule only for legacy records that pre-date this feature.
+                $threshold = $rec->schedule_jam_masuk
+                    ? Carbon::createFromFormat('H:i', $rec->schedule_jam_masuk)
+                    : $workStart;
+                if ($jm->gt($threshold->copy()->addMinutes($graceMinutes))) {
                     $lateCount++;
                 }
             }

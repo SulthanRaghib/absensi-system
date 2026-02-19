@@ -202,16 +202,19 @@ class AbsensiController extends Controller
         $statusLabel = $isLate ? 'Terlambat' : 'Tepat Waktu';
 
         // Create absence record
+        // `schedule_jam_masuk` snapshots the active threshold so historical reports
+        // remain accurate even after Settings are updated for future years.
         $absence = Absence::create([
-            'user_id'        => $user->id,
-            'tanggal'        => today(),
-            'jam_masuk'      => $checkInTime,
-            'lat_masuk'      => $validated['latitude'],
-            'lng_masuk'      => $validated['longitude'],
-            'distance_masuk' => $locationCheck['distance'],
-            'device_info'    => $info,
-            'capture_image'  => $imagePath,
-            'risk_level'     => $riskLevel,
+            'user_id'            => $user->id,
+            'tanggal'            => today(),
+            'jam_masuk'          => $checkInTime,
+            'schedule_jam_masuk' => $schedule['jam_masuk'], // e.g. '07:30' or '08:00'
+            'lat_masuk'          => $validated['latitude'],
+            'lng_masuk'          => $validated['longitude'],
+            'distance_masuk'     => $locationCheck['distance'],
+            'device_info'        => $info,
+            'capture_image'      => $imagePath,
+            'risk_level'         => $riskLevel,
         ]);
 
         return response()->json([

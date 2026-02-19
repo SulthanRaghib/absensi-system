@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\AttendanceExport;
 use App\Models\User;
+use App\Services\AttendanceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -41,9 +42,16 @@ class AbsenceExportController extends Controller
             $filename = 'Laporan_Absensi_' . $startDate->format('F_Y') . '.xlsx';
         }
 
-        // Default jam masuk kantor senin-jumat: 7.30
-        $jamMasukKantor = '07:30:00';
+        // Build a per-day threshold map so Ramadan schedules are reflected correctly
+        // in the exported report, regardless of when the export is generated.
+        $attendanceService = new AttendanceService();
+        $thresholdMap = [];
+        for ($d = 1; $d <= $daysInMonth; $d++) {
+            $date             = Carbon::createFromDate($year, $month, $d);
+            $schedule         = $attendanceService->getScheduleForDate($date);
+            $thresholdMap[$d] = $schedule['jam_masuk']; // 'HH:MM'
+        }
 
-        return Excel::download(new AttendanceExport($users, $daysInMonth, $startDate->translatedFormat('F'), $year, $startDate, $jamMasukKantor), $filename);
+        return Excel::download(new AttendanceExport($users, $daysInMonth, $startDate->translatedFormat('F'), $year, $startDate, $thresholdMap), $filename);
     }
 }

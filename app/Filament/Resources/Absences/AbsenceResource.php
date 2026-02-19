@@ -139,9 +139,20 @@ class AbsenceResource extends Resource
                     ->time('H:i')
                     ->placeholder('-')
                     ->badge()
-                    // Optimized: Use the model attribute directly (already cast to Carbon)
-                    // If it is null, color won't be called or we default.
-                    ->color(fn(Absence $record) => $record->jam_masuk && $record->jam_masuk->format('H:i:s') > '07:30:59' ? 'danger' : 'success'),
+                    ->color(function (Absence $record): string {
+                        if (! $record->jam_masuk) {
+                            return 'gray';
+                        }
+                        // Use the threshold that was active at check-in time (Ramadan-aware).
+                        // Falls back to 07:30 for records created before this feature.
+                        $threshold = $record->schedule_jam_masuk ?? '07:30';
+                        return $record->jam_masuk->format('H:i') > $threshold ? 'danger' : 'success';
+                    })
+                    ->tooltip(function (Absence $record): ?string {
+                        if (! $record->jam_masuk || ! $record->schedule_jam_masuk) return null;
+                        $onTime = $record->jam_masuk->format('H:i') <= $record->schedule_jam_masuk;
+                        return ($onTime ? 'Tepat Waktu' : 'Terlambat') . ' | Batas: ' . $record->schedule_jam_masuk;
+                    }),
 
                 Tables\Columns\TextColumn::make('jam_pulang')
                     ->label('Jam Pulang')

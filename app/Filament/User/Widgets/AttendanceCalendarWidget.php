@@ -128,9 +128,15 @@ class AttendanceCalendarWidget extends Widget
                         if ($absence->jam_masuk) {
                             // Already cast to Carbon via Model $casts
                             $jamMasuk = $absence->jam_masuk;
-                            // Dynamic threshold: respects Ramadan schedule for this specific date
-                            $schedule  = (new AttendanceService)->getScheduleForDate($day);
-                            $threshold = $schedule['jam_masuk_carbon']->second(59);
+                            // Prefer the threshold snapshotted at check-in time;
+                            // this makes the calendar immune to future Settings changes.
+                            // Fall back to getScheduleForDate() for legacy records.
+                            if ($absence->schedule_jam_masuk) {
+                                $threshold = \Carbon\Carbon::createFromFormat('H:i', $absence->schedule_jam_masuk)->second(59);
+                            } else {
+                                $schedule  = (new AttendanceService)->getScheduleForDate($day);
+                                $threshold = $schedule['jam_masuk_carbon']->second(59);
+                            }
 
                             if ($jamMasuk->gt($threshold)) {
                                 $status = 'late';
