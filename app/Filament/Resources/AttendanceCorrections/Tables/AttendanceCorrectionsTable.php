@@ -98,6 +98,12 @@ class AttendanceCorrectionsTable
                             'approved_by' => Auth::id(),
                         ]);
 
+                        // Resolve the schedule that was active on the correction date.
+                        // This correctly picks Ramadan schedule when applicable.
+                        $service     = new \App\Services\AttendanceService();
+                        $dateCarbon  = \Carbon\Carbon::parse($record->date);
+                        $daySchedule = $service->getScheduleForDate($dateCarbon);
+
                         // 2. Find or Create Absence Record
                         $absence = Absence::firstOrCreate(
                             [
@@ -106,19 +112,29 @@ class AttendanceCorrectionsTable
                             ],
                             [
                                 // Defaults if creating new
-                                'jam_masuk' => null,
-                                'jam_pulang' => null,
+                                'jam_masuk'          => null,
+                                'jam_pulang'         => null,
+                                'schedule_jam_masuk' => $daySchedule['jam_masuk'],
+                                'is_ramadan'         => $daySchedule['is_ramadan'],
                             ]
                         );
 
                         // 3. Update Absence based on Type
-                        if ($record->type === 'check_in' || $record->type === 'full_day') {
-                            $absence->jam_masuk = $record->correction_time_in;
+                        // Combine the date with the time to ensure full datetime is stored correctly.
+                        $dateStr = $record->date->format('Y-m-d');
+
+                        if (($record->type === 'check_in' || $record->type === 'full_day') && $record->correction_time_in) {
+                            $absence->jam_masuk = $dateStr . ' ' . $record->correction_time_in->format('H:i:s');
                         }
 
-                        if ($record->type === 'check_out' || $record->type === 'full_day') {
-                            $absence->jam_pulang = $record->correction_time_out;
+                        if (($record->type === 'check_out' || $record->type === 'full_day') && $record->correction_time_out) {
+                            $absence->jam_pulang = $dateStr . ' ' . $record->correction_time_out->format('H:i:s');
                         }
+
+                        // Always stamp the correct schedule snapshot so lateness
+                        // is evaluated against the right threshold (Ramadan or normal).
+                        $absence->schedule_jam_masuk = $daySchedule['jam_masuk'];
+                        $absence->is_ramadan         = $daySchedule['is_ramadan'];
 
                         $absence->save();
                     }),

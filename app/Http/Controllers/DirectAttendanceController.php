@@ -189,10 +189,15 @@ class DirectAttendanceController extends Controller
                     return redirect()->back()->with('error', 'Wajah wajib diverifikasi untuk Absen Masuk.');
                 }
 
+                $attendanceService = new \App\Services\AttendanceService();
+                $schedule = $attendanceService->getTodaySchedule();
+
                 Absence::create([
                     'user_id' => $user->id,
                     'tanggal' => $today,
                     'jam_masuk' => $now,
+                    'schedule_jam_masuk' => $schedule['jam_masuk'],
+                    'is_ramadan' => $schedule['is_ramadan'],
                     'lat_masuk' => $request->latitude,
                     'lng_masuk' => $request->longitude,
                     'distance_masuk' => $locationCheck['distance'],
