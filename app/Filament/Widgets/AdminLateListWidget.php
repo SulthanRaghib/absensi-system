@@ -3,8 +3,9 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Absence;
+use App\Services\AttendanceService;
+use Carbon\Carbon;
 use Filament\Widgets\Widget;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class AdminLateListWidget extends Widget
@@ -21,27 +22,33 @@ class AdminLateListWidget extends Widget
 
     public function getLateRecords(): Collection
     {
-        $today = now()->toDateString();
-
-        // Work schedule
-        $workStart = Carbon::createFromTimeString('07:30:00');
-        // Grace minutes removed
-        // $graceMinutes = config('filament.widgets.attendance_grace_minutes') ?? 10;
+        $today    = now()->toDateString();
+        $schedule = (new AttendanceService)->getTodaySchedule();
+        $threshold = $schedule['jam_masuk']; // 'HH:MM'
 
         $records = Absence::with('user')
             ->whereDate('tanggal', $today)
             ->whereNotNull('jam_masuk')
             ->get()
-            ->filter(function ($r) use ($workStart) {
+            ->filter(function (Absence $r) use ($threshold) {
                 if (! $r->jam_masuk) return false;
-                $jm = Carbon::parse($r->jam_masuk->format('H:i:s'));
-                return $jm->gt($workStart);
+                // Prefer the snapshotted per-record threshold (already stored at check-in).
+                // For today's records it equals $threshold; for legacy records it may differ.
+                $recordThreshold = $r->schedule_jam_masuk ?? $threshold;
+                return $r->jam_masuk->format('H:i') > $recordThreshold;
             })
             ->map(fn($r) => (object) [
-                'name' => optional($r->user)->name ?? '—',
-                'time' => optional($r->jam_masuk)?->format('H:i') ?? '-',
+                'name'       => optional($r->user)->name ?? '—',
+                'time'       => optional($r->jam_masuk)?->format('H:i') ?? '-',
+                'is_ramadan' => $r->is_ramadan,
+                'threshold'  => $r->schedule_jam_masuk ?? $threshold,
             ]);
 
         return $records->values();
+    }
+
+    public function getScheduleInfo(): array
+    {
+        return (new AttendanceService)->getTodaySchedule();
     }
 }

@@ -4,10 +4,9 @@ namespace App\Filament\Widgets;
 
 use App\Models\Absence;
 use App\Models\User;
+use App\Services\AttendanceService;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use App\Models\Setting;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 class AdminAttendanceStats extends BaseWidget
@@ -22,49 +21,42 @@ class AdminAttendanceStats extends BaseWidget
     protected function getStats(): array
     {
         return Cache::remember('admin_attendance_stats', 60, function () {
-            $totalUsers = User::count();
-            $today = now()->toDateString();
+            $schedule   = (new AttendanceService)->getTodaySchedule();
+            $threshold  = $schedule['jam_masuk']; // 'HH:MM' — Ramadan-aware
+
+            $totalUsers   = User::count();
+            $today        = now()->toDateString();
             $presentToday = Absence::whereDate('tanggal', $today)->whereNotNull('jam_masuk')->count();
-            $absent = max(0, $totalUsers - $presentToday);
+            $absent       = max(0, $totalUsers - $presentToday);
 
-            $workStart = Carbon::createFromTimeString('07:30:00');
-            // Grace minutes removed
-            // $graceMinutes = Setting::get('attendance_grace_minutes', 10);
-
+            // Late: use per-record threshold if available (immune to setting changes)
             $lateRecords = Absence::with('user')
                 ->whereDate('tanggal', $today)
                 ->whereNotNull('jam_masuk')
                 ->get()
-                ->filter(function ($r) use ($workStart) {
+                ->filter(function (Absence $r) use ($threshold) {
                     if (! $r->jam_masuk) return false;
-                    $jm = Carbon::parse($r->jam_masuk->format('H:i:s'));
-                    return $jm->gt($workStart);
+                    $recordThreshold = $r->schedule_jam_masuk ?? $threshold;
+                    return $r->jam_masuk->format('H:i') > $recordThreshold;
                 });
 
-            $lateCount = $lateRecords->count();
-            $lateNames = $lateRecords->pluck('user.name')->filter()->unique()->values()->all();
-            $latePreview = $lateNames ? implode(', ', array_slice($lateNames, 0, 5)) . (count($lateNames) > 5 ? '...' : '') : '-';
+            $lateCount   = $lateRecords->count();
+            $lateNames   = $lateRecords->pluck('user.name')->filter()->unique()->values()->all();
+            $latePreview = $lateNames
+                ? implode(', ', array_slice($lateNames, 0, 3)) . (count($lateNames) > 3 ? '...' : '')
+                : '-';
 
-            // chart data: last 7 days present counts (associative so labels are preserved)
-            $start = now()->subDays(6)->startOfDay();
+            // chart data: last 7 days present counts
             $chart = [];
-            for ($i = 0; $i < 7; $i++) {
-                $d = $start->copy()->addDays($i);
-                $label = $d->format('d M'); // e.g. "20 Nov"
-                $chart[$label] = Absence::whereDate('tanggal', $d->toDateString())->whereNotNull('jam_masuk')->count();
+            for ($i = 6; $i >= 0; $i--) {
+                $d = now()->subDays($i);
+                $chart[$d->format('d M')] = Absence::whereDate('tanggal', $d->toDateString())->whereNotNull('jam_masuk')->count();
             }
 
-            // additional counts: mentors (jabatan) and users by role
-            $totalMentors = User::whereHas('jabatan', function ($query) {
-                $query->where('name', 'like', '%mentor%');
-            })->count();
+            $totalMentors   = User::whereHas('jabatan', fn($q) => $q->where('name', 'like', '%mentor%'))->count();
             $totalRoleUsers = User::where('role', 'user')->count();
-
-            // Calculate absent for role 'user' only
             $absentRoleUsers = User::where('role', 'user')
-                ->whereDoesntHave('absences', function ($query) use ($today) {
-                    $query->whereDate('tanggal', $today)->whereNotNull('jam_masuk');
-                })
+                ->whereDoesntHave('absences', fn($q) => $q->whereDate('tanggal', $today)->whereNotNull('jam_masuk'))
                 ->count();
 
             return [
@@ -94,10 +86,11 @@ class AdminAttendanceStats extends BaseWidget
                     ->icon('heroicon-o-x-circle')
                     ->color('danger'),
 
-                // Stat::make('Karyawan Telat', $lateCount)
-                //     ->description($latePreview)
-                //     ->icon('heroicon-o-clock')
-                //     ->color($lateCount > 0 ? 'warning' : 'success'),
+                Stat::make('Terlambat Hari Ini', $lateCount)
+                    ->description($lateCount > 0 ? $latePreview : 'Semua tepat waktu')
+                    ->descriptionIcon($lateCount > 0 ? 'heroicon-m-clock' : 'heroicon-m-check-badge')
+                    ->icon('heroicon-o-clock')
+                    ->color($lateCount > 0 ? 'warning' : 'success'),
             ];
         });
     }
