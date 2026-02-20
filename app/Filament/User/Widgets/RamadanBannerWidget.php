@@ -28,7 +28,7 @@ class RamadanBannerWidget extends Widget
     {
         $schedule = (new AttendanceService)->getTodaySchedule();
 
-        // Rotating motivational quotes based on day of month (1-31)
+        // 30 Rotating motivational quotes — random per hari (seed by date)
         $quotes = [
             'Puasa bukan penghalang produktivitas. Yang hadir lebih awal hari ini, pahalanya double! 💪',
             'Ramadan bulan penuh berkah. Tiap ketikan keyboard di kantor bernilai ibadah! ⌨️✨',
@@ -37,6 +37,29 @@ class RamadanBannerWidget extends Widget
             'Perut kosong, semangat penuh! Buktikan kalau performa terbaik bisa dicapai bahkan saat berpuasa! 🔥',
             'Ramadan mengajarkan kita menahan diri. Termasuk menahan diri dari ngeluh soal deadline! 😄',
             'Lapar itu melatih fokus. Kamu sekarang sedang dalam mode ultra-fokus tanpa disadari! 🎯',
+            'Orang yang berpuasa sambil tetap kerja keras itu bukan manusia biasa — kamu adalah versi premium-nya! 🌟',
+            'Setiap jam kerja di bulan Ramadan adalah sedekah waktu untuk negara. Bangga dong jadi PNS beriman! 🇮🇩',
+            'Puasa bukan excuse buat lambat. Justru ini kesempatan buktikan bahwa niat lebih kuat dari rasa lapar! 💡',
+            'Bayangkan betapa nikmatnya makan malam nanti. Nah, kerjakan tugasmu dulu biar makin layak menikmatinya! 🍽️',
+            'Deadline tidak kenal puasa. Tapi kamu yang puasa pasti bisa kenal deadline dengan lebih bijak! 📅',
+            'Setiap "bismillah" sebelum kerja hari ini bernilai pahala tersendiri. Jangan lupa ucapkan! 🤲',
+            'Ramadan adalah reset button setahun sekali. Manfaatkan untuk reset kebiasaan kerja yang kurang optimal! 🔄',
+            'Yang bisa kerja profesional sambil menahan lapar dan haus — itu bukan karyawan biasa, itu legenda kantor! 🏆',
+            'Tarawih semalam mungkin bikin ngantuk, tapi pahala tadi malam sudah masuk rekening akhirat. Lanjutkan! 📿',
+            'Ibadah puasa + kerja keras = combo terkuat di bulan Ramadan. Aktifkan keduanya sekarang! ⚡',
+            'Jangan biarkan rasa kantuk menghapus semua pahala sahur tadi pagi. Bangkit dan selesaikan tugasmu! ☀️',
+            'Kamu sedang di bulan yang paling istimewa dalam setahun. Pastikan catatan amalmu di kantor juga istimewa! 📖',
+            'Lapar itu tanda bahwa kamu sedang berjuang. Dan pejuang tidak menyerah sebelum garis finish! 🏁',
+            'Setetes keringat kerja di bulan Ramadan nilainya lebih besar dari biasanya. Keluarkan usaha terbaikmu! 💦',
+            'Ramadan mengajarkan bahwa manusia bisa lebih dari yang mereka kira. Hari ini, buktikan itu di tempat kerjamu! 🚀',
+            'Absen tepat waktu di bulan Ramadan = satu poin disiplin + satu poin pahala. Double win! ✅',
+            'Kalau bisa menahan lapar berjam-jam, kamu pasti bisa selesaikan laporan itu dalam sejam. Logika yang valid! 🧮',
+            'Mood mungkin naik turun saat puasa, tapi profesionalisme kamu tidak boleh ikut fluktuasi. Stay solid! 💼',
+            'Di bulan Ramadan, setiap detik punya nilai lebih. Jangan sia-siakan dengan hal yang tidak produktif! ⏳',
+            'Rekan kerja mungkin tidak lihat perjuanganmu hari ini. Tapi Yang Di Atas selalu melihat dan menghitung! 🌙',
+            'Kamu sudah pilih jalan yang berat: puasa + kerja. Itulah kenapa hadiahnya juga yang terberat: pahala berlipat! 🎁',
+            'Satu hari Ramadan yang dilewati dengan baik = satu hari yang tidak akan pernah bisa diulang. Maksimalkan! ✨',
+            'Produktif di bulan Ramadan bukan cuma soal kerja — ini soal membuktikan bahwa iman dan profesionalisme bisa berjalan beriringan! 🌺',
         ];
 
         // 100 Tips & Semangat Ramadan di kantor
@@ -149,9 +172,9 @@ class RamadanBannerWidget extends Widget
             ['emoji' => '🍀', 'title' => 'Lucky Clover Ramadan',   'text' => 'Orang bilang daun semanggi empat daun itu beruntung. Tapi berpuasa di bulan Ramadan sambil tetap produktif? Itu keberuntungan 10 lipat!'],
         ];
 
-        // Pick quote of the day
-        $dayIndex = (now()->day - 1) % count($quotes);
-        $quoteOfDay = $quotes[$dayIndex];
+        // Pick quote of the day — random per hari, konsisten dalam satu hari
+        $seed = abs(crc32(now()->format('Y-m-d') . '_q'));
+        $quoteOfDay = $quotes[$seed % count($quotes)];
 
         // Pick 3 random tips per day (seed by date for consistency, refreshed each day)
         srand(abs(crc32(now()->format('Y-m-d'))));
