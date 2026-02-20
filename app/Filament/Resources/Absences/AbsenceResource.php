@@ -205,6 +205,7 @@ class AbsenceResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->poll(5)
             ->columns([
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Nama')
