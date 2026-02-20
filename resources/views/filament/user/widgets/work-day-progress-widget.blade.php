@@ -160,8 +160,68 @@
             status: 'before',
             timeRemainingText: '',
             ramadanHint: '',
+            dayHintIdx: 0,
+
+            /* ── Hint pools per status ── */
+            hints: {
+                /* Sudah check-out. Kerja selesai ~15:00, berbuka masih ~3 jam lagi */
+                finished_work: [
+                    '🎉 Alhamdulillah, tugas hari ini tuntas! Masih ada beberapa jam sebelum Maghrib — isi dengan hal bermanfaat ya',
+                    '✅ Kerjaan beres! Puasanya belum selesai, hati-hati di perjalanan dan sabar menanti azan 🕌',
+                    '🏠 Pulang kerja bukan berarti langsung buka — berbuka nanti di rumah bersama keluarga ya',
+                    '😌 Output hari ini maksimal! Waktu menuju Maghrib tinggal diisi istirahat & dzikir ringan',
+                    '📿 Sebentar lagi tiba waktunya — manfaatkan sisa waktu sebelum azan Maghrib dengan ibadah',
+                    '🌅 Kerja tuntas, puasa masih jalan! Perjalanan pulang juga ibadah, hati-hati ya',
+                ],
+                /* Sudah check-in, jam kerja sudah lewat tapi belum check-out */
+                in_progress_overtime: [
+                    '🔔 Jam kerja sudah usai — segera check-out sebelum pulang ya!',
+                    '🏃 Waktu kerja selesai tapi belum absen pulang? Yuk check-out dulu!',
+                    '⏰ Sudah melewati jam pulang — jangan lupa klik check-out!',
+                ],
+                /* Sedang bekerja, sisa waktu > 30 menit */
+                in_progress: [
+                    '💪 Semangat! Puasa + kerja = pahala berlipat hari ini',
+                    '🎯 Fokus dulu, ngabuburit nanti — selesaikan tugasmu!',
+                    '🌙 Setiap menit kerja dengan ikhlas hari ini bernilai pahala',
+                    '🚀 Lapar itu sinyal semangat — buktikan produktivitasmu!',
+                    '🔥 Setengah perjuangan sudah terlampaui — tetap jaga ritme!',
+                    '🧠 Perut kosong = pikiran jernih. Manfaatkan kondisi ini sebaik-baiknya!',
+                ],
+                /* Sedang bekerja, sisa waktu ≤ 30 menit */
+                in_progress_almost: [
+                    '🏁 Sedikit lagi jam pulang — sprint terakhir, jangan kendur!',
+                    '⏱️ Tinggal hitungan menit! Finalkan pekerjaanmu sekarang',
+                    '✨ Almost there! Selesaikan dengan baik sampai akhir',
+                    '🎊 Hampir finish — tarik napas, selesaikan tugasmu!',
+                ],
+                /* Belum jam masuk */
+                before: [
+                    '😴 Ngantuk? Itu efek sahur, bukan malas! Sebentar lagi dimulai',
+                    '🌙 Bismillah, hari baru Ramadan — niat ikhlas, kerja tuntas!',
+                    '🍚 Semoga sahur tadi cukup energi — persiapkan dirimu!',
+                    '✨ Hari ini penuh berkah — manfaatkan setiap menitnya!',
+                    '☀️ Pagi Ramadan yang produktif dimulai dari absen tepat waktu',
+                ],
+                /* Sudah jam masuk tapi belum absen */
+                not_checked_in: [
+                    '😅 Lapar bukan alasan skip absen ya — segera masuk!',
+                    '📋 Perut boleh puasa, absen jangan ikutan puasa!',
+                    '🏅 Buru-buru absen masuk — pahala tepat waktu menanti!',
+                    '🤦 Bukan sahurnya yang terlupa kan? Pastikan absennya tidak!',
+                    '⚡ Ayo gerak! Satu klik absen, ribuan pahala menanti',
+                ],
+            },
+
+            pickHint(key) {
+                const arr = this.hints[key] || [];
+                return arr.length ? arr[this.dayHintIdx % arr.length] : '';
+            },
 
             init() {
+                /* Seed from today's date — consistent all day, different each day */
+                const d = new Date();
+                this.dayHintIdx = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
                 this.update();
                 setInterval(() => this.update(), 1000);
             },
@@ -186,7 +246,8 @@
                     this.percentage = 100;
                     const diff = this.clockOut - this.clockIn;
                     this.timeRemainingText = 'Total jam kerja: ' + this.niceDuration(diff);
-                    this.ramadanHint = 'Alhamdulillah, waktunya berbuka! 🌙';
+                    this.ramadanHint = this.isRamadan ? this.pickHint('finished_work') : '';
+
                 } else if (this.isCheckedIn) {
                     this.status = 'in_progress';
                     const total = this.end - this.start;
@@ -194,24 +255,28 @@
                     this.percentage = Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
 
                     if (this.now >= this.end) {
-                        this.timeRemainingText = 'Waktu kerja telah usai';
-                        this.ramadanHint = 'Waktunya buka puasa! 🥤';
+                        this.timeRemainingText = 'Waktu kerja telah usai — segera check-out!';
+                        this.ramadanHint = this.isRamadan ? this.pickHint('in_progress_overtime') : '';
                     } else {
+                        const minsLeft = Math.floor((this.end - this.now) / 60000);
                         this.timeRemainingText = this.niceDuration(this.end - this.now) + ' lagi';
-                        this.ramadanHint = 'Tahan dulu, buka puasa sebentar lagi 💪';
+                        this.ramadanHint = this.isRamadan ?
+                            this.pickHint(minsLeft <= 30 ? 'in_progress_almost' : 'in_progress') :
+                            '';
                     }
+
                 } else {
                     if (this.now < this.start) {
                         const diff = this.start - this.now;
                         this.timeRemainingText = 'Mulai dalam ' + this.niceDuration(diff);
                         this.status = 'before';
                         this.percentage = 0;
-                        this.ramadanHint = 'Ngantuk? Itu efek sahur, bukan malas! 😴';
+                        this.ramadanHint = this.isRamadan ? this.pickHint('before') : '';
                     } else {
                         this.status = 'not_checked_in';
                         this.timeRemainingText = 'Belum Absen Masuk';
                         this.percentage = 0;
-                        this.ramadanHint = 'Lapar bukan alasan skip absen ya! 😅';
+                        this.ramadanHint = this.isRamadan ? this.pickHint('not_checked_in') : '';
                     }
                 }
             }
