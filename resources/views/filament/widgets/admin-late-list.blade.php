@@ -84,7 +84,7 @@
         /* ── Dark-mode overrides ── */
         .dark .alw-card {
             background: #111827 !important;
-            border-color: #374151 !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
             box-shadow: 0 1px 3px rgba(0, 0, 0, .3), 0 0 0 1px rgba(255, 255, 255, .04) !important;
         }
 
@@ -210,8 +210,8 @@
             </div>
 
             {{-- ── Scrollable list ── --}}
-            <div class="alw-divider late-scroll overflow-y-auto divide-y dark:divide-gray-700/40"
-                style="max-height:390px; divide-color:#f9fafb;">
+            <div class="abl-divider absent-scroll overflow-y-auto divide-y divide-gray-100/60 dark:divide-gray-700/20"
+                style="max-height:430px;">
                 @foreach ($late as $idx => $r)
                     @php
                         $ai = $avatarIdx($r->name);
