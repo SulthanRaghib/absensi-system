@@ -83,7 +83,7 @@
         }
 
         .dark .abl-divider>*+* {
-            border-color: #1f2937 !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
         }
 
         .dark .absent-row:hover {
@@ -152,8 +152,8 @@
             </div>
         @else
             {{-- ── Scrollable list ── --}}
-            <div class="abl-divider absent-scroll overflow-y-auto divide-y dark:divide-gray-700/40"
-                style="max-height:430px; border-color:#f9fafb;">
+            <div class="abl-divider absent-scroll overflow-y-auto divide-y divide-gray-100/60 dark:divide-gray-700/20"
+                style="max-height:430px;">
                 @foreach ($absent as $idx => $r)
                     @php
                         $ai = $avatarIdx($r->name);
