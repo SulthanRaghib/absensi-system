@@ -123,29 +123,24 @@ class AttendanceExport implements FromView, WithEvents
                 $sheet->getStyle('A1:' . $highestColumn . $highestRow)->getBorders()
                     ->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
-                // 5. Weekend Coloring
-                // Iterate through days to find weekends and color the data columns
-                if ($highestRow >= 6) {
-                    for ($day = 1; $day <= $this->daysInMonth; $day++) {
-                        $date = $this->startDate->copy()->day($day);
+                // 5. Column Widths
+                $sheet->getColumnDimension('A')->setWidth(5); // No
+                $sheet->getColumnDimension('B')->setWidth(35); // Nama
 
-                        if ($date->isWeekend()) {
-                            // Calculate columns for this day
-                            // Day 1 starts at Column C (Index 3)
-                            // Each day takes 2 columns (In, Out)
-                            $startColIndex = 3 + ($day - 1) * 2;
+                // Days columns
+                for ($day = 1; $day <= $this->daysInMonth; $day++) {
+                    $startColIndex = 3 + ($day - 1) * 2;
+                    $colString1 = Coordinate::stringFromColumnIndex($startColIndex);
+                    $colString2 = Coordinate::stringFromColumnIndex($startColIndex + 1);
+                    $sheet->getColumnDimension($colString1)->setWidth(8);
+                    $sheet->getColumnDimension($colString2)->setWidth(8);
+                }
 
-                            // Apply to both columns of the day
-                            for ($i = 0; $i < 2; $i++) {
-                                $colString = Coordinate::stringFromColumnIndex($startColIndex + $i);
-                                $range = $colString . '6:' . $colString . $highestRow;
-
-                                $sheet->getStyle($range)->getFill()
-                                    ->setFillType(Fill::FILL_SOLID)
-                                    ->getStartColor()->setARGB('FFFFCCCC'); // Light Red
-                            }
-                        }
-                    }
+                // Totals columns
+                $totalStartCol = 3 + ($this->daysInMonth * 2);
+                for ($i = 0; $i < 5; $i++) {
+                    $colString = Coordinate::stringFromColumnIndex($totalStartCol + $i);
+                    $sheet->getColumnDimension($colString)->setWidth(10);
                 }
             },
         ];

@@ -127,8 +127,8 @@
                         $isWeekend = $date->isWeekend();
                         $bgClass = 'bg-gray';
                     @endphp
-                    <th class="{{ $bgClass }}" style="width: 60px;">In</th>
-                    <th class="{{ $bgClass }}" style="width: 60px;">Out</th>
+                    <th class="{{ $bgClass }}" style="width: 80px;">In</th>
+                    <th class="{{ $bgClass }}" style="width: 80px;">Out</th>
                 @endfor
                 <th style="width: 80px; background-color: #d1e7dd;">Hadir</th>
                 <th style="width: 80px; background-color: #fff3cd;">Izin</th>
@@ -157,7 +157,7 @@
                             $dateObj = $startDate->copy()->day($day);
                             $dateStr = $dateObj->format('Y-m-d');
                             $isWeekend = $dateObj->isWeekend();
-                            $bgClass = $isWeekend ? 'bg-red' : '';
+                            $bgClass = '';
 
                             $attendance = $user->absences->first(function ($a) use ($dateStr) {
                                 return $a->tanggal->format('Y-m-d') === $dateStr;
@@ -229,7 +229,6 @@
                                 }
                             } elseif (in_array($dateStr, $holidays) || $isWeekend) {
                                 $inDisplay = 'LIBUR';
-                                $inStyles[] = 'background-color: #ffcccc';
                                 $inStyles[] = 'color: #d60000';
                                 $inStyles[] = 'font-weight: bold';
                                 $mergeCell = true;
@@ -237,6 +236,7 @@
                                 if ($dateObj->lte(now())) {
                                     $inDisplay = 'A';
                                     $totalAlpa++;
+                                    $inStyles[] = 'background-color: #ffcccc';
                                     $inStyles[] = 'color: #d32f2f';
                                     $inStyles[] = 'font-weight: bold';
                                     $mergeCell = true;
@@ -282,10 +282,11 @@
             <td style="border: none; width: 8px;"></td>
             <td style="border: 1px solid #ccc; background-color: #cfe2ff; padding: 3px 8px;">S = Sakit</td>
             <td style="border: none; width: 8px;"></td>
-            <td style="border: 1px solid #ccc; background-color: #ffcccc; padding: 3px 8px;">LIBUR / Weekend</td>
+            <td style="border: 1px solid #ccc; color: #d60000; font-weight: bold; padding: 3px 8px;">LIBUR / Weekend
+            </td>
             <td style="border: none; width: 8px;"></td>
             <td
-                style="border: 1px solid #ccc; background-color: #f8d7da; color: #d32f2f; font-weight: bold; padding: 3px 8px;">
+                style="border: 1px solid #ccc; background-color: #ffcccc; color: #d32f2f; font-weight: bold; padding: 3px 8px;">
                 A = Alpa</td>
         </tr>
     </table>
