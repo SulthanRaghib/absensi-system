@@ -69,6 +69,24 @@ class AttendanceExport implements FromView, WithEvents
         // The view expects standard array of date strings
         $holidays = array_keys($holidayMap);
 
+        // Build ramadanDays from the immutable `is_ramadan` flag snapshotted on each
+        // attendance record at check-in time. This guarantees that historical Ramadan
+        // display (e.g. Feb 2026 exports) will NEVER change when next year's Ramadan
+        // dates are different — because we read from the record itself, not from settings.
+        $ramadanDays = [];
+        $exportYearMonth = $this->startDate->format('Y-m');
+        foreach ($this->users as $user) {
+            foreach ($user->absences as $absence) {
+                if (!empty($absence->is_ramadan) && $absence->tanggal) {
+                    if ($absence->tanggal->format('Y-m') === $exportYearMonth) {
+                        $day = (int) $absence->tanggal->format('d');
+                        $ramadanDays[$day] = true;
+                    }
+                }
+            }
+        }
+        $ramadanDays = array_keys($ramadanDays);
+
         return view('exports.attendance', [
             'users'        => $this->users,
             'daysInMonth'  => $this->daysInMonth,
@@ -77,6 +95,7 @@ class AttendanceExport implements FromView, WithEvents
             'startDate'    => $this->startDate,
             'thresholdMap' => $this->thresholdMap, // [ day => 'HH:MM' ]
             'holidays'     => $holidays,
+            'ramadanDays'  => $ramadanDays, // immutable: derived from snapshotted is_ramadan flags
         ]);
     }
 
