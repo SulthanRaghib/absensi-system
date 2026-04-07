@@ -6,12 +6,14 @@ use App\Filament\Widgets\AdminScheduleInfoWidget;
 use App\Filament\Widgets\AdminAttendanceStats;
 use App\Filament\Widgets\AdminLateListWidget;
 use App\Filament\Widgets\AdminAbsentListWidget;
+use App\Filament\Widgets\AdminOnTimeListWidget;
 use App\Filament\Widgets\AdminLast7Chart;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
+use App\Filament\Pages\Dashboard as CustomDashboard;
 use Filament\View\PanelsRenderHook;
 use Filament\Facades\Filament;
 use Filament\Panel;
@@ -52,13 +54,14 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
-                Dashboard::class,
+                CustomDashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 // AccountWidget::class,
                 AdminScheduleInfoWidget::class,
                 AdminAttendanceStats::class,
+                AdminOnTimeListWidget::class,
                 AdminLateListWidget::class,
                 AdminAbsentListWidget::class,
                 AdminLast7Chart::class,
