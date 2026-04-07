@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 
 class AdminOnTimeListWidget extends Widget
 {
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 2;
 
     protected ?string $pollingInterval = null;
 

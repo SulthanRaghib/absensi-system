@@ -11,14 +11,14 @@ use Illuminate\Support\Facades\Storage;
 
 class AdminLateListWidget extends Widget
 {
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 3;
 
     protected ?string $pollingInterval = null;
 
     /** @var view-string */
     protected string $view = 'filament.widgets.admin-late-list';
 
-    // half width in 2-column dashboard grid
+    // one-third width in 3-column dashboard grid
     protected int | string | array $columnSpan = 1;
 
     public function getLateRecords(): Collection
