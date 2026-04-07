@@ -9,14 +9,14 @@ use Illuminate\Support\Facades\Storage;
 
 class AdminAbsentListWidget extends Widget
 {
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 4;
 
     protected ?string $pollingInterval = null;
 
     /** @var view-string */
     protected string $view = 'filament.widgets.admin-absent-list';
 
-    // half width in 2-column dashboard grid
+    // one-third width in 3-column dashboard grid
     protected int | string | array $columnSpan = 1;
 
     public function getAbsentRecords(): Collection
