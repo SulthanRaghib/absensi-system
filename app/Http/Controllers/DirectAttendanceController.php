@@ -6,27 +6,29 @@ use App\Models\Absence;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\AttendanceActionService;
+use App\Services\AttendanceImageService;
 use App\Services\DeviceRiskService;
 use App\Services\GeoLocationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class DirectAttendanceController extends Controller
 {
     protected $geoService;
     protected $deviceRiskService;
     protected $attendanceActionService;
+    protected $attendanceImageService;
 
     public function __construct(
         GeoLocationService $geoService,
         DeviceRiskService $deviceRiskService,
-        AttendanceActionService $attendanceActionService
+        AttendanceActionService $attendanceActionService,
+        AttendanceImageService $attendanceImageService
     ) {
         $this->geoService = $geoService;
         $this->deviceRiskService = $deviceRiskService;
         $this->attendanceActionService = $attendanceActionService;
+        $this->attendanceImageService = $attendanceImageService;
     }
 
     public function checkStatus(Request $request)
@@ -110,12 +112,7 @@ class DirectAttendanceController extends Controller
             $imagePath = null;
 
             if ($isFaceRecognitionEnabled && $request->filled('image')) {
-                $image = $request->image;
-                $image = str_replace('data:image/png;base64,', '', $image);
-                $image = str_replace(' ', '+', $image);
-                $imageName = 'absensi_photos/' . Str::random(10) . '.png';
-                Storage::disk('public')->put($imageName, base64_decode($image));
-                $imagePath = $imageName;
+                $imagePath = $this->attendanceImageService->storePng($request->image);
             }
 
             $today = now()->toDateString();

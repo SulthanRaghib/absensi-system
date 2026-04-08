@@ -5,26 +5,28 @@ namespace App\Http\Controllers;
 use App\Models\Absence;
 use App\Models\Setting;
 use App\Services\AttendanceActionService;
+use App\Services\AttendanceImageService;
 use App\Services\DeviceRiskService;
 use App\Services\GeoLocationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class AbsensiController extends Controller
 {
     protected $geoService;
     protected $attendanceActionService;
+    protected $attendanceImageService;
     protected $deviceRiskService;
 
     public function __construct(
         GeoLocationService $geoService,
         AttendanceActionService $attendanceActionService,
+        AttendanceImageService $attendanceImageService,
         DeviceRiskService $deviceRiskService
     ) {
         $this->geoService = $geoService;
         $this->attendanceActionService = $attendanceActionService;
+        $this->attendanceImageService = $attendanceImageService;
         $this->deviceRiskService = $deviceRiskService;
     }
 
@@ -71,14 +73,7 @@ class AbsensiController extends Controller
                 ], 400);
             }
 
-            // Decode and save image
-            $image = $validated['image'];
-            $image = str_replace('data:image/png;base64,', '', $image);
-            $image = str_replace(' ', '+', $image);
-            $imageName = 'absensi_photos/' . Str::random(10) . '.png';
-
-            Storage::disk('public')->put($imageName, base64_decode($image));
-            $imagePath = $imageName;
+            $imagePath = $this->attendanceImageService->storePng($validated['image']);
         }
 
         $info = $this->geoService->getDeviceInfo($request);
