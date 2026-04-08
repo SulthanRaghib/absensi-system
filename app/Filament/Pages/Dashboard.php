@@ -14,7 +14,7 @@ class Dashboard extends BaseDashboard
     public function getColumns(): array|int
     {
         return [
-            'default' => 3, // 3 columns for better widget layout
+            'default' => 1, // single-column stack on phones
             'sm' => 1,      // 1 column on small screens
             'md' => 2,      // 2 columns on medium screens
             'lg' => 3,      // 3 columns on large screens
