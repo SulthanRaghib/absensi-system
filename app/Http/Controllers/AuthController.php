@@ -20,12 +20,8 @@ class AuthController extends Controller
         // Fetch office location for the map in the login/choice view
         $officeLocation = Setting::getOfficeLocation();
         $radiusEnabled = Setting::isRadiusEnabled();
-
-        $faceSetting = Setting::where('key', 'face_recognition_enabled')->first();
-        $faceRecognitionEnabled = $faceSetting ? filter_var($faceSetting->value, FILTER_VALIDATE_BOOLEAN) : false;
-
-        $thresholdSetting = Setting::where('key', 'face_threshold')->first();
-        $faceThreshold = $thresholdSetting ? (float) $thresholdSetting->value : 0.5;
+        $faceRecognitionEnabled = Setting::isFaceRecognitionEnabled();
+        $faceThreshold = Setting::getFaceThreshold();
 
         // Detect if today falls within the configured Ramadan period (for UI theming only).
         $ramadanSettings = Setting::getRamadanSettings();

@@ -28,12 +28,8 @@ class Absensi extends Page
         $todayAbsence = Absence::getTodayAbsence($user->id);
         $officeLocation = Setting::getOfficeLocation();
         $isRadiusEnabled = Setting::isRadiusEnabled();
-
-        $faceSetting = Setting::where('key', 'face_recognition_enabled')->first();
-        $faceRecognitionEnabled = $faceSetting ? filter_var($faceSetting->value, FILTER_VALIDATE_BOOLEAN) : false;
-
-        $thresholdSetting = Setting::where('key', 'face_threshold')->first();
-        $faceThreshold = $thresholdSetting ? (float) $thresholdSetting->value : 0.5;
+        $faceRecognitionEnabled = Setting::isFaceRecognitionEnabled();
+        $faceThreshold = Setting::getFaceThreshold();
 
         return [
             'user' => $user,

@@ -41,16 +41,16 @@ class ListSettings extends ListRecords
                 }),
 
             Action::make('toggleDeviceValidation')
-                ->label(fn() => (Setting::where('key', 'device_validation_enabled')->first()->value ?? '0') == '1' ? 'Device: ON' : 'Device: OFF')
-                ->color(fn() => (Setting::where('key', 'device_validation_enabled')->first()->value ?? '0') == '1' ? 'success' : 'danger')
-                ->icon(fn() => (Setting::where('key', 'device_validation_enabled')->first()->value ?? '0') == '1' ? 'heroicon-o-device-phone-mobile' : 'heroicon-o-device-tablet')
+                ->label(fn() => $this->isDeviceValidationEnabled() ? 'Device: ON' : 'Device: OFF')
+                ->color(fn() => $this->isDeviceValidationEnabled() ? 'success' : 'danger')
+                ->icon(fn() => $this->isDeviceValidationEnabled() ? 'heroicon-o-device-phone-mobile' : 'heroicon-o-device-tablet')
                 ->requiresConfirmation()
-                ->modalHeading(fn() => (Setting::where('key', 'device_validation_enabled')->first()->value ?? '0') == '1' ? 'Nonaktifkan Validasi Device?' : 'Aktifkan Validasi Device?')
-                ->modalDescription(fn() => (Setting::where('key', 'device_validation_enabled')->first()->value ?? '0') == '1'
+                ->modalHeading(fn() => $this->isDeviceValidationEnabled() ? 'Nonaktifkan Validasi Device?' : 'Aktifkan Validasi Device?')
+                ->modalDescription(fn() => $this->isDeviceValidationEnabled()
                     ? 'Apakah Anda yakin ingin menonaktifkan validasi device? Pegawai dapat login dan absen menggunakan device apa saja tanpa batasan.'
                     : 'Apakah Anda yakin ingin mengaktifkan validasi device? Pegawai hanya dapat absen menggunakan device yang terdaftar.')
-                ->modalSubmitActionLabel(fn() => (Setting::where('key', 'device_validation_enabled')->first()->value ?? '0') == '1' ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan')
-                ->modalIcon(fn() => (Setting::where('key', 'device_validation_enabled')->first()->value ?? '0') == '1' ? 'heroicon-o-exclamation-triangle' : 'heroicon-o-check-circle')
+                ->modalSubmitActionLabel(fn() => $this->isDeviceValidationEnabled() ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan')
+                ->modalIcon(fn() => $this->isDeviceValidationEnabled() ? 'heroicon-o-exclamation-triangle' : 'heroicon-o-check-circle')
                 ->action(function () {
                     $setting = Setting::firstOrCreate(
                         ['key' => 'device_validation_enabled'],
@@ -70,16 +70,16 @@ class ListSettings extends ListRecords
                 }),
 
             Action::make('toggleFaceRecognition')
-                ->label(fn() => (Setting::where('key', 'face_recognition_enabled')->first()->value ?? '0') == '1' ? 'Face Rec: ON' : 'Face Rec: OFF')
-                ->color(fn() => (Setting::where('key', 'face_recognition_enabled')->first()->value ?? '0') == '1' ? 'success' : 'danger')
-                ->icon(fn() => (Setting::where('key', 'face_recognition_enabled')->first()->value ?? '0') == '1' ? 'heroicon-o-face-smile' : 'heroicon-o-face-frown')
+                ->label(fn() => $this->isFaceRecognitionEnabled() ? 'Face Rec: ON' : 'Face Rec: OFF')
+                ->color(fn() => $this->isFaceRecognitionEnabled() ? 'success' : 'danger')
+                ->icon(fn() => $this->isFaceRecognitionEnabled() ? 'heroicon-o-face-smile' : 'heroicon-o-face-frown')
                 ->requiresConfirmation()
-                ->modalHeading(fn() => (Setting::where('key', 'face_recognition_enabled')->first()->value ?? '0') == '1' ? 'Nonaktifkan Face Recognition?' : 'Aktifkan Face Recognition?')
-                ->modalDescription(fn() => (Setting::where('key', 'face_recognition_enabled')->first()->value ?? '0') == '1'
+                ->modalHeading(fn() => $this->isFaceRecognitionEnabled() ? 'Nonaktifkan Face Recognition?' : 'Aktifkan Face Recognition?')
+                ->modalDescription(fn() => $this->isFaceRecognitionEnabled()
                     ? 'Apakah Anda yakin ingin menonaktifkan validasi wajah? Pegawai dapat absen tanpa perlu verifikasi wajah.'
                     : 'Apakah Anda yakin ingin mengaktifkan validasi wajah? Pegawai harus melakukan verifikasi wajah saat absen.')
-                ->modalSubmitActionLabel(fn() => (Setting::where('key', 'face_recognition_enabled')->first()->value ?? '0') == '1' ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan')
-                ->modalIcon(fn() => (Setting::where('key', 'face_recognition_enabled')->first()->value ?? '0') == '1' ? 'heroicon-o-exclamation-triangle' : 'heroicon-o-check-circle')
+                ->modalSubmitActionLabel(fn() => $this->isFaceRecognitionEnabled() ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan')
+                ->modalIcon(fn() => $this->isFaceRecognitionEnabled() ? 'heroicon-o-exclamation-triangle' : 'heroicon-o-check-circle')
                 ->action(function () {
                     $setting = Setting::firstOrCreate(
                         ['key' => 'face_recognition_enabled'],
@@ -112,5 +112,15 @@ class ListSettings extends ListRecords
 
             CreateAction::make(),
         ];
+    }
+
+    protected function isDeviceValidationEnabled(): bool
+    {
+        return Setting::isDeviceValidationEnabled();
+    }
+
+    protected function isFaceRecognitionEnabled(): bool
+    {
+        return Setting::isFaceRecognitionEnabled();
     }
 }

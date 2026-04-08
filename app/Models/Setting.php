@@ -23,6 +23,29 @@ class Setting extends Model
     }
 
     /**
+     * Generic helper for boolean feature flags.
+     */
+    public static function isFeatureEnabled(string $key, bool $default = false): bool
+    {
+        return (bool) static::get($key, $default);
+    }
+
+    public static function isFaceRecognitionEnabled(): bool
+    {
+        return static::isFeatureEnabled('face_recognition_enabled', false);
+    }
+
+    public static function isDeviceValidationEnabled(): bool
+    {
+        return static::isFeatureEnabled('device_validation_enabled', true);
+    }
+
+    public static function getFaceThreshold(float $default = 0.5): float
+    {
+        return (float) static::get('face_threshold', $default);
+    }
+
+    /**
      * Get setting value by key
      */
     public static function get(string $key, $default = null)
