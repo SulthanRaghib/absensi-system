@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Jenssegers\Agent\Agent;
 
 class AbsensiController extends Controller
 {
@@ -37,9 +36,7 @@ class AbsensiController extends Controller
         $user = Auth::user();
         $todayAbsence = Absence::getTodayAbsence($user->id);
         $officeLocation = Setting::getOfficeLocation();
-
-        $faceSetting = Setting::where('key', 'face_recognition_enabled')->first();
-        $faceRecognitionEnabled = $faceSetting ? filter_var($faceSetting->value, FILTER_VALIDATE_BOOLEAN) : false;
+        $faceRecognitionEnabled = Setting::isFaceRecognitionEnabled();
 
         return view('absensi.index', compact('user', 'todayAbsence', 'officeLocation', 'faceRecognitionEnabled'));
     }
@@ -63,8 +60,7 @@ class AbsensiController extends Controller
         $riskLevel = $this->deviceRiskService->assessForCheckIn($user, $validated['device_token']);
 
         // 2. Check Face Recognition Setting
-        $faceSetting = Setting::where('key', 'face_recognition_enabled')->first();
-        $isFaceRecognitionEnabled = $faceSetting ? filter_var($faceSetting->value, FILTER_VALIDATE_BOOLEAN) : false;
+        $isFaceRecognitionEnabled = Setting::isFaceRecognitionEnabled();
         $imagePath = null;
 
         if ($isFaceRecognitionEnabled) {
@@ -116,31 +112,7 @@ class AbsensiController extends Controller
             ], 400);
         }
 
-        // Get device info
-        $agent = new Agent();
-        $agent->setUserAgent($request->userAgent());
-
-        $device = $agent->device();
-        $platform = $agent->platform();
-        $browser = $agent->browser();
-        $version = $agent->version($browser);
-
-        $deviceType = 'Unknown';
-        if ($agent->isDesktop()) {
-            $deviceType = 'Desktop';
-        } elseif ($agent->isTablet()) {
-            $deviceType = 'Tablet';
-        } elseif ($agent->isPhone()) {
-            $deviceType = 'Phone';
-        } elseif ($agent->isRobot()) {
-            $deviceType = 'Robot';
-        }
-
-        $info = "{$platform} | {$browser} {$version} | {$device} ({$deviceType})";
-
-        // Add IP address
-        $ip = $request->ip();
-        $info .= " | IP: {$ip}";
+        $info = $this->geoService->getDeviceInfo($request);
 
         // Determine late/on-time status using the active schedule (normal or Ramadan)
         $checkInTime = now();

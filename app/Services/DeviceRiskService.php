@@ -29,10 +29,7 @@ class DeviceRiskService
         );
         $userDevice->update(['last_used_at' => now()]);
 
-        $deviceSetting = Setting::where('key', 'device_validation_enabled')->first();
-        $isDeviceValidationEnabled = $deviceSetting
-            ? filter_var($deviceSetting->value, FILTER_VALIDATE_BOOLEAN)
-            : true;
+        $isDeviceValidationEnabled = Setting::isDeviceValidationEnabled();
 
         if (! $isDeviceValidationEnabled) {
             return 'safe';

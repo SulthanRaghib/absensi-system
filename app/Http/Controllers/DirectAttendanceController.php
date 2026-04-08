@@ -9,7 +9,6 @@ use App\Services\DeviceRiskService;
 use App\Services\GeoLocationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -101,8 +100,7 @@ class DirectAttendanceController extends Controller
             $riskLevel = 'safe';
 
             // Face Recognition Logic
-            $faceSetting = Setting::where('key', 'face_recognition_enabled')->first();
-            $isFaceRecognitionEnabled = $faceSetting ? filter_var($faceSetting->value, FILTER_VALIDATE_BOOLEAN) : false;
+            $isFaceRecognitionEnabled = Setting::isFaceRecognitionEnabled();
             $imagePath = null;
 
             if ($isFaceRecognitionEnabled && $request->filled('image')) {
