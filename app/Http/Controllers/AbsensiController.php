@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Absence;
 use App\Models\Setting;
-use App\Services\AttendanceService;
+use App\Services\AttendanceActionService;
 use App\Services\DeviceRiskService;
 use App\Services\GeoLocationService;
 use Illuminate\Http\Request;
@@ -15,16 +15,16 @@ use Illuminate\Support\Str;
 class AbsensiController extends Controller
 {
     protected $geoService;
-    protected $attendanceService;
+    protected $attendanceActionService;
     protected $deviceRiskService;
 
     public function __construct(
         GeoLocationService $geoService,
-        AttendanceService $attendanceService,
+        AttendanceActionService $attendanceActionService,
         DeviceRiskService $deviceRiskService
     ) {
         $this->geoService = $geoService;
-        $this->attendanceService = $attendanceService;
+        $this->attendanceActionService = $attendanceActionService;
         $this->deviceRiskService = $deviceRiskService;
     }
 
@@ -81,71 +81,38 @@ class AbsensiController extends Controller
             $imagePath = $imageName;
         }
 
-        // Check if already checked in today
-        if (Absence::hasCheckedInToday($user->id)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda sudah melakukan absen masuk hari ini.',
-            ], 400);
-        }
-
-        // Validate GPS accuracy
-        $accuracyCheck = $this->geoService->validateAccuracy($validated['accuracy']);
-        if (!$accuracyCheck['valid']) {
-            return response()->json([
-                'success' => false,
-                'message' => $accuracyCheck['message'],
-            ], 400);
-        }
-
-        // Validate location
-        $locationCheck = $this->geoService->validateLocation(
-            $validated['latitude'],
-            $validated['longitude']
-        );
-
-        if (!$locationCheck['valid']) {
-            return response()->json([
-                'success' => false,
-                'message' => $locationCheck['message'],
-                'distance' => $locationCheck['distance'],
-            ], 400);
-        }
-
         $info = $this->geoService->getDeviceInfo($request);
 
-        // Determine late/on-time status using the active schedule (normal or Ramadan)
-        $checkInTime = now();
-        $schedule    = $this->attendanceService->getTodaySchedule();
-        $isLate      = $this->attendanceService->isLate($checkInTime);
-        $statusLabel = $isLate ? 'Terlambat' : 'Tepat Waktu';
+        $result = $this->attendanceActionService->checkIn(
+            $user,
+            (float) $validated['latitude'],
+            (float) $validated['longitude'],
+            (float) $validated['accuracy'],
+            $riskLevel,
+            $info,
+            $imagePath,
+        );
 
-        // Create absence record
-        // `schedule_jam_masuk` and `is_ramadan` snapshot the active schedule so
-        // historical reports remain accurate even after Settings are updated.
-        $absence = Absence::create([
-            'user_id'            => $user->id,
-            'tanggal'            => today(),
-            'jam_masuk'          => $checkInTime,
-            'schedule_jam_masuk' => $schedule['jam_masuk'],    // e.g. '07:30' or '08:00'
-            'is_ramadan'         => $schedule['is_ramadan'],   // immutable flag
-            'lat_masuk'          => $validated['latitude'],
-            'lng_masuk'          => $validated['longitude'],
-            'distance_masuk'     => $locationCheck['distance'],
-            'device_info'        => $info,
-            'capture_image'      => $imagePath,
-            'risk_level'         => $riskLevel,
-        ]);
+        if (! $result['ok']) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'],
+                'distance' => $result['distance'] ?? null,
+            ], $result['status']);
+        }
+
+        $absence = $result['absence'];
+        $schedule = $result['schedule'];
 
         return response()->json([
             'success' => true,
-            'message' => 'Absen masuk berhasil! ' . $locationCheck['message'],
+            'message' => $result['message'],
             'data' => [
                 'jam_masuk'   => $absence->jam_masuk->format('H:i:s'),
-                'status'      => $statusLabel,
+                'status'      => $result['statusLabel'],
                 'is_ramadan'  => $schedule['is_ramadan'],
                 'jam_threshold' => $schedule['jam_masuk'],
-                'distance'    => $locationCheck['distance'],
+                'distance'    => $result['distance'],
             ],
         ]);
     }
@@ -163,60 +130,29 @@ class AbsensiController extends Controller
 
         $user = Auth::user();
 
-        // Check if not checked in yet
-        if (!Absence::hasCheckedInToday($user->id)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda belum melakukan absen masuk hari ini.',
-            ], 400);
-        }
-
-        // Check if already checked out
-        if (Absence::hasCheckedOutToday($user->id)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda sudah melakukan absen pulang hari ini.',
-            ], 400);
-        }
-
-        // Validate GPS accuracy
-        $accuracyCheck = $this->geoService->validateAccuracy($validated['accuracy']);
-        if (!$accuracyCheck['valid']) {
-            return response()->json([
-                'success' => false,
-                'message' => $accuracyCheck['message'],
-            ], 400);
-        }
-
-        // Validate location
-        $locationCheck = $this->geoService->validateLocation(
-            $validated['latitude'],
-            $validated['longitude']
+        $result = $this->attendanceActionService->checkOut(
+            $user,
+            (float) $validated['latitude'],
+            (float) $validated['longitude'],
+            (float) $validated['accuracy'],
         );
 
-        if (!$locationCheck['valid']) {
+        if (! $result['ok']) {
             return response()->json([
                 'success' => false,
-                'message' => $locationCheck['message'],
-                'distance' => $locationCheck['distance'],
-            ], 400);
+                'message' => $result['message'],
+                'distance' => $result['distance'] ?? null,
+            ], $result['status']);
         }
 
-        // Update absence record
-        $absence = Absence::getTodayAbsence($user->id);
-        $absence->update([
-            'jam_pulang' => now(),
-            'lat_pulang' => $validated['latitude'],
-            'lng_pulang' => $validated['longitude'],
-            'distance_pulang' => $locationCheck['distance'],
-        ]);
+        $absence = $result['absence'];
 
         return response()->json([
             'success' => true,
-            'message' => 'Absen pulang berhasil! ' . $locationCheck['message'],
+            'message' => $result['message'],
             'data' => [
                 'jam_pulang' => $absence->jam_pulang->format('H:i:s'),
-                'distance' => $locationCheck['distance'],
+                'distance' => $result['distance'],
             ],
         ]);
     }

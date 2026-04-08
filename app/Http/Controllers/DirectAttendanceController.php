@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Absence;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\AttendanceActionService;
 use App\Services\DeviceRiskService;
 use App\Services\GeoLocationService;
 use Illuminate\Http\Request;
@@ -16,11 +17,16 @@ class DirectAttendanceController extends Controller
 {
     protected $geoService;
     protected $deviceRiskService;
+    protected $attendanceActionService;
 
-    public function __construct(GeoLocationService $geoService, DeviceRiskService $deviceRiskService)
-    {
+    public function __construct(
+        GeoLocationService $geoService,
+        DeviceRiskService $deviceRiskService,
+        AttendanceActionService $attendanceActionService
+    ) {
         $this->geoService = $geoService;
         $this->deviceRiskService = $deviceRiskService;
+        $this->attendanceActionService = $attendanceActionService;
     }
 
     public function checkStatus(Request $request)
@@ -115,24 +121,6 @@ class DirectAttendanceController extends Controller
             $today = now()->toDateString();
             $now = now();
 
-            // Validate GPS accuracy
-            $accuracyCheck = $this->geoService->validateAccuracy((float) $request->accuracy);
-            if (!$accuracyCheck['valid']) {
-                Auth::logout();
-                return redirect()->back()->with('error', $accuracyCheck['message']);
-            }
-
-            // Validate location
-            $locationCheck = $this->geoService->validateLocation(
-                $request->latitude,
-                $request->longitude
-            );
-
-            if (!$locationCheck['valid']) {
-                Auth::logout();
-                return redirect()->back()->with('error', $locationCheck['message']);
-            }
-
             // Check for existing absence record for today
             $absence = Absence::where('user_id', $user->id)
                 ->whereDate('tanggal', $today)
@@ -142,54 +130,47 @@ class DirectAttendanceController extends Controller
             $status = 'success';
             $newDeviceId = null;
 
-            if (!$absence) {
-                // Check In
+            if (!$absence || !$absence->jam_masuk) {
+                // Check In (new record OR edge-case incomplete record)
                 if ($isFaceRecognitionEnabled && !$imagePath) {
                     Auth::logout();
                     return redirect()->back()->with('error', 'Wajah wajib diverifikasi untuk Absen Masuk.');
                 }
 
                 $riskLevel = $this->deviceRiskService->assessForCheckIn($user, $request->device_token);
+                $result = $this->attendanceActionService->checkIn(
+                    $user,
+                    (float) $request->latitude,
+                    (float) $request->longitude,
+                    (float) $request->accuracy,
+                    $riskLevel,
+                    $this->geoService->getDeviceInfo($request),
+                    $imagePath,
+                    $now,
+                );
 
-                $attendanceService = new \App\Services\AttendanceService();
-                $schedule = $attendanceService->getTodaySchedule();
+                if (! $result['ok']) {
+                    Auth::logout();
+                    return redirect()->back()->with('error', $result['message']);
+                }
 
-                Absence::create([
-                    'user_id' => $user->id,
-                    'tanggal' => $today,
-                    'jam_masuk' => $now,
-                    'schedule_jam_masuk' => $schedule['jam_masuk'],
-                    'is_ramadan' => $schedule['is_ramadan'],
-                    'lat_masuk' => $request->latitude,
-                    'lng_masuk' => $request->longitude,
-                    'distance_masuk' => $locationCheck['distance'],
-                    'device_info' => $this->geoService->getDeviceInfo($request),
-                    'capture_image' => $imagePath,
-                    'risk_level' => $riskLevel,
-                ]);
                 $message = 'Berhasil Absen Masuk! Selamat Bekerja, ' . $user->name;
             } elseif ($absence->jam_masuk && !$absence->jam_pulang) {
                 // Check Out
-                $absence->update([
-                    'jam_pulang' => $now,
-                    'lat_pulang' => $request->latitude,
-                    'lng_pulang' => $request->longitude,
-                    'distance_pulang' => $locationCheck['distance'],
-                ]);
+                $result = $this->attendanceActionService->checkOut(
+                    $user,
+                    (float) $request->latitude,
+                    (float) $request->longitude,
+                    (float) $request->accuracy,
+                    $now,
+                );
+
+                if (! $result['ok']) {
+                    Auth::logout();
+                    return redirect()->back()->with('error', $result['message']);
+                }
 
                 $message = 'Berhasil Absen Pulang! Hati-hati di jalan, ' . $user->name;
-            } elseif (!$absence->jam_masuk) {
-                // Edge case: Record exists but no check-in (maybe created manually without time)
-                $riskLevel = $this->deviceRiskService->assessForCheckIn($user, $request->device_token);
-
-                $absence->update([
-                    'jam_masuk' => $now,
-                    'lat_masuk' => $request->latitude,
-                    'lng_masuk' => $request->longitude,
-                    'distance_masuk' => $locationCheck['distance'],
-                    'risk_level' => $riskLevel,
-                ]);
-                $message = 'Berhasil Absen Masuk! Selamat Bekerja, ' . $user->name;
             } else {
                 // Already completed
                 $message = 'Anda sudah melakukan absen masuk dan pulang hari ini.';
