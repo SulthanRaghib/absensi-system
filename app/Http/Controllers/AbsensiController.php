@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Absence;
 use App\Models\Setting;
 use App\Services\AttendanceService;
+use App\Services\DeviceRiskService;
 use App\Services\GeoLocationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,11 +17,16 @@ class AbsensiController extends Controller
 {
     protected $geoService;
     protected $attendanceService;
+    protected $deviceRiskService;
 
-    public function __construct(GeoLocationService $geoService, AttendanceService $attendanceService)
-    {
+    public function __construct(
+        GeoLocationService $geoService,
+        AttendanceService $attendanceService,
+        DeviceRiskService $deviceRiskService
+    ) {
         $this->geoService = $geoService;
         $this->attendanceService = $attendanceService;
+        $this->deviceRiskService = $deviceRiskService;
     }
 
     /**
@@ -53,67 +59,8 @@ class AbsensiController extends Controller
 
         $user = Auth::user();
 
-        // 1. Device Validation & Risk Assessment
-        $deviceSetting = Setting::where('key', 'device_validation_enabled')->first();
-        $isDeviceValidationEnabled = $deviceSetting ? filter_var($deviceSetting->value, FILTER_VALIDATE_BOOLEAN) : true;
-
-        $deviceToken = $validated['device_token'];
-        $riskLevel = 'safe';
-
-        if ($isDeviceValidationEnabled) {
-            // Step A: Record Device FIRST (so current user is included in history)
-            $userDevice = \App\Models\UserDevice::firstOrCreate(
-                ['user_id' => $user->id, 'device_unique_id' => $deviceToken],
-                ['last_used_at' => now()]
-            );
-            $userDevice->update(['last_used_at' => now()]);
-
-            // Step B: Retrieve device history (oldest first) to identify original owner
-            $deviceHistory = \App\Models\UserDevice::where('device_unique_id', $deviceToken)
-                ->orderBy('created_at', 'asc')
-                ->get();
-
-            $uniqueUserIds = $deviceHistory->pluck('user_id')->unique()->values();
-            $hasCollision = $uniqueUserIds->count() > 1;
-            $originalOwnerId = $deviceHistory->first()?->user_id;
-
-            // Step C: Risk Logic (timestamp-based ownership)
-            if (!$hasCollision) {
-                // Scenario 1: no collision (only current user)
-                $riskLevel = 'safe';
-            } else {
-                if ($originalOwnerId === $user->id) {
-                    // Scenario 2A: current user is original owner -> keep safe
-                    $riskLevel = 'safe';
-
-                    // Action: mark today's absences for other users (borrowers) as danger
-                    $borrowerIds = $uniqueUserIds->filter(fn($id) => $id !== $user->id)->all();
-                    if (!empty($borrowerIds)) {
-                        Absence::whereIn('user_id', $borrowerIds)
-                            ->whereDate('tanggal', today())
-                            ->where('risk_level', '!=', 'danger')
-                            ->update(['risk_level' => 'danger']);
-                    }
-                } else {
-                    // Scenario 2B: current user is NOT original owner -> danger
-                    $riskLevel = 'danger';
-
-                    // Action: warn original owner if they already have an absence today
-                    if ($originalOwnerId) {
-                        Absence::where('user_id', $originalOwnerId)
-                            ->whereDate('tanggal', today())
-                            ->where('risk_level', '!=', 'danger')
-                            ->update(['risk_level' => 'warning']);
-                    }
-                }
-            }
-        } else {
-            // If validation is disabled, we still record the device for history but don't calculate risk
-            \App\Models\UserDevice::firstOrCreate(
-                ['user_id' => $user->id, 'device_unique_id' => $deviceToken],
-                ['last_used_at' => now()]
-            )->update(['last_used_at' => now()]);
-        }
+        // 1. Device Validation & Risk Assessment (shared service)
+        $riskLevel = $this->deviceRiskService->assessForCheckIn($user, $validated['device_token']);
 
         // 2. Check Face Recognition Setting
         $faceSetting = Setting::where('key', 'face_recognition_enabled')->first();

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Absence;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\DeviceRiskService;
 use App\Services\GeoLocationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,10 +16,12 @@ use Illuminate\Support\Str;
 class DirectAttendanceController extends Controller
 {
     protected $geoService;
+    protected $deviceRiskService;
 
-    public function __construct(GeoLocationService $geoService)
+    public function __construct(GeoLocationService $geoService, DeviceRiskService $deviceRiskService)
     {
         $this->geoService = $geoService;
+        $this->deviceRiskService = $deviceRiskService;
     }
 
     public function checkStatus(Request $request)
@@ -95,48 +98,7 @@ class DirectAttendanceController extends Controller
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
-            // Check Device Validation Setting
-            $setting = Setting::where('key', 'device_validation_enabled')->first();
-            $isDeviceValidationEnabled = $setting ? filter_var($setting->value, FILTER_VALIDATE_BOOLEAN) : true;
-
-            $deviceToken = $request->device_token;
             $riskLevel = 'safe';
-
-            if ($isDeviceValidationEnabled) {
-                // Step A: Record Device
-                $userDevice = \App\Models\UserDevice::firstOrCreate(
-                    ['user_id' => $user->id, 'device_unique_id' => $deviceToken],
-                    ['last_used_at' => now()]
-                );
-                $userDevice->update(['last_used_at' => now()]);
-
-                // Step B: Collision Detection
-                $otherUsersWithSameDevice = \App\Models\UserDevice::where('device_unique_id', $deviceToken)
-                    ->where('user_id', '!=', $user->id)
-                    ->get();
-
-                // Step C: Risk Logic
-                if ($otherUsersWithSameDevice->isNotEmpty()) {
-                    $riskLevel = 'danger';
-
-                    // Update other users' attendance records
-                    foreach ($otherUsersWithSameDevice as $otherDevice) {
-                        $otherUserAbsence = Absence::where('user_id', $otherDevice->user_id)
-                            ->whereDate('tanggal', today())
-                            ->first();
-
-                        if ($otherUserAbsence) {
-                            $otherUserAbsence->update(['risk_level' => 'warning']);
-                        }
-                    }
-                }
-            } else {
-                // Loose Mode: Record history but don't flag risk
-                \App\Models\UserDevice::firstOrCreate(
-                    ['user_id' => $user->id, 'device_unique_id' => $deviceToken],
-                    ['last_used_at' => now()]
-                )->update(['last_used_at' => now()]);
-            }
 
             // Face Recognition Logic
             $faceSetting = Setting::where('key', 'face_recognition_enabled')->first();
@@ -189,6 +151,8 @@ class DirectAttendanceController extends Controller
                     return redirect()->back()->with('error', 'Wajah wajib diverifikasi untuk Absen Masuk.');
                 }
 
+                $riskLevel = $this->deviceRiskService->assessForCheckIn($user, $request->device_token);
+
                 $attendanceService = new \App\Services\AttendanceService();
                 $schedule = $attendanceService->getTodaySchedule();
 
@@ -218,11 +182,14 @@ class DirectAttendanceController extends Controller
                 $message = 'Berhasil Absen Pulang! Hati-hati di jalan, ' . $user->name;
             } elseif (!$absence->jam_masuk) {
                 // Edge case: Record exists but no check-in (maybe created manually without time)
+                $riskLevel = $this->deviceRiskService->assessForCheckIn($user, $request->device_token);
+
                 $absence->update([
                     'jam_masuk' => $now,
                     'lat_masuk' => $request->latitude,
                     'lng_masuk' => $request->longitude,
                     'distance_masuk' => $locationCheck['distance'],
+                    'risk_level' => $riskLevel,
                 ]);
                 $message = 'Berhasil Absen Masuk! Selamat Bekerja, ' . $user->name;
             } else {
