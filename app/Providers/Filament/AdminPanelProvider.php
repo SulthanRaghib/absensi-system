@@ -35,7 +35,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            // ->login() // Fallback to custom login
             ->spa()
             ->brandLogo(asset('images/Logo_bapeten.png'))
             ->brandLogoHeight('5rem')

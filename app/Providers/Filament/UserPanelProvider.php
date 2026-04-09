@@ -30,7 +30,7 @@ class UserPanelProvider extends PanelProvider
         return $panel
             ->id('user')
             ->path('user')
-            ->login()
+            // ->login() // Fallback to custom login
             ->spa()
             ->brandLogo(asset('images/Logo_bapeten.png'))
             ->brandLogoHeight('5rem')
