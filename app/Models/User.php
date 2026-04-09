@@ -97,7 +97,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         }
 
         if ($panel->getId() === 'user') {
-            return $this->role === 'user' || $this->role === 'admin';
+            return in_array($this->role, ['user', 'admin', 'pegawai']);
         }
 
         return false;

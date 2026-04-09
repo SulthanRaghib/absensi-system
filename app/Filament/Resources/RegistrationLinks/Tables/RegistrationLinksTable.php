@@ -6,6 +6,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\Action;
+use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
@@ -21,6 +22,14 @@ class RegistrationLinksTable
                     ->limit(20)
                     ->copyable()
                     ->searchable(),
+                TextColumn::make('role')
+                    ->label('Role Pendaftar')
+                    ->badge()
+                    ->colors([
+                        'danger' => 'admin',
+                        'warning' => 'pegawai',
+                        'success' => 'user',
+                    ]),
                 TextColumn::make('expires_at')
                     ->dateTime()
                     ->sortable(),

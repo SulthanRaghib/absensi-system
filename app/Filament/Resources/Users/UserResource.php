@@ -62,7 +62,8 @@ class UserResource extends Resource
                             ->label('Role')
                             ->options([
                                 'admin' => 'Admin',
-                                'user' => 'User',
+                                'pegawai' => 'Pegawai',
+                                'user' => 'User (Magang)',
                             ])
                             ->default('user')
                             ->required(),
@@ -134,6 +135,7 @@ class UserResource extends Resource
                     ->label('Role')
                     ->colors([
                         'danger' => 'admin',
+                        'warning' => 'pegawai',
                         'success' => 'user',
                     ]),
 
@@ -181,7 +183,8 @@ class UserResource extends Resource
                     ->label('Role')
                     ->options([
                         'admin' => 'Admin',
-                        'user' => 'User',
+                        'pegawai' => 'Pegawai',
+                        'user' => 'User (Magang)',
                     ]),
             ])
             ->actions([

@@ -11,6 +11,7 @@ class RegistrationLink extends Model
         'expires_at',
         'is_active',
         'jabatan_id',
+        'role',
     ];
 
     protected $casts = [

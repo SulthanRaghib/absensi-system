@@ -68,11 +68,14 @@ class InternRegister extends BaseRegister
 
     protected function handleRegistration(array $data): Model
     {
+        $link = RegistrationLink::where('token', $this->token)->first();
+        $role = $link ? $link->role : 'user';
+
         $user = $this->getUserModel()::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => $data['password'],
-            'role' => 'user',
+            'role' => $role,
             'jabatan_id' => $data['jabatan_id'],
             'unit_kerja_id' => $data['unit_kerja_id'],
         ]);

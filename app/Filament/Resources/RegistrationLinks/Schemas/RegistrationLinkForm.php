@@ -20,6 +20,16 @@ class RegistrationLinkForm
                     ->unique(ignoreRecord: true)
                     ->columnSpanFull(),
 
+                Forms\Select::make('role')
+                    ->label('Role Pendaftar')
+                    ->options([
+                        'admin' => 'Admin',
+                        'pegawai' => 'Pegawai',
+                        'user' => 'User (Magang)',
+                    ])
+                    ->default('user')
+                    ->required(),
+
                 Forms\DateTimePicker::make('expires_at')
                     ->label('Expiration Time')
                     ->required()
