@@ -8,6 +8,7 @@ use App\Models\UnitKerja;
 use Filament\Actions\Action;
 use Filament\Auth\Http\Responses\Contracts\RegistrationResponse;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Auth\Pages\Register as BaseRegister;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
@@ -51,16 +52,41 @@ class InternRegister extends BaseRegister
                 $this->getEmailFormComponent(),
                 Select::make('jabatan_id')
                     ->label('Jabatan')
-                    ->options(Jabatan::all()->pluck('name', 'id'))
+                    ->options(fn () => Jabatan::pluck('name', 'id'))
                     ->required()
                     ->searchable()
-                    ->preload(),
+                    ->preload()
+                    ->helperText('Cari jabatan Anda dahulu. Jika tidak terdaftar, klik tombol "+" untuk menambah baru.')
+                    ->createOptionForm([
+                        TextInput::make('name')
+                            ->label('Nama Jabatan')
+                            ->required()
+                            ->unique('jabatans', 'name')
+                            ->maxLength(255),
+                    ])
+                    ->createOptionUsing(function (array $data): int {
+                        $data['name'] = ucwords(strtolower($data['name']));
+                        return Jabatan::create($data)->id;
+                    }),
+
                 Select::make('unit_kerja_id')
                     ->label('Unit Kerja')
-                    ->options(UnitKerja::all()->pluck('name', 'id'))
+                    ->options(fn () => UnitKerja::pluck('name', 'id'))
                     ->required()
                     ->searchable()
-                    ->preload(),
+                    ->preload()
+                    ->helperText('Cari unit kerja Anda dahulu. Jika tidak terdaftar, klik tombol "+" untuk menambah baru.')
+                    ->createOptionForm([
+                        TextInput::make('name')
+                            ->label('Nama Unit Kerja')
+                            ->required()
+                            ->unique('unit_kerjas', 'name')
+                            ->maxLength(255),
+                    ])
+                    ->createOptionUsing(function (array $data): int {
+                        $data['name'] = ucwords(strtolower($data['name']));
+                        return UnitKerja::create($data)->id;
+                    }),
                 $this->getPasswordFormComponent(),
                 $this->getPasswordConfirmationFormComponent(),
             ]);
