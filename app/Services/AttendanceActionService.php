@@ -87,6 +87,11 @@ class AttendanceActionService
             ]);
         }
 
+        // Dispatch Background Geocoding Job
+        if ($absence) {
+            \App\Jobs\ReverseGeocodeAbsenceJob::dispatch($absence->id, 'masuk');
+        }
+
         return [
             'ok' => true,
             'status' => 200,
@@ -139,12 +144,19 @@ class AttendanceActionService
             'distance_pulang'  => $geo['distance'],
         ]);
 
+        $freshAbsence = $absence->fresh();
+
+        // Dispatch Background Geocoding Job
+        if ($freshAbsence) {
+            \App\Jobs\ReverseGeocodeAbsenceJob::dispatch($freshAbsence->id, 'pulang');
+        }
+
         return [
             'ok' => true,
             'status' => 200,
             'message' => 'Absen pulang berhasil! ' . $geo['message'],
             'distance' => $geo['distance'],
-            'absence' => $absence->fresh(),
+            'absence' => $freshAbsence,
         ];
     }
 

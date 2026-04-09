@@ -23,6 +23,8 @@ class Absence extends Model
         'device_info',
         'capture_image',
         'risk_level',
+        'lokasi_masuk',
+        'lokasi_pulang',
     ];
 
     protected $casts = [
@@ -80,12 +82,12 @@ class Absence extends Model
      */
     public function getFormattedDistanceMasukAttribute(): string
     {
-        return $this->distance_masuk ? number_format($this->distance_masuk, 2) . ' m' : '-';
+        return $this->distance_masuk ? number_format((float) $this->distance_masuk, 2) . ' m' : '-';
     }
 
     public function getFormattedDistancePulangAttribute(): string
     {
-        return $this->distance_pulang ? number_format($this->distance_pulang, 2) . ' m' : '-';
+        return $this->distance_pulang ? number_format((float) $this->distance_pulang, 2) . ' m' : '-';
     }
 
     /**

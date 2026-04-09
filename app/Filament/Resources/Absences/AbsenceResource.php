@@ -172,6 +172,11 @@ class AbsenceResource extends Resource
                             ->label('Jarak Masuk (meter)')
                             ->numeric()
                             ->suffix('m'),
+
+                        Forms\Textarea::make('lokasi_masuk')
+                            ->label('Alamat / Lokasi (Masuk)')
+                            ->columnSpanFull()
+                            ->disabled(),
                     ])
                     ->columns(3)
                     ->collapsed(),
@@ -191,6 +196,11 @@ class AbsenceResource extends Resource
                             ->label('Jarak Pulang (meter)')
                             ->numeric()
                             ->suffix('m'),
+
+                        Forms\Textarea::make('lokasi_pulang')
+                            ->label('Alamat / Lokasi (Pulang)')
+                            ->columnSpanFull()
+                            ->disabled(),
                     ])
                     ->columns(3)
                     ->collapsed(),
@@ -265,13 +275,27 @@ class AbsenceResource extends Resource
 
                 Tables\Columns\TextColumn::make('distance_masuk')
                     ->label('Jarak Masuk')
-                    ->formatStateUsing(fn($state) => $state ? number_format($state, 2) . ' m' : '-')
+                    ->formatStateUsing(fn($state) => $state ? number_format((float)$state, 2) . ' m' : '-')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('distance_pulang')
                     ->label('Jarak Pulang')
-                    ->formatStateUsing(fn($state) => $state ? number_format($state, 2) . ' m' : '-')
+                    ->formatStateUsing(fn($state) => $state ? number_format((float)$state, 2) . ' m' : '-')
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('lokasi_masuk')
+                    ->label('Lokasi Masuk')
+                    ->placeholder(fn(Absence $record) => $record->lat_masuk ? 'Sedang Sinkronisasi...' : '-')
+                    ->limit(30)
+                    ->tooltip(fn($state) => $state)
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('lokasi_pulang')
+                    ->label('Lokasi Pulang')
+                    ->placeholder(fn(Absence $record) => $record->lat_pulang ? 'Sedang Sinkronisasi...' : '-')
+                    ->limit(30)
+                    ->tooltip(fn($state) => $state)
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('device_info')
                     ->label('Device Info')
