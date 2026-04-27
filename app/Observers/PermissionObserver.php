@@ -2,38 +2,29 @@
 
 namespace App\Observers;
 
-use App\Filament\Resources\Permissions\PermissionResource;
-use App\Filament\User\Resources\Permissions\PermissionResource as UserPermissionResource;
 use App\Models\Absence;
 use App\Models\Permission;
 use App\Models\User;
 use App\Services\AttendanceService;
+use App\Services\NotificationService;
 use Carbon\CarbonPeriod;
-use Filament\Actions\Action;
-use Filament\Notifications\Notification;
 
 
 class PermissionObserver
 {
+    public function __construct(
+        private readonly NotificationService $notificationService,
+        private readonly AttendanceService $attendanceService,
+    ) {}
+
     /**
      * Handle the Permission "created" event.
      */
     public function created(Permission $permission): void
     {
-        $admins = User::where('role', 'admin')->get();
-
-        foreach ($admins as $admin) {
-            Notification::make()
-                ->title('Pengajuan Izin Baru')
-                ->body("{$permission->user->name} mengajukan izin {$permission->type}.")
-                ->icon('heroicon-o-document-text')
-                ->iconColor('info')
-                ->actions([
-                    Action::make('Lihat')
-                        ->url(PermissionResource::getUrl('edit', ['record' => $permission], panel: 'admin')),
-                ])
-                ->sendToDatabase($admin);
-        }
+        User::where('role', 'admin')
+            ->get()
+            ->each(fn(User $admin) => $this->notificationService->sendPermissionRequestNotification($permission, $admin));
     }
 
     /**
@@ -41,16 +32,17 @@ class PermissionObserver
      */
     public function updated(Permission $permission): void
     {
-        if ($permission->isDirty('status')) {
+        if ($permission->wasChanged('status')) {
             if ($permission->status === 'approved') {
-                Notification::make()
-                    ->title('Pengajuan Izin Disetujui ✅')
-                    ->body("Izin {$permission->type} Anda untuk tanggal {$permission->start_date} telah disetujui.")
-                    ->success()
-                    ->sendToDatabase($permission->user);
+                $this->notificationService->updateNotificationStatus(
+                    referenceType: 'permission',
+                    referenceId: $permission->id,
+                    newStatus: 'approved',
+                );
+
+                $this->notificationService->sendPermissionStatusNotification($permission);
 
                 if ($permission->type === 'dinas_luar' && $permission->start_date && $permission->end_date) {
-                    $attendanceService = new AttendanceService();
                     $period = CarbonPeriod::create($permission->start_date, $permission->end_date);
 
                     foreach ($period as $date) {
@@ -58,7 +50,7 @@ class PermissionObserver
                             continue;
                         }
 
-                        $daySchedule  = $attendanceService->getScheduleForDate($date);
+                        $daySchedule  = $this->attendanceService->getScheduleForDate($date);
                         $checkInTime  = $date->format('Y-m-d') . ' ' . $daySchedule['jam_masuk'] . ':00';
                         $checkOutTime = $date->format('Y-m-d') . ' ' . $daySchedule['jam_pulang'] . ':00';
 
@@ -81,15 +73,13 @@ class PermissionObserver
                     }
                 }
             } elseif ($permission->status === 'rejected') {
-                Notification::make()
-                    ->title('Pengajuan Izin Ditolak ❌')
-                    ->body("Maaf, izin Anda ditolak. Alasan: {$permission->rejection_note}.")
-                    ->danger()
-                    ->actions([
-                        Action::make('Lihat')
-                            ->url(UserPermissionResource::getUrl('edit', ['record' => $permission], panel: 'user')),
-                    ])
-                    ->sendToDatabase($permission->user);
+                $this->notificationService->updateNotificationStatus(
+                    referenceType: 'permission',
+                    referenceId: $permission->id,
+                    newStatus: 'rejected',
+                );
+
+                $this->notificationService->sendPermissionStatusNotification($permission);
             }
         }
     }
