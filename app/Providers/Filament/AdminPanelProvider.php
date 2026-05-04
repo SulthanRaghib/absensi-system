@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Widgets\AdminNationalHolidayCalendarWidget;
 use App\Filament\Widgets\AdminScheduleInfoWidget;
 use App\Filament\Widgets\AdminAttendanceStats;
 use App\Filament\Widgets\AdminLateListWidget;
@@ -64,6 +65,7 @@ class AdminPanelProvider extends PanelProvider
                 AdminOnTimeListWidget::class,
                 AdminLateListWidget::class,
                 AdminAbsentListWidget::class,
+                AdminNationalHolidayCalendarWidget::class,
                 AdminLast7Chart::class,
             ])
             ->middleware([

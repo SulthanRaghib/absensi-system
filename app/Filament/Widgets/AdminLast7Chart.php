@@ -7,7 +7,7 @@ use Filament\Widgets\ChartWidget;
 
 class AdminLast7Chart extends ChartWidget
 {
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 6;
 
     protected ?string $pollingInterval = null;
 
