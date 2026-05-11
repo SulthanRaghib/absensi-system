@@ -70,6 +70,10 @@ class UserPanelProvider extends PanelProvider
             // Load Smart Profile assets early so Alpine can evaluate x-data safely (SPA pages don't re-run inline scripts).
             ->renderHook(PanelsRenderHook::HEAD_END, fn() => Filament::getCurrentPanel()?->getId() === 'user'
                 ? view('filament.user.hooks.smart-profile-assets')->render()
+                : '')
+            // PWA Install Prompt Banner (bottom-sheet style, mobile only).
+            ->renderHook(PanelsRenderHook::BODY_END, fn() => Filament::getCurrentPanel()?->getId() === 'user'
+                ? view('filament.user.hooks.pwa-install-banner')->render()
                 : '');
     }
 }
